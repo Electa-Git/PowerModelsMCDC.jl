@@ -23,7 +23,7 @@ mpc.bus = [
 	3       1       45	15	0   0   1       1       0	345     1       1.1     0.9;
 	4       1       40	5	0   0   1       1       0	345     1       1.1     0.9;
 	5       1       60	10	0   0   1       1       0	345     1       1.1     0.9;
-    6       3       0	0	0   0   2       1.06	0	345     1       1.1     0.9;
+  6       3       0	0	0   0   2       1.06	0	345     1       1.1     0.9;
 	7       2       20	10	0   0   2       1       0	345     1       1.1     0.9;
 	8       1       45	15	0   0   2       1       0	345     1       1.1     0.9;
 	9       1       40	5	0   0   2       1       0	345     1       1.1     0.9;
@@ -71,28 +71,28 @@ mpc.dcpol=2;
 %% bus data
 %column_names%   busdc_i grid    Pdc     Vdc     basekVdc    Vdcmax  Vdcmin  Cdc
 mpc.busdc = [
-    1              1       0       1       345         1.1     0.9     0;
-    2              1       0       1       345         1.1     0.9     0;
+  1              1       0       1       345         1.1     0.9     0;
+  2              1       0       1       345         1.1     0.9     0;
 	3              1       0       1       345         1.1     0.9     0;
 	4              1       0       1       345         1.1     0.9     0;
 
 ];
 
 %% converters
-%column_names%   busdc_i busac_i type_dc type_ac P_g   Q_g   islcc Vtar    rtf xtf  transformer tm   bf filter    rc      xc  reactor   basekVac    Vmmax   Vmmin   Imax    status   LossA LossB  LossCrec LossCinv  droop      Pdcset    Vdcset  dVdcset Pacmax Pacmin Qacmax Qacmin
+%column_names%   busdc_i busac_i type_dc type_ac P_g   Q_g   islcc Vtar    rtf xtf  transformer tm   bf filter    rc      xc  reactor   basekVac    Vmmax   Vmmin   Imax    status   LossA LossB  LossCrec LossCinv  droop      Pdcset    Vdcset  dVdcset Pacmax Pacmin Qacmax Qacmin Confi ground_type ground_z
 mpc.convdc = [
-    1       2   1       1       -60    -40    0 1     0.01  0.01 1 1 0.01 1 0.01   0.01 1  345         1.1     0.9     1.1     1       1.103 0.887  2.885    1.885      0.0050    -58.6274   1.0079   0 100 -100 50 -50;
-    2       7   2       1       0       0     0 1     0.01  0.01 1 1 0.01 1 0.01   0.01 1  345         1.1     0.9     1.1     1       1.103 0.887  2.885    2.885      0.0070     21.9013   1.0000   0 100 -100 50 -50;
-	3      11   2       1       0       0     0 1     0.01  0.01 1 1 0.01 1 0.01   0.01 1  345         1.1     0.9     1.1     1       1.103 0.887  2.885    2.885      0.0070     21.9013   1.0000   0 100 -100 50 -50;
+    1       2   1       1       -60    -40    0 1     0.01  0.01 1 1 0.01 1 0.01   0.01 1  345         1.1     0.9     1.1     1       1.103 0.887  2.885    1.885      0.0050    -58.6274   1.0079   0 100 -100 50 -50 20 0 0.5 ;
+    2       7   2       1       0       0     0 1     0.01  0.01 1 1 0.01 1 0.01   0.01 1  345         1.1     0.9     1.1     1       1.103 0.887  2.885    2.885      0.0070     21.9013   1.0000   0 100 -100 50 -50 20 1 0.5;
+	3      11   2       1       0       0     0 1     0.01  0.01 1 1 0.01 1 0.01   0.01 1  345         1.1     0.9     1.1     1       1.103 0.887  2.885    2.885      0.0070     21.9013   1.0000   0 100 -100 50 -50 11 3 0.5;
 
 ];
 
 %% branches
-%column_names%   fbusdc  tbusdc  r      l        c   rateA   rateB   rateC   status
+%column_names%   fbusdc  tbusdc  r      l        c   rateA   rateB   rateC   status confi return_type return_z
 mpc.branchdc = [
-    1       2       0.052   0   0    100     100     100     1;
-	4       3       0.052   0   0    100     100     100     1;
-
+  1       4       0.052   0   0    100     100     100     1  2 3 0.04;
+	2       4       0.052   0   0    100     100     100     1  2 3 0.04;
+	3       4       0.052   0   0    100     100     100     1  1 3 0.04;
  ];
 
 %% generator cost data
