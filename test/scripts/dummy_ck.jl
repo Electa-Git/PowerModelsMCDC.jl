@@ -17,8 +17,9 @@ ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=1)
 
 result = _PMACDC.run_acdcopf("./test/data/matacdc_scripts/case5_2grids_MC.m", _PM.ACPPowerModel, ipopt_solver)
 
-data = _PM.parse_file("./test/data/matacdc_scripts/case5_2grids_MC.m")
+data = _PM.parse_file("../PowerModelsMCDC.jl/test/data/matacdc_scripts/case5_2grids_MC.m")
 
+data11 = _PM.parse_file("./test/data/matacdc_scripts/case5_2grids_MC.m")
 
 
 
