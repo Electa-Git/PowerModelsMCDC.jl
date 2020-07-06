@@ -17,6 +17,9 @@ const _conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status"
     "discharge_rating", "charge_efficiency", "discharge_efficiency", "p_loss", "q_loss",
     "model", "ncost", "cost", "startup", "shutdown", "name", "source_id", "active_phases"])
 
+"only dc side data"
+const _DCdata=["busdc", "convdc", "branchdc"]
+
 "feild names that should become multi-conductor matrix not arrays"
 const _conductor_matrix = Set(["br_r", "br_x"])
 
@@ -31,6 +34,7 @@ function _make_multiconductor!(data::Dict{String,<:Any}, conductors::Real)
     data["conductors"] = conductors
 
     for (key, item) in data
+     for key in _DCdata
         if isa(item, Dict{String,Any})
             for (item_id, item_data) in item
                 if isa(item_data, Dict{String,Any})
