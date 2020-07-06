@@ -11,17 +11,17 @@ end
 
 
 "feild names that should not be multi-conductor values"
-const _conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
-    "br_status", "gen_bus", "load_bus", "shunt_bus", "storage_bus", "f_bus", "t_bus",
-    "transformer", "area", "zone", "base_kv", "energy", "energy_rating", "charge_rating",
-    "discharge_rating", "charge_efficiency", "discharge_efficiency", "p_loss", "q_loss",
-    "model", "ncost", "cost", "startup", "shutdown", "name", "source_id", "active_phases"])
+const _conductorless = Set(["basekVdc", "source_id", "busdc_i", "grid", "index",
+"return_type", "status", "confi", "return_z", "fbusdc", "tbusdc","busac_i", "dVdcset", "Vdcset", "basekVac",
+"type_dc", "filter", "reactor", "transformer", "type_dc", "P_g", "Q_g", "Vtar", "status", "islcc",
+"Pdcset", "droop", "ground_type", "Confi", "ground_z", "type_dc"])
+#Assumed: control modes and setpoints are not per conductor.
 
 "only dc side data"
 const _DCdata=["busdc", "convdc", "branchdc"]
 
 "feild names that should become multi-conductor matrix not arrays"
-const _conductor_matrix = Set(["br_r", "br_x"])
+const _conductor_matrix = Set(["br_r", "br_x", "rc", "xc", "rtf", "xtf", "bf"])
 
 
 function _make_multiconductor!(data::Dict{String,<:Any}, conductors::Real)

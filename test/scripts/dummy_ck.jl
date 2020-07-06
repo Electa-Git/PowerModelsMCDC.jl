@@ -1,10 +1,9 @@
-using PowerModelsMCDC
-const _PMACDC = PowerModelsACDC
+using LinearAlgebra, LinearAlgebra: I
 import PowerModels
 const _PM = PowerModels
 
-import PowerModelsDistribution
-const _PD = PowerModelsDistribution
+# import PowerModelsDistribution
+# const _PD = PowerModelsDistribution
 
 using InfrastructureModels
 using JuMP
@@ -20,7 +19,6 @@ data11 = _PM.parse_file("./test/data/matacdc_scripts/case5_2grids_MC.m")
 result = _PMACDC.run_acdcopf("./test/data/matacdc_scripts/case5_2grids_MC.m", _PM.ACPPowerModel, ipopt_solver)
 
 result1 = run_mcdcopf(file, _PM.ACPPowerModel, ipopt_solver)
-
 
 data = _PM.parse_file("../PowerModelsMCDC.jl/test/data/matacdc_scripts/case5_2grids_MC.m")
 
