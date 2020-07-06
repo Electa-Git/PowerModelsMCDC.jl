@@ -24,17 +24,16 @@ const _DCdata=["busdc", "convdc", "branchdc"]
 const _conductor_matrix = Set(["br_r", "br_x"])
 
 
-""
 function _make_multiconductor!(data::Dict{String,<:Any}, conductors::Real)
-    if haskey(data, "conductors")
-        Memento.warn(_LOGGER, "skipping network that is already multiconductor")
-        return
-    end
+    # if haskey(data, "conductors")
+    #     Memento.warn(_LOGGER, "skipping network that is already multiconductor")
+    #     return
+    # end
 
     data["conductors"] = conductors
 
     for (key, item) in data
-     for key in _DCdata
+     if key in _DCdata
         if isa(item, Dict{String,Any})
             for (item_id, item_data) in item
                 if isa(item_data, Dict{String,Any})
@@ -57,7 +56,8 @@ function _make_multiconductor!(data::Dict{String,<:Any}, conductors::Real)
             #root non-dict items
         end
     end
-end
+    end
+  end
 
 
 #  From multiconductor.jl of PowerModels
@@ -67,13 +67,13 @@ end
 #
 #
 
-# using LinearAlgebra: I
-# using LinearAlgebra
-# using JSON
-# using InfrastructureModels
-# using PowerModels
-# using PowerModelsDistribution
-#
+using LinearAlgebra: I
+using LinearAlgebra
+using JSON
+using InfrastructureModels
+using PowerModels
+using PowerModelsDistribution
+
 
 # "a data structure for working with multiconductor datasets"
 abstract type MultiConductorValue{T,N} <: AbstractArray{T,N} end
@@ -234,7 +234,7 @@ Base.rad2deg(a::MultiConductorMatrix) = MultiConductorMatrix(map(rad2deg, a.valu
 Base.deg2rad(a::MultiConductorVector) = MultiConductorVector(map(deg2rad, a.values))
 Base.deg2rad(a::MultiConductorMatrix) = MultiConductorMatrix(map(deg2rad, a.values))
 
-JSON.lower(mcv::PowerModels.MultiConductorValue) = Dict("values"=>[eltype(mcv) != String && (isinf(v) || isnan(v)) ? string(v) : v for v in mcv.values], "type"=>string(typeof(mcv)))
+JSON.lower(mcv::_PM.MultiConductorValue) = Dict("values"=>[eltype(mcv) != String && (isinf(v) || isnan(v)) ? string(v) : v for v in mcv.values], "type"=>string(typeof(mcv)))
 function JSON.show_json(io::JSON.StructuralContext, s::JSON.CommonSerialization, p::PowerModels.MultiConductorValue)
     if eltype(p) != String
         if isa(p, MultiConductorMatrix)

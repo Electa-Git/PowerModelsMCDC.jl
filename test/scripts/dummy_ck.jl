@@ -1,4 +1,4 @@
-import PowerModelsACDC
+using PowerModelsMCDC
 const _PMACDC = PowerModelsACDC
 import PowerModels
 const _PM = PowerModels
@@ -14,8 +14,13 @@ using Ipopt
 
 ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=1)
 
+file="./test/data/matacdc_scripts/case5_2grids_MC.m"
+data11 = _PM.parse_file("./test/data/matacdc_scripts/case5_2grids_MC.m")
 
 result = _PMACDC.run_acdcopf("./test/data/matacdc_scripts/case5_2grids_MC.m", _PM.ACPPowerModel, ipopt_solver)
+
+result1 = run_mcdcopf(file, _PM.ACPPowerModel, ipopt_solver)
+
 
 data = _PM.parse_file("../PowerModelsMCDC.jl/test/data/matacdc_scripts/case5_2grids_MC.m")
 
@@ -39,7 +44,9 @@ data11 = _PM.parse_file("./test/data/matacdc_scripts/case5_2grids_MC.m")
 # ==============================
 
 datadc = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
+
 function build_mc_data!(base_data; conductors::Int=3)
+# function build_mc_data!(base_data)
     mp_data = PowerModels.parse_file(base_data)
     # _PMACDC.process_additional_data!(base_data)
     # _PD.make_multiconductor!(mp_data, conductors)
@@ -49,8 +56,8 @@ end
 
 
 
-datadc["busdc"]["1"]["Vdcmax"][2]
-datadc["busdc"]["1"]["vmax"][2]
+datadc["busdc"]["1"]["Vdcmax"]
+datadc["bus"]["1"]["vmax"]
 
 datadc["branchdc"]["1"]["r"][2]
 datadc["branch"]["1"]["r"][2]
