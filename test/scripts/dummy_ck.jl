@@ -50,7 +50,7 @@ function build_mc_data!(base_data; conductors::Int=3)
     mp_data = PowerModels.parse_file(base_data)
     # _PMACDC.process_additional_data!(base_data)
     # _PD.make_multiconductor!(mp_data, conductors)
-    make_multiconductor!(mp_data, conductors)
+    _make_multiconductor!(mp_data, conductors)
     return mp_data
 end
 
