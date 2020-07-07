@@ -1,5 +1,3 @@
-import PowerModelsACDC
-const _PMACDC = PowerModelsACDC
 import PowerModels
 const _PM = PowerModels
 import Ipopt

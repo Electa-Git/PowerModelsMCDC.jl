@@ -3,7 +3,7 @@ export run_acdcopf
 ""
 function run_mcdcopf(file::String, model_type::Type, solver; kwargs...)
     data = _PM.parse_file(file)
-    PowerModelsACDC.process_additional_data!(data)
+    process_additional_data!(data)
     return run_acdcopf(data, model_type, solver; ref_extensions = [add_ref_dcgrid!], kwargs...)
 end
 
