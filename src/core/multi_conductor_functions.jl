@@ -24,13 +24,14 @@ const _DCdata=["busdc", "convdc", "branchdc"]
 const _conductor_matrix = Set(["br_r", "br_x", "rc", "xc", "rtf", "xtf", "bf"])
 
 
+
 function _make_multiconductor!(data::Dict{String,<:Any}, conductors::Real)
     if haskey(data, "conductors")
         Memento.warn(_LOGGER, "skipping network that is already multiconductor")
         return
     end
 
-    data["conductors"] = conductors
+    data["conductors_dc"] = conductors
 
     for (key, item) in data
      if key in _DCdata

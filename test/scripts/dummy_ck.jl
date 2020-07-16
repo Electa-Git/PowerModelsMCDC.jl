@@ -1,7 +1,8 @@
-using LinearAlgebra, LinearAlgebra: I
+using LinearAlgebra
+using LinearAlgebra: I
 import PowerModels
 const _PM = PowerModels
-
+using PowerModelsMCDC
 # import PowerModelsDistribution
 # const _PD = PowerModelsDistribution
 
@@ -18,7 +19,7 @@ data11 = _PM.parse_file("./test/data/matacdc_scripts/case5_2grids_MC.m")
 
 result = _PMACDC.run_acdcopf("./test/data/matacdc_scripts/case5_2grids_MC.m", _PM.ACPPowerModel, ipopt_solver)
 
-result1 = run_mcdcopf(file, _PM.ACPPowerModel, ipopt_solver)
+result1 = run_acdcopf(file, _PM.ACPPowerModel, ipopt_solver)
 
 data = _PM.parse_file("../PowerModelsMCDC.jl/test/data/matacdc_scripts/case5_2grids_MC.m")
 
@@ -52,6 +53,7 @@ function build_mc_data!(base_data; conductors::Int=3)
     return mp_data
 end
 
+result = run_mcdcopf(datadc, _PM.DCPPowerModel, ipopt_solver)
 
 
 datadc["busdc"]["1"]["Vdcmax"]

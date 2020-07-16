@@ -6,9 +6,9 @@ module PowerModelsMCDC
 import JuMP
 import Memento
 import PowerModels
-import PowerModelsACDC
+# import PowerModelsACDC
 const _PM = PowerModels
-const _PMACDC = PowerModelsACDC
+# const _PMACDC = PowerModelsACDC
 import InfrastructureModels
 # import InfrastructureModels: ids, ref, var, con, sol, nw_ids, nws, optimize_model!, @im_fields
 const _IM = InfrastructureModels

@@ -1,27 +1,27 @@
-export run_acdcopf
+export run_mcdcopf
 
 ""
-function run_acdcopf(file::String, model_type::Type, solver; kwargs...)
+function run_mcdcopf(file::String, model_type::Type, solver; kwargs...)
     data = _PM.parse_file(file)
     PowerModelsACDC.process_additional_data!(data)
-    return run_acdcopf(data, model_type, solver; ref_extensions = [add_ref_dcgrid!], kwargs...)
+    return run_mcdcopf(data, model_type, solver; ref_extensions = [add_ref_dcgrid!], kwargs...)
 end
 
 ""
-function run_acdcopf(data::Dict{String,Any}, model_type::Type, solver; kwargs...)
-    return _PM.run_model(data, model_type, solver, post_acdcopf; ref_extensions = [add_ref_dcgrid!], kwargs...)
+function run_mcdcopf(data::Dict{String,Any}, model_type::Type, solver; kwargs...)
+    return _PM.run_model(data, model_type, solver, post_mcdcopf; ref_extensions = [add_ref_dcgrid!], kwargs...)
 end
 
 ""
-function post_acdcopf(pm::_PM.AbstractPowerModel)
-    _PM.variable_voltage(pm)
-    _PM.variable_generation(pm)
-    _PM.variable_branch_flow(pm)
+function post_mcdcopf(pm::_PM.AbstractPowerModel)
+    # _PM.variable_voltage(pm)
+    # _PM.variable_generation(pm)
+    # _PM.variable_branch_flow(pm)
 
-    variable_active_dcbranch_flow(pm)
+    variable_mc_active_dcbranch_flow(pm)
+    variable_mcdcgrid_voltage_magnitude(pm)
     variable_dcbranch_current(pm)
     variable_dc_converter(pm)
-    variable_dcgrid_voltage_magnitude(pm)
 
     _PM.objective_min_fuel_cost(pm)
 
