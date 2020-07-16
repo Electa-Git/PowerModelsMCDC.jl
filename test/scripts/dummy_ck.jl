@@ -9,7 +9,7 @@ using PowerModelsMCDC
 using InfrastructureModels
 using JuMP
 using Ipopt
-
+using Memento
 
 
 ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=1)
@@ -24,20 +24,6 @@ result1 = run_acdcopf(file, _PM.ACPPowerModel, ipopt_solver)
 data = _PM.parse_file("../PowerModelsMCDC.jl/test/data/matacdc_scripts/case5_2grids_MC.m")
 
 data11 = _PM.parse_file("./test/data/matacdc_scripts/case5_2grids_MC.m")
-
-
-
-# datadc = build_mn_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m"; replicates::Int=3, conductors::Int=3)
-# datadc = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
-#
-# function build_mc_data!(base_data; conductors::Int=3)
-#     mp_data = PowerModels.parse_file(base_data)
-#     # _PMACDC.process_additional_data!(base_data)
-#     make_multiconductor!(mp_data["convdc"], conductors)
-#     return mp_data
-# end
-#
-# include("./multi_conductor_functions.jl")
 
 
 # ==============================

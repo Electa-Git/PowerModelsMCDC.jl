@@ -14,9 +14,9 @@ end
 
 ""
 function post_mcdcopf(pm::_PM.AbstractPowerModel)
-    # _PM.variable_voltage(pm)
-    # _PM.variable_generation(pm)
-    # _PM.variable_branch_flow(pm)
+    _PM.variable_voltage(pm)]
+    _PM.variable_generation(pm)
+    _PM.variable_branch_flow(pm)
 
     variable_mc_active_dcbranch_flow(pm)
     variable_mcdcgrid_voltage_magnitude(pm)
