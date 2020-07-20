@@ -3,6 +3,7 @@ using LinearAlgebra: I
 import PowerModels
 const _PM = PowerModels
 using PowerModelsMCDC
+const _PMMCDC= PowerModelsMCDC
 # import PowerModelsDistribution
 # const _PD = PowerModelsDistribution
 
@@ -17,7 +18,7 @@ ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=1)
 file="./test/data/matacdc_scripts/case5_2grids_MC.m"
 data11 = _PM.parse_file("./test/data/matacdc_scripts/case5_2grids_MC.m")
 
-result = _PMACDC.run_acdcopf("./test/data/matacdc_scripts/case5_2grids_MC.m", _PM.ACPPowerModel, ipopt_solver)
+# result = _PMACDC.run_acdcopf("./test/data/matacdc_scripts/case5_2grids_MC.m", _PM.ACPPowerModel, ipopt_solver)
 
 result1 = run_acdcopf(file, _PM.ACPPowerModel, ipopt_solver)
 
@@ -35,7 +36,7 @@ function build_mc_data!(base_data; conductors::Int=3)
     mp_data = PowerModels.parse_file(base_data)
     # _PMACDC.process_additional_data!(base_data)
     # _PD.make_multiconductor!(mp_data, conductors)
-    _make_multiconductor!(mp_data, conductors)
+    _PMMCDC._make_multiconductor!(mp_data, conductors)
     return mp_data
 end
 
@@ -48,18 +49,28 @@ datadc["bus"]["1"]["vmax"]
 datadc["branchdc"]["1"]["r"][2]
 datadc["branch"]["1"]["r"][2]
 
+################### new multiconductor#####
 
+datadc_new = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
 
-#
-# function build_mn_mc_data!(base_data; replicates::Int=3, conductors::Int=3)
-#     mp_data = PowerModels.parse_file(base_data)
-#     make_multiconductor!(mp_data, conductors)
-#     mn_mc_data = PowerModels.replicate(mp_data, replicates)
-#     mn_mc_data["conductors"] = mn_mc_data["nw"]["1"]["conductors"]
-#     return mn_mc_data
-# end
-#
-#
-# function build_mn_mc_data!(base_data_1, base_data_2; conductors_1::Int=3, conductors_2::Int=3)
-#     mp_data_1 = PowerModels.parse_file(base_data_1)
-#     mp_data_2 = PowerModels.parse_file(base_data_2)
+function build_mc_data!(base_data)
+# function build_mc_data!(base_data)
+    mp_data = PowerModels.parse_file(base_data)
+    # _PMACDC.process_additional_data!(base_data)
+    # _PD.make_multiconductor!(mp_data, conductors)
+    _make_multiconductor_new!(mp_data)
+    return mp_data
+end
+
+data11["branchdc"]["1"]["confi"]
+data11["convdc"]["1"]["confi"]
+
+datadc_new["branchdc"]["3"]["confi"]
+
+haskey(data11["branchdc"]["1"], "confi")
+
+for (i,j) in data11["branchdc"]["1"]
+    println(i)
+    println(j)
+    println("gap")
+end

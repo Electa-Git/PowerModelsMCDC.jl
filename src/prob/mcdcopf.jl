@@ -14,7 +14,7 @@ end
 
 ""
 function post_mcdcopf(pm::_PM.AbstractPowerModel)
-    _PM.variable_voltage(pm)]
+    _PM.variable_voltage(pm)
     _PM.variable_generation(pm)
     _PM.variable_branch_flow(pm)
 

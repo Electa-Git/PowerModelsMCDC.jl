@@ -84,12 +84,14 @@ end
 
 "variable: `p_dcgrid[l,i,j]` for `(l,i,j)` in `arcs_dcgrid`"
 function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
-    cnds = _PM.conductor_ids(pm; nw=nw)
+    for (l,i,j) in _PM.ref(pm, nw, :arcs_dcgrid)
+    # cnds = _PM.conductor_ids(pm; nw=nw)
+
     ncnds = length(cnds)
     p = _PM.var(pm, nw)[:p_dcgrid] = Dict((l,i,j) =>JuMP.@variable(pm.model,
         [c in 1:ncnds], base_name="$(nw)_pdcgrid_$((l,i,j))",
         start = comp_start_value(_PM.ref(pm, nw, :branchdc, l), "p_start", c, 0.0)
-        ) for (l,i,j) in _PM.ref(pm, nw, :arcs_dcgrid)
+        )
     )
     display(p)
     display(ncnds)

@@ -34,6 +34,7 @@ include("core/constraint.jl")
 include("core/objective.jl")
 include("core/relaxation_scheme.jl")
 include("core/multi_conductor_functions.jl")
+include("core/new_multi_conductor_functions")
 include("core/constraint_template.jl")
 
 include("formdcgrid/dcp.jl")
