@@ -16,7 +16,7 @@ end
 const _conductorless = Set(["basekVdc", "source_id", "busdc_i", "grid", "index",
 "return_type", "status", "confi", "return_z", "fbusdc", "tbusdc","busac_i", "dVdcset", "Vdcset", "basekVac",
 "type_dc", "filter", "reactor", "transformer", "type_dc", "P_g", "Q_g", "Vtar", "status", "islcc",
-"Pdcset", "droop", "ground_type", "line_confi", "conv_confi", "ground_z", "type_dc"])
+"Pdcset", "droop", "ground_type", "line_confi", "conv_confi", "ground_z", "type_dc","conductors"])
 #Assumed: control modes and setpoints are not per conductor.
 
 "only dc side data"
@@ -37,7 +37,7 @@ function _make_multiconductor_new!(data::Dict{String,<:Any})
 
     for (key, item) in data
      if key in _DCdata
-         display(key)
+         # display(key)
         if isa(item, Dict{String,Any})
             for (item_id, item_data) in item
                 if isa(item_data, Dict{String,Any})
@@ -79,6 +79,6 @@ function conductorsDC_number(item_data::Dict{String,<:Any})
         else
             conductors= 3
         end
-        println("pass")
+        # println("pass")
         return conductors
 end

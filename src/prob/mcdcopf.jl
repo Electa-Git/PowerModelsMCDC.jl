@@ -3,7 +3,7 @@ export run_mcdcopf
 ""
 function run_mcdcopf(file::String, model_type::Type, solver; kwargs...)
     data = _PM.parse_file(file)
-    PowerModelsACDC.process_additional_data!(data)
+    process_additional_data!(data)
     return run_mcdcopf(data, model_type, solver; ref_extensions = [add_ref_dcgrid!], kwargs...)
 end
 
@@ -14,9 +14,9 @@ end
 
 ""
 function post_mcdcopf(pm::_PM.AbstractPowerModel)
-    _PM.variable_voltage(pm)
-    _PM.variable_generation(pm)
-    _PM.variable_branch_flow(pm)
+    # _PM.variable_voltage(pm)
+    # _PM.variable_generation(pm)
+    # _PM.variable_branch_flow(pm)
 
     variable_mc_active_dcbranch_flow(pm)
     variable_mcdcgrid_voltage_magnitude(pm)

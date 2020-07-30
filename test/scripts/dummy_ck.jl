@@ -8,6 +8,7 @@ const _PMMCDC= PowerModelsMCDC
 # const _PD = PowerModelsDistribution
 
 using InfrastructureModels
+const _IM=InfrastructureModels
 using JuMP
 using Ipopt
 using Memento
