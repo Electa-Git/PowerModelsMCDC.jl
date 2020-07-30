@@ -39,9 +39,9 @@ include("core/constraint_template.jl")
 include("core/variable_mcdcgrid.jl")
 
 include("formdcgrid/dcp.jl")
-
 include("formconv/dcp.jl")
 
+include("prob/acdcopf.jl")
 include("prob/mcdcopf.jl")
 
 end
