@@ -50,7 +50,7 @@ end
 
 function relaxation_semicont_variable_on_off(m::JuMP.Model, a::JuMP.VariableRef, z::JuMP.VariableRef)
     a_lb, a_ub = _IM.variable_domain(a)
-    
+
     JuMP.@constraint(m, a <= a_ub*z)
     JuMP.@constraint(m, a >= a_lb*z)
 end

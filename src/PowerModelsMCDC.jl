@@ -37,6 +37,7 @@ include("core/multi_conductor_functions.jl")
 include("core/new_multi_conductor_functions.jl")
 include("core/constraint_template.jl")
 include("core/variable_mcdcgrid.jl")
+include("core/variableconv_mc.jl")
 
 include("formdcgrid/dcp.jl")
 include("formconv/dcp.jl")

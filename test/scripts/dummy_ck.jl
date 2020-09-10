@@ -14,6 +14,7 @@ using Ipopt
 using Memento
 
 
+
 ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=1)
 
 file="./test/data/matacdc_scripts/case5_2grids_MC.m"
@@ -21,12 +22,12 @@ data11 = _PM.parse_file("./test/data/matacdc_scripts/case5_2grids_MC.m")
 
 # result = _PMACDC.run_acdcopf("./test/data/matacdc_scripts/case5_2grids_MC.m", _PM.ACPPowerModel, ipopt_solver)
 
-result1 = run_acdcopf(file, _PM.ACPPowerModel, ipopt_solver)
+result1 = _PMMCDC.run_acdcopf(file, _PM.ACPPowerModel, ipopt_solver)
 
 data = _PM.parse_file("../PowerModelsMCDC.jl/test/data/matacdc_scripts/case5_2grids_MC.m")
 
 data11 = _PM.parse_file("./test/data/matacdc_scripts/case5_2grids_MC.m")
-
+data11["multinetwork"]
 
 # ==============================
 
@@ -50,6 +51,7 @@ datadc["bus"]["1"]["vmax"]
 datadc["branchdc"]["1"]["r"][2]
 datadc["branch"]["1"]["r"][2]
 
+
 ################### new multiconductor#####
 
 datadc_new = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
@@ -57,21 +59,26 @@ datadc_new = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
 function build_mc_data!(base_data)
 # function build_mc_data!(base_data)
     mp_data = PowerModels.parse_file(base_data)
-    # _PMACDC.process_additional_data!(base_data)
+    PowerModelsMCDC.process_additional_data!(mp_data)
     # _PD.make_multiconductor!(mp_data, conductors)
-    _make_multiconductor_new!(mp_data)
+    PowerModelsMCDC._make_multiconductor_new!(mp_data)
     return mp_data
 end
 
-data11["branchdc"]["1"]["confi"]
-data11["convdc"]["1"]["confi"]
+result1 = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver)
 
 datadc_new["branchdc"]["3"]["confi"]
+datadc_new["branchdc"]["3"]["conductors"]
+datadc_new["convdc"]["1"]["acrated"]
+datadc_new["convdc"]["1"]["Pacrated"]
+println(datadc_new["convdc"]["1"])
 
 haskey(data11["branchdc"]["1"], "confi")
 
-for (i,j) in data11["branchdc"]["1"]
+for (i,j) in datadc_new["branchdc"]["1"]
     println(i)
-    println(j)
-    println("gap")
+    println("gap1")
+    # println(j)
+    # println("gap2")
+    break
 end

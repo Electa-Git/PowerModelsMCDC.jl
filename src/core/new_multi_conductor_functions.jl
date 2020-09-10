@@ -15,9 +15,10 @@ end
 "feild names that should not be multi-conductor values"
 const _conductorless = Set(["basekVdc", "source_id", "busdc_i", "grid", "index",
 "return_type", "status", "confi", "return_z", "fbusdc", "tbusdc","busac_i", "dVdcset", "Vdcset", "basekVac",
-"type_dc", "filter", "reactor", "transformer", "type_dc", "P_g", "Q_g", "Vtar", "status", "islcc",
+"type_dc", "filter", "reactor", "transformer", "type_dc", "Vtar", "status", "islcc",
 "Pdcset", "droop", "ground_type", "line_confi", "conv_confi", "ground_z", "type_dc","conductors"])
 #Assumed: control modes and setpoints are not per conductor.
+# "P_g", "Q_g", removed due to conv set point. Should be tacked differently if multiconductor of AC is considered
 
 "only dc side data"
 const _DCdata=["busdc", "convdc", "branchdc"]
