@@ -22,7 +22,8 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     bus_arcs_dcgrid = _PM.ref(pm, nw, :bus_arcs_dcgrid, i)
     bus_convs_dc = _PM.ref(pm, nw, :bus_convs_dc, i)
     pd = _PM.ref(pm, nw, :busdc, i)["Pdc"]
-    constraint_kcl_shunt_dcgrid(pm, nw, i, bus_arcs_dcgrid, bus_convs_dc, pd)
+    total_cond = _PM.ref(pm, nw, :busdc,i)["conductors"]
+    constraint_kcl_shunt_dcgrid(pm, nw, i, bus_arcs_dcgrid, bus_convs_dc, pd, total_cond)
 end
 #
 function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
@@ -31,10 +32,11 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=p
     t_bus = branch["tbusdc"]
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
+    total_cond = _PM.ref(pm, nw, :branchdc, i)["conductors"]
 
     p = _PM.ref(pm, nw, :dcpol)
 
-    constraint_ohms_dc_branch(pm, nw, f_bus, t_bus, f_idx, t_idx, branch["r"], p)
+    constraint_ohms_dc_branch(pm, nw, f_bus, t_bus, f_idx, t_idx, branch["r"], p, total_cond)
 end
 #
 function constraint_converter_losses(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)

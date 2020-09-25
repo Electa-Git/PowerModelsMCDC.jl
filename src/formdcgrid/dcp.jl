@@ -10,8 +10,9 @@ function constraint_kcl_shunt(pm::_PM.AbstractDCPModel, n::Int,  i::Int, bus_arc
     pconv_ac = _PM.var(pm, n, :pconv_ac)
     pconv_grid_ac = _PM.var(pm, n, :pconv_tf_fr)
     v = 1
-
-    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(pconv_grid_ac[c] for c in bus_convs_ac)  == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*v^2)
+    # display("constraint_kcl_shunt")
+    # display(p[a] for a in bus_arcs)
+    display(JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(pconv_grid_ac[c][1] for c in bus_convs_ac)  == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*v^2))
 end
 
 """
@@ -21,12 +22,15 @@ Creates Ohms constraints for DC branches
 p[f_idx] + p[t_idx] == 0)
 ```
 """
-function constraint_ohms_dc_branch(pm::_PM.AbstractDCPModel, n::Int,  f_bus, t_bus, f_idx, t_idx, r, p)
+function constraint_ohms_dc_branch(pm::_PM.AbstractDCPModel, n::Int,  f_bus, t_bus, f_idx, t_idx, r, p, total_cond)
     p_dc_fr = _PM.var(pm, n, :p_dcgrid, f_idx)
     p_dc_to = _PM.var(pm, n, :p_dcgrid, t_idx)
 
-    JuMP.@constraint(pm.model, p_dc_fr + p_dc_to == 0)
+    for c = 1: total_cond
+        display(JuMP.@constraint(pm.model, p_dc_fr[c] + p_dc_to[c] == 0))
+    end
 end
+
 "`vdc[i] == vdcm`"
 function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractDCPModel, n::Int,  i, vdcm)
     # not used

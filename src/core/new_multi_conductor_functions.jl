@@ -11,12 +11,13 @@ function make_multiconductor_new!(data::Dict{String,<:Any})
     end
 end
 
-
+#TODO put names in the order of .m files so that they are easy to find. Everything that doesn't have a conductorwise choice to be
+#in this field for now
 "feild names that should not be multi-conductor values"
 const _conductorless = Set(["basekVdc", "source_id", "busdc_i", "grid", "index",
 "return_type", "status", "confi", "return_z", "fbusdc", "tbusdc","busac_i", "dVdcset", "Vdcset", "basekVac",
-"type_dc", "filter", "reactor", "transformer", "type_dc", "Vtar", "status", "islcc",
-"Pdcset", "droop", "ground_type", "line_confi", "conv_confi", "ground_z", "type_dc","conductors"])
+"type_dc", "filter", "reactor", "transformer", "type_ac", "Vtar", "status", "islcc",
+"Pdcset", "droop", "ground_type", "line_confi", "connect_at", "conv_confi", "ground_z", "type_dc","conductors"])
 #Assumed: control modes and setpoints are not per conductor.
 # "P_g", "Q_g", removed due to conv set point. Should be tacked differently if multiconductor of AC is considered
 
@@ -72,13 +73,13 @@ function conductorsDC_number(item_data::Dict{String,<:Any})
                  conductors= 1
              else conductors= 2
              end
-         elseif haskey(item_data, "confi")
+         elseif haskey(item_data, "line_confi")
              if item_data["line_confi"]== 1 #monopolar/symmetrical dc line
                 conductors= 2
             else conductors= 3
             end
         else
-            conductors= 3
+            conductors= 3  # for buses
         end
         # println("pass")
         return conductors

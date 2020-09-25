@@ -247,21 +247,27 @@ end
 function variable_dcside_power(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
     bigM = 1.2; # to account for losses, maximum losses to be derived
     pcdc = _PM.var(pm, nw)[:pconv_dc] = Dict(i =>JuMP.@variable(pm.model,
-    [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]], base_name="$(nw)_pconv_dc_$(i)",
+    [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"] + 1], base_name="$(nw)_pconv_dc_$(i)",
     start = 1.0 #comp_start_value(_PM.ref(pm, nw, :convdc, i), "Pdcset", c, 1.0)
     ) for i in _PM.ids(pm, nw, :convdc)
     )
+    # (+1) in above function for neutral or ground - if conductors are adjusted ac side will also be parsed for neutral
 
     # pprfr = _PM.var(pm, nw)[:pconv_pr_fr] = Dict(i =>JuMP.@variable(pm.model,
     # [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]], base_name="$(nw)_pconv_pr_fr_$(i)",
     # start = comp_start_value(_PM.ref(pm, nw, :convdc, i), "P_g", c, 1.0)
     # ) for i in _PM.ids(pm, nw, :convdc)
     # )
-
+    display("pcdc")
+    display(pcdc)
     if bounded
-        for (c, convdc) in _PM.ref(pm, nw, :convdc)
-            JuMP.set_lower_bound.(pcdc[c],  -convdc["Pacrated"] * bigM)
-            JuMP.set_upper_bound.(pcdc[c],   convdc["Pacrated"] * bigM)
+        for i in _PM.ids(pm, nw, :convdc)
+            for c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]
+            display(pcdc[i])
+            display(convdc["Pacrated"])
+            JuMP.set_lower_bound.(pcdc[i],  -_PM.ref(pm, nw, :convdc)[i]["Pacrated"][c] * bigM)
+            JuMP.set_upper_bound.(pcdc[i],   _PM.ref(pm, nw, :convdc)[i]["Pacrated"][c] * bigM)
+            end
         end
     end
 

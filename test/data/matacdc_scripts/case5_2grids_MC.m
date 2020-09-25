@@ -90,9 +90,9 @@ mpc.convdc = [
 %% branches
 %column_names%   fbusdc  tbusdc  r      l        c   rateA   rateB   rateC   status line_confi return_type return_z connect_at
 mpc.branchdc = [
-  1       4       0.052   0   0    100     100     100     1  2 3 0.04 0;
-	2       4       0.052   0   0    100     100     100     1  2 3 0.04 0;
-	3       4       0.052   0   0    100     100     100     1  1 3 0.04 1;
+  1       4       0.052   0   0    100     100     100     1  2 2 0.04 0;  %bipolar
+	2       4       0.052   0   0    100     100     100     1  2 2 0.04 0;  %bipolar
+	3       4       0.052   0   0    100     100     100     1  1 2 0.04 1;  %monopolar
  ];
 
 %% generator cost data

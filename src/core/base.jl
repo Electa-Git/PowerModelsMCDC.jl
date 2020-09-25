@@ -17,6 +17,49 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             end
             nw_ref[:bus_arcs_dcgrid] = bus_arcs_dcgrid
 
+            # bus_line_conn = Dict([(bus["busdc_i"], []) for (i,bus) in nw_ref[:busdc]])
+            # for (l,i,j) in nw_ref[:arcs_dcgrid]
+            #     push!(bus_line_conn[i], l)
+            # end
+            # nw_ref[:bus_line_conn] = bus_line_conn
+            # display("bus_line_conn")
+            # display(bus_line_conn)
+
+            #bus arcs of the DC grid - conductor connections
+            # display("nw_ref_busdc")
+             bus_arcs_dcgrid_cond = Dict([( (bus["busdc_i"], c), Dict()) for c in 1:3 for (i,bus) in nw_ref[:busdc]])
+            # display(bus_arcs_dcgrid_cond)
+
+           for (l,i,j) in nw_ref[:arcs_dcgrid]
+                 # for c = 1:length(nw_ref[:busdc][i]["conductors"])
+                 # display("l:$l")
+                 # display(bus_arcs_dcgrid_cond[(i, c)])
+                 # display("line_confi")
+                 # display(nw_ref[:branchdc][l]["line_confi"])
+                 # display("connect_at")
+                 # display(nw_ref[:branchdc][l]["connect_at"])
+                    if nw_ref[:branchdc][l]["line_confi"] == 1
+                        if nw_ref[:branchdc][l]["connect_at"] == 0
+                            push!(bus_arcs_dcgrid_cond[(i, 1)], (l,i,j) =>1 )
+                            push!(bus_arcs_dcgrid_cond[(i, 3)], (l,i,j) =>2)
+                        elseif  nw_ref[:branchdc][l]["connect_at"] == 1
+                            push!(bus_arcs_dcgrid_cond[(i, 1)], (l,i,j) =>1)
+                            push!(bus_arcs_dcgrid_cond[(i, 2)], (l,i,j) =>2)
+                        elseif  nw_ref[:branchdc][l]["connect_at"] == 2
+                            push!(bus_arcs_dcgrid_cond[(i, 2)], (l,i,j) =>2)
+                            push!(bus_arcs_dcgrid_cond[(i, 3)], (l,i,j) =>3)
+                        end
+                    elseif nw_ref[:branchdc][l]["line_confi"] == 2
+                        push!(bus_arcs_dcgrid_cond[(i, 1)], (l,i,j) =>1)
+                        push!(bus_arcs_dcgrid_cond[(i, 2)], (l,i,j) =>2)
+                        push!(bus_arcs_dcgrid_cond[(i, 3)], (l,i,j) =>3)
+                    end
+                 # end
+            end
+            nw_ref[:bus_arcs_dcgrid_cond] = bus_arcs_dcgrid_cond
+            display("bus_arcs_dcgrid_cond")
+            display(bus_arcs_dcgrid_cond)
+
             # bus_convs for AC side power injection of DC converters
             bus_convs_ac = Dict([(i, []) for (i,bus) in nw_ref[:bus]])
             for (i,conv) in nw_ref[:convdc]
@@ -30,6 +73,34 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                 push!(bus_convs_dc[conv["busdc_i"]], i)
             end
             nw_ref[:bus_convs_dc] = bus_convs_dc
+
+            # bus_convs for AC side power injection of DC converters - conductor references
+            bus_convs_dc_cond = Dict([((bus["busdc_i"], c), Dict())  for c in 1:3  for (i,bus) in nw_ref[:busdc]])
+            for (i, conv) in nw_ref[:convdc]
+                bus = conv["busdc_i"]
+                  for c = 1:length(nw_ref[:busdc][i]["conductors"])
+                     if conv["conv_confi"] == 1
+                         if conv["connect_at"] == 0
+                             push!(bus_convs_dc_cond[(bus, 1)], i =>1 )
+                             push!(bus_convs_dc_cond[(bus, 3)], i =>2)
+                         elseif  conv["connect_at"] == 1
+                             push!(bus_convs_dc_cond[(bus, 1)], i =>1)
+                             push!(bus_convs_dc_cond[(bus, 2)], i =>2)
+                         elseif  conv["connect_at"] == 2
+                             push!(bus_convs_dc_cond[(bus, 2)], i =>2)
+                             push!(bus_convs_dc_cond[(bus, 3)], i =>3)
+                         end
+                     elseif conv["conv_confi"] == 2
+                         push!(bus_convs_dc_cond[(bus, 1)], i =>1)
+                         push!(bus_convs_dc_cond[(bus, 2)], i =>2)
+                         push!(bus_convs_dc_cond[(bus, 3)], i =>3)
+                     end
+                  end
+             end
+
+            nw_ref[:bus_convs_dc_cond] = bus_convs_dc_cond
+            # display("bus_convs_dc_cond")
+            # display(bus_convs_dc_cond)
             # Add DC reference buses
             ref_buses_dc = Dict{String, Any}()
             for (k,v) in nw_ref[:convdc]

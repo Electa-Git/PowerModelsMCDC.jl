@@ -7,11 +7,15 @@ end
 sum(p_dcgrid[a] for a in bus_arcs_dcgrid) + sum(pconv_dc[c] for c in bus_convs_dc) == pd
 ```
 """
-function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int, bus_arcs_dcgrid, bus_convs_dc, pd)
+function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int, bus_arcs_dcgrid, bus_convs_dc, pd, total_cond)
     p_dcgrid = _PM.var(pm, n, :p_dcgrid)
     pconv_dc = _PM.var(pm, n, :pconv_dc)
-
-    JuMP.@constraint(pm.model, sum(p_dcgrid[a] for a in bus_arcs_dcgrid) + sum(pconv_dc[c] for c in bus_convs_dc) == (-pd))
+    bus_arcs_dcgrid_cond = _PM.ref(pm, n, :bus_arcs_dcgrid_cond)
+    bus_convs_dc_cond =  _PM.ref(pm, n, :bus_convs_dc_cond)
+    display("KCL at bus:$i")
+    for k = 1: total_cond
+         display(JuMP.@constraint(pm.model, sum(p_dcgrid[c][d] for (c,d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(pconv_dc[c][d] for (c,d) in bus_convs_dc_cond[(i, k)]) == (-pd[k])))
+    end
 end
 
 "`pconv[i] == pconv`"
