@@ -5,9 +5,9 @@ Creates lossy converter model between AC and DC grid, assuming U_i is approximat
 pconv_ac[i] + pconv_dc[i] == a + b*pconv_ac
 ```
 """
-function constraint_converter_losses(pm::_PM.AbstractDCPModel, n::Int,  i::Int, a, b, c, plmax)
-    pconv_ac = _PM.var(pm, n, :pconv_ac, i)
-    pconv_dc = _PM.var(pm, n, :pconv_dc, i)
+function constraint_converter_losses(pm::_PM.AbstractDCPModel, n::Int,  i::Int, a, b, c, plmax, cond)
+    pconv_ac = _PM.var(pm, n, :pconv_ac, i)[cond]
+    pconv_dc = _PM.var(pm, n, :pconv_dc, i)[cond]
     v = 1 #pu, assumption to approximate current
     cm_conv_ac = pconv_ac/v # can actually be negative, not a very nice model...
     if pm.setting["conv_losses_mp"] == true
@@ -30,19 +30,19 @@ p_tf_fr == -btf*(v^2)/tm*(va-vaf)
 p_tf_to == -btf*(v^2)/tm*(vaf-va)
 ```
 """
-function constraint_conv_transformer(pm::_PM.AbstractDCPModel, n::Int,  i::Int, rtf, xtf, acbus, tm, transformer)
-    ptf_fr = _PM.var(pm, n, :pconv_tf_fr, i)
-    ptf_to = _PM.var(pm, n, :pconv_tf_to, i)
+function constraint_conv_transformer(pm::_PM.AbstractDCPModel, n::Int,  i::Int, rtf, xtf, acbus, tm, transformer, cond)
+    ptf_fr = _PM.var(pm, n, :pconv_tf_fr, i)[cond]
+    ptf_to = _PM.var(pm, n, :pconv_tf_to, i)[cond]
 
-    vaf = _PM.var(pm, n, :vaf, i)
+    vaf = _PM.var(pm, n, :vaf, i)[cond]
     va = _PM.var(pm, n, :va, acbus)
 
     if transformer
-        btf = imag(1/(im*xtf)) # classic DC approach to obtain susceptance form
+         btf = imag(1/(im*xtf)) # classic DC approach to obtain susceptance form
         v = 1 # pu, assumption DC approximation
         # _PM.con(pm, n, :conv_tf_p_fr)[i] = JuMP.@constraint(pm.model, ptf_fr == -btf*(v^2)/tm*(va-vaf))
         # _PM.con(pm, n, :conv_tf_p_to)[i] = JuMP.@constraint(pm.model, ptf_to == -btf*(v^2)/tm*(vaf-va))
-        JuMP.@constraint(pm.model, ptf_fr == -btf*(v^2)/tm*(va-vaf))
+        display(JuMP.@constraint(pm.model, ptf_fr == -btf*(v^2)/tm*(va-vaf)))
         JuMP.@constraint(pm.model, ptf_to == -btf*(v^2)/tm*(vaf-va))
     else
         # _PM.con(pm, n, :conv_tf_p_fr)[i] = JuMP.@constraint(pm.model, va == vaf)
@@ -59,18 +59,22 @@ p_pr_fr == -bc*(v^2)*(vaf-vac)
 pconv_ac == -bc*(v^2)*(vac-vaf)
 ```
 """
-function constraint_conv_reactor(pm::_PM.AbstractDCPModel, n::Int,  i::Int, rc, xc, reactor)
-    ppr_fr = _PM.var(pm, n, :pconv_pr_fr, i)
-    pconv_ac = _PM.var(pm, n, :pconv_ac, i)
-    vaf = _PM.var(pm, n, :vaf, i)
-    vac = _PM.var(pm, n, :vac, i)
-
+function constraint_conv_reactor(pm::_PM.AbstractDCPModel, n::Int,  i::Int, rc, xc, reactor, cond)
+    ppr_fr = _PM.var(pm, n, :pconv_pr_fr, i)[cond]
+    pconv_ac = _PM.var(pm, n, :pconv_ac, i)[cond]
+    vaf = _PM.var(pm, n, :vaf, i)[cond]
+    vac = _PM.var(pm, n, :vac, i)[cond]
+    # display(ppr_fr)
+    # display(pconv_ac)
+    # display(vaf)
+    # display(vac)
     if reactor
+
         bc = imag(1/(im*xc))
         v = 1 # pu, assumption DC approximation
         # _PM.con(pm, n, :conv_pr_p)[i] = JuMP.@constraint(pm.model, ppr_fr == -bc*(v^2)*(vaf-vac))
         # _PM.con(pm, n, :conv_pr_p_to)[i] = JuMP.@constraint(pm.model, pconv_ac == -bc*(v^2)*(vac-vaf))
-        JuMP.@constraint(pm.model, ppr_fr == -bc*(v^2)*(vaf-vac))
+        display(JuMP.@constraint(pm.model, ppr_fr == -bc*(v^2)*(vaf-vac)))
         JuMP.@constraint(pm.model, pconv_ac == -bc*(v^2)*(vac-vaf))
     else
         # _PM.con(pm, n, :conv_pr_p)[i] =  JuMP.@constraint(pm.model, vac == vaf)
@@ -85,9 +89,9 @@ Converter filter constraints (no active power losses)
 p_pr_fr + p_tf_to == 0
 ```
 """
-function constraint_conv_filter(pm::_PM.AbstractDCPModel, n::Int,  i::Int, bv, filter)
-    ppr_fr = _PM.var(pm, n, :pconv_pr_fr, i)
-    ptf_to = _PM.var(pm, n, :pconv_tf_to, i)
+function constraint_conv_filter(pm::_PM.AbstractDCPModel, n::Int,  i::Int, bv, filter, cond)
+    ppr_fr = _PM.var(pm, n, :pconv_pr_fr, i)[cond]
+    ptf_to = _PM.var(pm, n, :pconv_tf_to, i)[cond]
 
     # _PM.con(pm, n, :conv_kcl_p)[i] = JuMP.@constraint(pm.model,   ppr_fr + ptf_to == 0 )
     JuMP.@constraint(pm.model,   ppr_fr + ptf_to == 0 )

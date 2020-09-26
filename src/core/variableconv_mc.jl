@@ -258,15 +258,14 @@ function variable_dcside_power(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bound
     # start = comp_start_value(_PM.ref(pm, nw, :convdc, i), "P_g", c, 1.0)
     # ) for i in _PM.ids(pm, nw, :convdc)
     # )
-    display("pcdc")
-    display(pcdc)
+    # display("pcdc")
+    # display(pcdc)
     if bounded
         for i in _PM.ids(pm, nw, :convdc)
             for c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]
-            display(pcdc[i])
-            display(convdc["Pacrated"])
-            JuMP.set_lower_bound.(pcdc[i],  -_PM.ref(pm, nw, :convdc)[i]["Pacrated"][c] * bigM)
-            JuMP.set_upper_bound.(pcdc[i],   _PM.ref(pm, nw, :convdc)[i]["Pacrated"][c] * bigM)
+            display(pcdc[i][c])
+            JuMP.set_lower_bound.(pcdc[i][c],  -_PM.ref(pm, nw, :convdc)[i]["Pacrated"][c] * bigM)
+            JuMP.set_upper_bound.(pcdc[i][c],   _PM.ref(pm, nw, :convdc)[i]["Pacrated"][c] * bigM)
             end
         end
     end

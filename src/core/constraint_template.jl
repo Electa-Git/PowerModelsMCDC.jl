@@ -44,8 +44,12 @@ function constraint_converter_losses(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     a = conv["LossA"]
     b = conv["LossB"]
     c = conv["LossCinv"]
-    plmax = conv["LossA"] + conv["LossB"] * conv["Pacrated"] + conv["LossCinv"] * (conv["Pacrated"])^2
-    constraint_converter_losses(pm, nw, i, a, b, c, plmax)
+     # plmax = Dict([(i, []) for i in 1:conv["conductors"] ])
+    for cond in 1:conv["conductors"]
+          plmax = conv["LossA"][cond] + conv["LossB"][cond] * conv["Pacrated"][cond] + conv["LossCinv"][cond] * (conv["Pacrated"][cond])^2
+        # push!(plmax[c], conv["LossA"][c] + conv["LossB"][c] * conv["Pacrated"][c] + conv["LossCinv"][c] * (conv["Pacrated"][c])^2 )
+        constraint_converter_losses(pm, nw, i, a[cond], b[cond], c[cond], plmax, cond)
+    end
 end
 
 function constraint_converter_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
@@ -73,19 +77,35 @@ end
 #
 function constraint_conv_reactor(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     conv = _PM.ref(pm, nw, :convdc, i)
-    constraint_conv_reactor(pm, nw, i, conv["rc"], conv["xc"], Bool(conv["reactor"]))
+
+    for cond in 1:conv["conductors"]
+        # display(conv["rc"][cond])
+        # display(conv["xc"][cond])
+        # display(conv["reactor"])
+        constraint_conv_reactor(pm, nw, i, conv["rc"][cond], conv["xc"][cond], Bool(conv["reactor"]), cond)
+    end
 end
 
 #
 function constraint_conv_filter(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     conv = _PM.ref(pm, nw, :convdc, i)
-    constraint_conv_filter(pm, nw, i, conv["bf"], Bool(conv["filter"]) )
+
+    for cond in 1:conv["conductors"]
+        constraint_conv_filter(pm, nw, i, conv["bf"][cond], Bool(conv["filter"]), cond)
+    end
 end
 
 #
 function constraint_conv_transformer(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     conv = _PM.ref(pm, nw, :convdc, i)
-    constraint_conv_transformer(pm, nw, i, conv["rtf"], conv["xtf"], conv["busac_i"], conv["tm"], Bool(conv["transformer"]))
+    # display("template")
+    for cond in 1:conv["conductors"]
+        # display(conv["rtf"][cond])
+        # display(conv["xtf"][cond])
+        # display(conv["busac_i"])
+        #  display(conv["tm"][cond])
+     constraint_conv_transformer(pm, nw, i, conv["rtf"][cond], conv["xtf"][cond], conv["busac_i"], conv["tm"][cond], Bool(conv["transformer"]), cond)
+    end
 end
 
 #
