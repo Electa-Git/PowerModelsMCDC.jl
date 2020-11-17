@@ -55,7 +55,7 @@ function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=pm
     if bounded
     for arc in _PM.ref(pm, nw, :arcs_dcgrid)
         l,i,j = arc
-        JuMP.set_lower_bound.(p[arc],0)
+        JuMP.set_lower_bound.(p[arc],-_PM.ref(pm, nw, :branchdc, l)["rateA"])
         JuMP.set_upper_bound.(p[arc],  _PM.ref(pm, nw, :branchdc, l)["rateA"])
     end
     end
@@ -63,6 +63,8 @@ function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=pm
 #
     println("dc branch power p")
     display(p)
+    # display("from index of dcgrid arcs= $(_PM.ref(pm, nw, :arcs_dcgrid_from))")
+
     # for i in _PM.ids(pm, nw, :busdc)
     #     display(_PM.ref(pm, nw, :busdc)[i]["conductors"])
     #     println("ref and ids")

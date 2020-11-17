@@ -24,7 +24,6 @@ gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
 
 
 function build_mc_data!(base_data)
-# function build_mc_data!(base_data)
     mp_data = PowerModels.parse_file(base_data)
     PowerModelsMCDC.process_additional_data!(mp_data)
     for (c,conv) in mp_data["convdc"]
@@ -35,13 +34,12 @@ function build_mc_data!(base_data)
         conv["LossB"]=0
         conv["LossCrec"]=0
         conv["LossCinv"]=0
-
     end
 
     # for (c,bn) in mp_data["branchdc"]
     #     bn["line_confi"]=1
     # end
-    # _PD.make_multiconductor!(mp_data, conductors)
+
     PowerModelsMCDC._make_multiconductor_new!(mp_data)
     return mp_data
 end

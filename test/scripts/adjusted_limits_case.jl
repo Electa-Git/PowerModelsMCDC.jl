@@ -35,20 +35,37 @@ function build_mc_data!(base_data)
         conv["LossB"]=0
         conv["LossCrec"]=0
         conv["LossCinv"]=0
-
     end
 
     # for (c,bn) in mp_data["branchdc"]
     #     bn["line_confi"]=1
     # end
-    # _PD.make_multiconductor!(mp_data, conductors)
     PowerModelsMCDC._make_multiconductor_new!(mp_data)
+    # Adjusting line limits
+    for (c,bn) in mp_data["branchdc"]
+        if bn["line_confi"]==2
+            bn["rateA"]=bn["rateA"]/2
+            bn["rateB"]=bn["rateB"]/2
+            bn["rateC"]=bn["rateC"]/2
+            bn["r"]=bn["r"]/2
+        end
+        metalic_cond_number= bn["conductors"]
+        bn["rateA"][metalic_cond_number]=bn["rateA"][metalic_cond_number]*0.1
+        bn["rateB"][metalic_cond_number]=bn["rateB"][metalic_cond_number]*0.1
+        bn["rateC"][metalic_cond_number]=bn["rateC"][metalic_cond_number]*0.1
+        bn["r"][metalic_cond_number]=bn["return_z"]
+    end
+
+      # Adjusting conveter limits
+      for (c,conv) in mp_data["convdc"]
+         if conv["conv_confi"]==2
+             conv["Pacmax"]=conv["Pacmax"]/2
+         end
+      end
     return mp_data
 end
 
 datadc_new = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
-
-
 
 file="./test/data/matacdc_scripts/case5_2grids_MC.m"
 
@@ -85,7 +102,7 @@ end
 for i in 1:3
      # display("power from grid to dc at converter $i")
      display("power pgrid at converter $i")
-    display(result_acdc["solution"]["convdc"]["$i"]["pgrid"])
+    display(result_mcdc["solution"]["convdc"]["$i"]["pgrid"])
 end
 for i in 1:3
     display("flow of over dc branch $i")

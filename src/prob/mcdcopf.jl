@@ -21,7 +21,7 @@ function post_mcdcopf(pm::_PM.AbstractPowerModel)
     variable_mc_active_dcbranch_flow(pm)
     variable_mcdcgrid_voltage_magnitude(pm)
     variable_dcbranch_current(pm)
-    variable_dc_converter(pm)
+    variable_mcdc_converter(pm)
 
     _PM.objective_min_fuel_cost(pm)
 
@@ -44,17 +44,21 @@ function post_mcdcopf(pm::_PM.AbstractPowerModel)
         _PM.constraint_thermal_limit_to(pm, i)
     end
     for i in _PM.ids(pm, :busdc)
+        display("Now it is callig dc grid kcl for bus $i")
         constraint_kcl_shunt_dcgrid(pm, i)
     end
     for i in _PM.ids(pm, :branchdc)
         constraint_ohms_dc_branch(pm, i)
     end
     for i in _PM.ids(pm, :convdc)
+        display("Now it is callig all converter constraints")
         constraint_converter_losses(pm, i)
+        constraint_converter_dc_ground(pm, i)
         constraint_converter_current(pm, i)
         constraint_conv_transformer(pm, i)
         constraint_conv_reactor(pm, i)
         constraint_conv_filter(pm, i)
+        display("end of constraints for converter $i")
         if pm.ref[:nw][pm.cnw][:convdc][i]["islcc"] == 1
             constraint_conv_firing_angle(pm, i)
         end

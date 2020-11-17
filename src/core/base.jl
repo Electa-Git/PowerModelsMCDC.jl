@@ -41,13 +41,13 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                     if nw_ref[:branchdc][l]["line_confi"] == 1
                         if nw_ref[:branchdc][l]["connect_at"] == 0
                             push!(bus_arcs_dcgrid_cond[(i, 1)], (l,i,j) =>1 )
-                            push!(bus_arcs_dcgrid_cond[(i, 3)], (l,i,j) =>2)
+                            push!(bus_arcs_dcgrid_cond[(i, 2)], (l,i,j) =>2)
                         elseif  nw_ref[:branchdc][l]["connect_at"] == 1
                             push!(bus_arcs_dcgrid_cond[(i, 1)], (l,i,j) =>1)
-                            push!(bus_arcs_dcgrid_cond[(i, 2)], (l,i,j) =>2)
+                            push!(bus_arcs_dcgrid_cond[(i, 3)], (l,i,j) =>2)
                         elseif  nw_ref[:branchdc][l]["connect_at"] == 2
-                            push!(bus_arcs_dcgrid_cond[(i, 2)], (l,i,j) =>2)
-                            push!(bus_arcs_dcgrid_cond[(i, 3)], (l,i,j) =>3)
+                            push!(bus_arcs_dcgrid_cond[(i, 2)], (l,i,j) =>1)
+                            push!(bus_arcs_dcgrid_cond[(i, 3)], (l,i,j) =>2)
                         end
                     elseif nw_ref[:branchdc][l]["line_confi"] == 2
                         push!(bus_arcs_dcgrid_cond[(i, 1)], (l,i,j) =>1)
@@ -82,13 +82,13 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                      if conv["conv_confi"] == 1
                          if conv["connect_at"] == 0
                              push!(bus_convs_dc_cond[(bus, 1)], i =>1 )
-                             push!(bus_convs_dc_cond[(bus, 3)], i =>2)
+                             push!(bus_convs_dc_cond[(bus, 2)], i =>2)
                          elseif  conv["connect_at"] == 1
                              push!(bus_convs_dc_cond[(bus, 1)], i =>1)
-                             push!(bus_convs_dc_cond[(bus, 2)], i =>2)
+                             push!(bus_convs_dc_cond[(bus, 3)], i =>2)
                          elseif  conv["connect_at"] == 2
-                             push!(bus_convs_dc_cond[(bus, 2)], i =>2)
-                             push!(bus_convs_dc_cond[(bus, 3)], i =>3)
+                             push!(bus_convs_dc_cond[(bus, 2)], i =>1)
+                             push!(bus_convs_dc_cond[(bus, 3)], i =>2) #'i' is for variable where as (bus,3) for connection
                          end
                      elseif conv["conv_confi"] == 2
                          push!(bus_convs_dc_cond[(bus, 1)], i =>1)

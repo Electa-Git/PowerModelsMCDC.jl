@@ -12,7 +12,9 @@ function constraint_kcl_shunt(pm::_PM.AbstractDCPModel, n::Int,  i::Int, bus_arc
     v = 1
     # display("constraint_kcl_shunt")
     # display(p[a] for a in bus_arcs)
-    display(JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(pconv_grid_ac[c][1] for c in bus_convs_ac)  == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*v^2))
+    total_cond=length(bus_convs_ac)
+       JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c]) for c in bus_convs_ac)  == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*v^2)
+      # JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs)   == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*v^2)
 end
 
 """
