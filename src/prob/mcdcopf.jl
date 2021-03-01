@@ -55,6 +55,7 @@ function post_mcdcopf(pm::_PM.AbstractPowerModel)
         constraint_converter_losses(pm, i)
         constraint_converter_dc_ground(pm, i)
         constraint_converter_current(pm, i)
+         constraint_converter_dc_current(pm, i)
         constraint_conv_transformer(pm, i)
         constraint_conv_reactor(pm, i)
         constraint_conv_filter(pm, i)
@@ -63,4 +64,5 @@ function post_mcdcopf(pm::_PM.AbstractPowerModel)
             constraint_conv_firing_angle(pm, i)
         end
     end
+    constraint_converter_dc_ground_shunt_kcl(pm)
 end

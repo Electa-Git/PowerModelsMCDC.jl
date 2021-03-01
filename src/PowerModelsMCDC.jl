@@ -40,7 +40,11 @@ include("core/variableconv_mc.jl")
 include("formdcgrid/dcp.jl")
 include("formconv/dcp.jl")
 
+include("formdcgrid/acp.jl")
+include("formconv/acp.jl")
+
 include("prob/acdcopf.jl")
 include("prob/mcdcopf.jl")
+include("prob/mcdcpf.jl")
 
 end

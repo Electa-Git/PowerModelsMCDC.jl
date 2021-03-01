@@ -6,8 +6,11 @@ function variable_mcdc_converter(pm::_PM.AbstractPowerModel; kwargs...)
     variable_converter_active_power(pm; kwargs...)
     variable_converter_reactive_power(pm; kwargs...)
     variable_acside_current(pm; kwargs...)
+    variable_dcside_current(pm; kwargs...)
+    variable_dcside_current_ground(pm; kwargs...)
     variable_dcside_power(pm; kwargs...)
     variable_dcside_ground_power(pm; kwargs...)
+    variable_dcside_grounding_shunt_power(pm; kwargs...)
     variable_converter_firing_angle(pm; kwargs...)
 
     variable_converter_filter_voltage(pm; kwargs...)
@@ -99,12 +102,12 @@ function variable_conv_transformer_active_power_to(pm::_PM.AbstractPowerModel; n
    # start = comp_start_value(_PM.ref(pm, nw, :busdc, i), "Vdc", c, 1.0)
    # ) for i in _PM.ids(pm, nw, :busdc)
    # )
-    println("ptfto for all")
-    display(ptfto)
-
-    println("ptfto for conv 1")
-    display(ptfto[1])
-    display(_PM.ref(pm, nw, :convdc)[1]["Pacrated"])
+    # println("ptfto for all")
+    # display(ptfto)
+    #
+    # println("ptfto for conv 1")
+    # display(ptfto[1])
+    # display(_PM.ref(pm, nw, :convdc)[1]["Pacrated"])
 
 
     if bounded
@@ -126,18 +129,18 @@ function variable_conv_transformer_reactive_power_to(pm::_PM.AbstractPowerModel;
     ) for i in _PM.ids(pm, nw, :convdc)
     )
 
-    println("qtfto for all")
-    display(qtfto)
-
-    println("ptfto for conv 1")
-    display(qtfto[1])
-    display(_PM.ref(pm, nw, :convdc)[1]["Qacrated"])
+    # println("qtfto for all")
+    # display(qtfto)
+    #
+    # println("ptfto for conv 1")
+    # display(qtfto[1])
+    # display(_PM.ref(pm, nw, :convdc)[1]["Qacrated"])
 
     if bounded
         for (c, convdc) in _PM.ref(pm, nw, :convdc)
-            display(qtfto[c])
-            display(-convdc["Qacrated"])
-            JuMP.set_lower_bound.(qtfto[1],  -convdc["Qacrated"] * bigM)
+            # display(qtfto[c])
+            # display(-convdc["Qacrated"])
+            JuMP.set_lower_bound.(qtfto[c],  -convdc["Qacrated"] * bigM)
             JuMP.set_upper_bound.(qtfto[c],   convdc["Qacrated"] * bigM)
             # JuMP.set_lower_bound.(ptfto[c],  -convdc["Pacrated"] * bigM)
             # JuMP.set_upper_bound.(ptfto[c],   convdc["Pacrated"] * bigM)
@@ -243,6 +246,52 @@ function variable_converter_to_grid_reactive_power(pm::_PM.AbstractPowerModel; n
     report && _IM.sol_component_value(pm, nw, :convdc, :qgrid, _PM.ids(pm, nw, :convdc), qtffr)
 end
 
+function variable_dcside_current(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+        # bigM = 1.2; # to account for losses, maximum losses to be derived
+        icdc = _PM.var(pm, nw)[:iconv_dc] = Dict(i =>JuMP.@variable(pm.model,
+        [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]+1], base_name="$(nw)_iconv_dc_$(i)",
+        start = 1.0 #comp_start_value(_PM.ref(pm, nw, :convdc, i), "Pdcset", c, 1.0)
+        ) for i in _PM.ids(pm, nw, :convdc)
+        )
+
+
+            if bounded
+                for i in _PM.ids(pm, nw, :convdc)
+                    conv_cond=_PM.ref(pm, nw, :convdc)[i]["conductors"]
+                    for c in 1:conv_cond
+                        JuMP.set_lower_bound.(icdc[i][c],  -_PM.ref(pm, nw, :convdc)[i]["Imax"][c])
+                        JuMP.set_upper_bound.(icdc[i][c],   _PM.ref(pm, nw, :convdc)[i]["Imax"][c])
+                    end
+                    JuMP.set_lower_bound.(icdc[i][conv_cond+1],  -_PM.ref(pm, nw, :convdc)[i]["Imax"][1])
+                    JuMP.set_upper_bound.(icdc[i][conv_cond+1],   _PM.ref(pm, nw, :convdc)[i]["Imax"][1])
+                end
+            end
+
+            report && _IM.sol_component_value(pm, nw, :convdc, :iconv_dc, _PM.ids(pm, nw, :convdc), icdc)
+
+end
+
+function variable_dcside_current_ground(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+        # bigM = 1.2; # to account for losses, maximum losses to be derived
+        icdcg = _PM.var(pm, nw)[:iconv_dcg] = Dict(i =>JuMP.@variable(pm.model,
+        [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]], base_name="$(nw)_iconv_dcg_$(i)",
+        start = 1.0 #comp_start_value(_PM.ref(pm, nw, :convdc, i), "Pdcset", c, 1.0)
+        ) for i in _PM.ids(pm, nw, :convdc)
+        )
+
+            if bounded
+                for i in _PM.ids(pm, nw, :convdc)
+                    conv_cond=_PM.ref(pm, nw, :convdc)[i]["conductors"]
+                    for c in 1:conv_cond
+                        JuMP.set_lower_bound.(icdcg[i][c],  -_PM.ref(pm, nw, :convdc)[i]["Imax"][c])
+                        JuMP.set_upper_bound.(icdcg[i][c],   _PM.ref(pm, nw, :convdc)[i]["Imax"][c])
+                    end
+                end
+            end
+
+            report && _IM.sol_component_value(pm, nw, :convdc, :iconv_dcg, _PM.ids(pm, nw, :convdc), icdcg)
+end
+
 
 "variable: `pconv_dc[j]` for `j` in `convdc`"
 function variable_dcside_power(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
@@ -261,11 +310,11 @@ function variable_dcside_power(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bound
     # )
     # display("pcdc")
     # display(pcdc)
-    display("here it is <*=*> pcdc")
+    # display("here it is <*=*> pcdc")
     if bounded
         for i in _PM.ids(pm, nw, :convdc)
             for c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]
-            display(pcdc[i][c])
+            # display(pcdc[i][c])
             JuMP.set_lower_bound.(pcdc[i][c],  -_PM.ref(pm, nw, :convdc)[i]["Pacrated"][c] * bigM)
             JuMP.set_upper_bound.(pcdc[i][c],   _PM.ref(pm, nw, :convdc)[i]["Pacrated"][c] * bigM)
             end
@@ -283,12 +332,12 @@ function variable_dcside_ground_power(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw
     start = 1.0 #comp_start_value(_PM.ref(pm, nw, :convdc, i), "Pdcset", c, 1.0)
     ) for i in _PM.ids(pm, nw, :convdc)
     )
-    display(pcdcg)
+    # display(pcdcg)
     if bounded
         for i in _PM.ids(pm, nw, :convdc)
             for c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]
-             display(pcdcg[i][c])
-             display("here we are== $(_PM.var(pm, nw, :pconv_dcg, i)[c])")
+             # display(pcdcg[i][c])
+             # display("here we are== $(_PM.var(pm, nw, :pconv_dcg, i)[c])")
             JuMP.set_lower_bound.(pcdcg[i][c],  -_PM.ref(pm, nw, :convdc)[i]["Pacrated"][c] * bigM)
             JuMP.set_upper_bound.(pcdcg[i][c],   _PM.ref(pm, nw, :convdc)[i]["Pacrated"][c] * bigM)
             end
@@ -297,6 +346,36 @@ function variable_dcside_ground_power(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw
     # pconv_dcg= _PM.var(pm, nw, :pconv_dcg, 1)[1]
     # display(JuMP.@constraint(pm.model, pconv_dcg == 0))
     report && _IM.sol_component_value(pm, nw, :convdc, :pdcg, _PM.ids(pm, nw, :convdc), pcdcg)
+end
+
+# variable_dcside_grounding_shunt_power
+"variable: `pconv_dcg_shunt[j]` for `j` in `convdc`"
+function variable_dcside_grounding_shunt_power(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+    bigM = 1.2; # to account for losses, maximum losses to be derived
+    pcdcg_shunt = _PM.var(pm, nw)[:pconv_dcg_shunt] = Dict(i =>JuMP.@variable(pm.model,
+     base_name="$(nw)_pconv_dcg_shunt_$(i)",
+    start = 1.0 #comp_start_value(_PM.ref(pm, nw, :convdc, i), "Pdcset", c, 1.0)
+    ) for i in _PM.ids(pm, nw, :convdc)
+    )
+    # [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]]
+    # [c in 1:1],
+    # display(pcdcg_shunt)
+    if bounded
+        for i in _PM.ids(pm, nw, :convdc)
+            display(_PM.ref(pm, nw, :convdc)[i]["ground_type"])
+            # for c in 1:1
+             # display(pcdcg_shunt[i][c])
+             # display("here we are== $(_PM.var(pm, nw, :pconv_dcg_shunt, i)[c])")
+            # JuMP.set_lower_bound.(pcdcg_shunt[i][c],  -_PM.ref(pm, nw, :convdc)[i]["Pacrated"][c]*0.1 * bigM)
+            # JuMP.set_upper_bound.(pcdcg_shunt[i][c],   _PM.ref(pm, nw, :convdc)[i]["Pacrated"][c] *0.1* bigM)
+            JuMP.set_lower_bound.(pcdcg_shunt[i],  -_PM.ref(pm, nw, :convdc)[i]["Pacrated"][1]*0.1 * bigM*_PM.ref(pm, nw, :convdc)[i]["ground_type"])
+            JuMP.set_upper_bound.(pcdcg_shunt[i],   _PM.ref(pm, nw, :convdc)[i]["Pacrated"][1] *0.1* bigM*_PM.ref(pm, nw, :convdc)[i]["ground_type"])
+            # end
+        end
+    end
+    # pconv_dcg= _PM.var(pm, nw, :pconv_dcg, 1)[1]
+    # display(JuMP.@constraint(pm.model, pconv_dcg == 0))
+    report && _IM.sol_component_value(pm, nw, :convdc, :pdcg_shunt, _PM.ids(pm, nw, :convdc), pcdcg_shunt)
 end
 
 

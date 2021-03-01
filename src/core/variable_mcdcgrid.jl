@@ -49,8 +49,8 @@ function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=pm
         ) for (l,i,j) in _PM.ref(pm, nw, :arcs_dcgrid)
     )
      # display(p)
-      display(p[(2, 2, 4)])
-      display( _PM.ref(pm, nw, :branchdc, 2)["rateA"])
+      # display(p[(2, 2, 4)])
+      # display( _PM.ref(pm, nw, :branchdc, 2)["rateA"])
 
     if bounded
     for arc in _PM.ref(pm, nw, :arcs_dcgrid)
@@ -61,8 +61,8 @@ function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=pm
     end
 
 #
-    println("dc branch power p")
-    display(p)
+    # println("dc branch power p")
+    # display(p)
     # display("from index of dcgrid arcs= $(_PM.ref(pm, nw, :arcs_dcgrid_from))")
 
     # for i in _PM.ids(pm, nw, :busdc)

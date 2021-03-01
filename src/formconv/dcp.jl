@@ -34,6 +34,53 @@ function constraint_converter_dc_ground(pm::_PM.AbstractDCPModel, n::Int,  i::In
     display(JuMP.@constraint(pm.model, pconv_dc[total_conv_cond+1]==sum(pconv_dcg[cond_g] for cond_g=1:total_conv_cond)))
 end
 
+function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractPowerModel, n::Int)
+    pconv_dcg_shunt=_PM.var(pm, n, :pconv_dcg_shunt)
+    bus_convs_grounding_shunt=_PM.ref(pm, n, :bus_convs_grounding_shunt)
+
+    # sum(pconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, k)
+     # for i in _PM.ids(pm, nw, :convdc)
+     # display(pconv_dcg_shunt)
+     # display(bus_convs_grounding_shunt)
+     #
+         # JuMP.@constraint(pm.model, sum(pconv_dcg_shunt[c] for (i,c) in bus_convs_grounding_shunt)==0)
+         display(JuMP.@constraint(pm.model, sum(sum(pconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, 3)]) for i in _PM.ids(pm, n, :busdc))==0))
+end
+
+
+
+function constraint_converter_dc_current(pm::_PM.AbstractDCPModel, n::Int, i::Int)
+    pconv_dc = _PM.var(pm, n, :pconv_dc)
+    iconv_dc = _PM.var(pm, n, :iconv_dc)
+    vdcm = 1.0
+
+    dc_bus=_PM.ref(pm, n, :convdc,i)["busdc_i"]
+    conv_cond=_PM.ref(pm, n, :convdc,i)["conductors"]
+    bus_convs_dc_cond =  _PM.ref(pm, n, :bus_convs_dc_cond)
+
+     total_cond = _PM.ref(pm, n, :busdc,i)["conductors"]
+     for k in 1:total_cond
+        for (c,d) in bus_convs_dc_cond[(dc_bus, k)]
+            if k==1
+                vdcm= 1 #metallic return volatage is taken 0
+            elseif k==2
+                vdcm= -1
+            elseif k==3
+                vdcm= -0
+            end
+
+            if c==i
+                display(JuMP.@constraint(pm.model, pconv_dc[c][d]==iconv_dc[c][d]*vdcm))
+            end
+        end
+    end
+
+    display(JuMP.@constraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1)==0))
+
+    # if conv_cond==2
+    #     display(JuMP.@constraint(pm.model, sign(iconv_dc[i][1]) + sign(iconv_dc[i][2])==0 ) )
+    # end
+end
 """
 Converter transformer constraints
 
@@ -115,7 +162,7 @@ Converter current constraint (not applicable)
 ```
 ```
 """
-function constraint_converter_current(pm::_PM.AbstractDCPModel, n::Int,  i::Int, Umax, Imax)
+function constraint_converter_current(pm::_PM.AbstractDCPModel, n::Int,  i::Int, Umax, Imax, cond)
     # not used
 end
 # function variable_dc_converter(pm::_PM.AbstractDCPModel; kwargs...)
@@ -137,27 +184,27 @@ end
 # function variable_converter_internal_voltage(pm::_PM.AbstractDCPModel; kwargs...)
 #     variable_converter_internal_voltage_angle(pm; kwargs...)
 # end
-# """
-# Converter reactive power setpoint constraint (PF only, not applicable)
-# ```
-# ```
-# """
-# function constraint_reactive_conv_setpoint(pm::_PM.AbstractDCPModel, n::Int,  i, qconv)
-# end
-# """
-# Converter firing angle constraint (not applicable)
-# ```
-# ```
-# """
-# function constraint_conv_firing_angle(pm::_PM.AbstractDCPModel, n::Int,  i::Int, S, P1, Q1, P2, Q2)
-# end
-# """
-# Converter droop constraint (not applicable)
-# ```
-# ```
-# """
-# function constraint_dc_droop_control(pm::_PM.AbstractDCPModel, n::Int,  i::Int, busdc_i, vref_dc, pref_dc, k_droop)
-# end
+"""
+Converter reactive power setpoint constraint (PF only, not applicable)
+```
+```
+"""
+function constraint_reactive_conv_setpoint(pm::_PM.AbstractDCPModel, n::Int,  i, qconv)
+end
+"""
+Converter firing angle constraint (not applicable)
+```
+```
+"""
+function constraint_conv_firing_angle(pm::_PM.AbstractDCPModel, n::Int,  i::Int, S, P1, Q1, P2, Q2)
+end
+"""
+Converter droop constraint (not applicable)
+```
+```
+"""
+function constraint_dc_droop_control(pm::_PM.AbstractDCPModel, n::Int,  i::Int, busdc_i, vref_dc, pref_dc, k_droop)
+end
 ######################## TNEP Constraints #################
 # """
 # Creates lossy converter model between AC and DC grid, assuming U_i is approximatley 1 numerically

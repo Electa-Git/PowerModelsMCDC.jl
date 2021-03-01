@@ -35,7 +35,7 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=p
     total_cond = _PM.ref(pm, nw, :branchdc, i)["conductors"]
 
     p = _PM.ref(pm, nw, :dcpol)
-
+    # display("p for bus $i is $p")
     constraint_ohms_dc_branch(pm, nw, f_bus, t_bus, f_idx, t_idx, branch["r"], p, total_cond)
 end
 #
@@ -60,26 +60,57 @@ function constraint_converter_dc_ground(pm::_PM.AbstractPowerModel, i::Int; nw::
         constraint_converter_dc_ground(pm, nw, i,pconv_dc, pconv_dcg, total_conv_cond)
 end
 
+function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractPowerModel, nw::Int=pm.cnw)
+    # conv = _PM.ref(pm, nw, :convdc, i)
+    #     total_conv_cond=conv["conductors"]
+    #     pconv_dc = _PM.var(pm, nw, :pconv_dc, i)
+    #     pconv_dcg= _PM.var(pm, nw, :pconv_dcg, i)
+        # constraint_converter_dc_ground(pm, nw, i,pconv_dc, pconv_dcg, total_conv_cond)
+        constraint_converter_dc_ground_shunt_kcl(pm, nw)
+end
+
 function constraint_converter_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     conv = _PM.ref(pm, nw, :convdc, i)
-    Vmax = conv["Vmmax"]
-    Imax = conv["Imax"]
-    constraint_converter_current(pm, nw, i, Vmax, Imax)
+    for cond in 1:conv["conductors"]
+        Vmax = conv["Vmmax"][cond]
+        Imax = conv["Imax"][cond]
+        constraint_converter_current(pm, nw, i, Vmax, Imax,cond)
+    end
+end
+
+function constraint_converter_dc_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+    # conv = _PM.ref(pm, nw, :convdc, i)
+    # for cond in 1:conv["conductors"]
+    #     Vmax = conv["Vmmax"][cond]
+    #     Imax = conv["Imax"][cond]
+        constraint_converter_dc_current(pm, nw, i)
+    # end
 end
 
 function constraint_active_conv_setpoint(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     conv = _PM.ref(pm, nw, :convdc, i)
-    constraint_active_conv_setpoint(pm, nw, conv["index"], conv["P_g"])
+
+    for cond in 1:conv["conductors"]
+        # conv["index"][cond]
+        constraint_active_conv_setpoint(pm, nw, i, conv["P_g"][cond], cond)
+    end
 end
 
 function constraint_reactive_conv_setpoint(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     conv = _PM.ref(pm, nw, :convdc, i)
-    constraint_reactive_conv_setpoint(pm, nw, conv["index"], conv["Q_g"])
+    display(i)
+    for cond in 1:conv["conductors"]
+        constraint_reactive_conv_setpoint(pm, nw, i, conv["Q_g"][cond], cond)
+    end
 end
 ""
 function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
-    conv = _PM.ref(pm, nw, :convdc, i)
-    constraint_dc_voltage_magnitude_setpoint(pm, nw, conv["busdc_i"], conv["Vdcset"])
+    # conv = _PM.ref(pm, nw, :convdc, i)
+
+    # for cond in 1:conv["conductors"]
+        # constraint_dc_voltage_magnitude_setpoint(pm, nw, conv["busdc_i"], conv["Vdcset"][cond], cond)
+    # end
+    constraint_dc_voltage_magnitude_setpoint(pm, nw, i)
 end
 
 #
@@ -119,12 +150,15 @@ end
 #
 function constraint_conv_firing_angle(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     conv = _PM.ref(pm, nw, :convdc, i)
-    S = conv["Pacrated"]
-    P1 = cos(0) * S
-    Q1 = sin(0) * S
-    P2 = cos(pi) * S
-    Q2 = sin(pi) * S
-    constraint_conv_firing_angle(pm, nw, i, S, P1, Q1, P2, Q2)
+    for cond in 1:conv["conductors"]
+        S = conv["Pacrated"][cond]
+        P1 = cos(0) * S
+        Q1 = sin(0) * S
+        P2 = cos(pi) * S
+        Q2 = sin(pi) * S
+        constraint_conv_firing_angle(pm, nw, i, S, P1, Q1, P2, Q2, cond)
+    end
+
 end
 
 function constraint_dc_branch_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
@@ -143,8 +177,9 @@ end
 function constraint_dc_droop_control(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     conv = _PM.ref(pm, nw, :convdc, i)
     bus = _PM.ref(pm, nw, :busdc, conv["busdc_i"])
-
-    constraint_dc_droop_control(pm, nw, i, conv["busdc_i"], conv["Vdcset"], conv["Pdcset"], conv["droop"])
+    for cond in 1:conv["conductors"]
+        constraint_dc_droop_control(pm, nw, i, conv["busdc_i"][cond], conv["Vdcset"][cond], conv["Pdcset"][cond], conv["droop"][cond], cond)
+    end
 end
 
 # ############## TNEP Constraints #####################

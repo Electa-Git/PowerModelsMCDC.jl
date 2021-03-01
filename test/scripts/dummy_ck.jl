@@ -43,6 +43,12 @@ function build_mc_data!(base_data)
     # end
     # _PD.make_multiconductor!(mp_data, conductors)
     PowerModelsMCDC._make_multiconductor_new!(mp_data)
+    for (i,busdc) in mp_data["busdc"]
+       busdc["Vdcmax"][3]=0.1
+       busdc["Vdcmin"][3]=-0.1
+       busdc["Vdcmax"][2]=-0.9
+       busdc["Vdcmin"][2]=-1.1
+    end
     return mp_data
 end
 
@@ -85,7 +91,7 @@ end
 for i in 1:3
      # display("power from grid to dc at converter $i")
      display("power pgrid at converter $i")
-    display(result_acdc["solution"]["convdc"]["$i"]["pgrid"])
+    display(result_mcdc["solution"]["convdc"]["$i"]["pdc"])
 end
 for i in 1:3
     display("flow of over dc branch $i")
