@@ -23,7 +23,7 @@ const _LOGGER = Memento.getlogger(@__MODULE__)
 # NOTE: If this line is not included then the precompiled `_PM._LOGGER` won't be registered at runtime.
 __init__() = Memento.register(_LOGGER)
 
-include("prob/mcdcopf.jl")
+# include("prob/mcdcopf.jl")
 
 include("core/solution.jl")
 include("core/data.jl")
@@ -43,7 +43,7 @@ include("formconv/dcp.jl")
 include("formdcgrid/acp.jl")
 include("formconv/acp.jl")
 
-include("prob/acdcopf.jl")
+# include("prob/acdcopf.jl")
 include("prob/mcdcopf.jl")
 include("prob/mcdcpf.jl")
 

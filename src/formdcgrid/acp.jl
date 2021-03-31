@@ -12,8 +12,8 @@ function constraint_kcl_shunt(pm::_PM.AbstractACPModel, n::Int,  i::Int, bus_arc
     qg = _PM.var(pm, n,  :qg)
     pconv_grid_ac = _PM.var(pm, n,  :pconv_tf_fr)
     qconv_grid_ac = _PM.var(pm, n,  :qconv_tf_fr)
-
-    JuMP.@NLconstraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n,  :pconv_tf_fr, c))) for c in bus_convs_ac)  == sum(pg[g] for g in bus_gens)   - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*vm^2)
+    display("constraint_kcl_shunt for ac bus $i")
+    display(JuMP.@NLconstraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n,  :pconv_tf_fr, c))) for c in bus_convs_ac)  == sum(pg[g] for g in bus_gens)   - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*vm^2))
     JuMP.@NLconstraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n,  :pconv_tf_fr, c))) for c in bus_convs_ac)  == sum(qg[g] for g in bus_gens)  - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts)*vm^2)
 end
 
@@ -43,16 +43,35 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int,  f_bus, t_b
     vmdc_fr = _PM.var(pm, n,  :vdcm, f_bus)
     vmdc_to = _PM.var(pm, n,  :vdcm, t_bus)
 
-    for c = 1: total_cond
-        if r[c] == 0
-            JuMP.@constraint(pm.model, p_dc_fr[c] + p_dc_to[c] == 0)
-        else
-            g = 1 / r[c]
+    bus_arcs_dcgrid_cond = _PM.ref(pm, n, :bus_arcs_dcgrid_cond)
+
+    # for c = 1: total_cond
+    #     if r[c] == 0
+    #         JuMP.@constraint(pm.model, p_dc_fr[c] + p_dc_to[c] == 0)
+    #     else
+            # g = 1 / r[c]
             #doubt about p in following equation
-            JuMP.@NLconstraint(pm.model, p_dc_fr[c] ==  g * vmdc_fr[c] * (vmdc_fr[c] - vmdc_to[c]))
-            JuMP.@NLconstraint(pm.model, p_dc_to[c] ==  g * vmdc_to[c] * (vmdc_to[c] - vmdc_fr[c]))
-        end
-    end
+            for k=1:3
+                for (line, d) in bus_arcs_dcgrid_cond[(f_bus, k)]
+                    if r[d] == 0
+                         JuMP.@constraint(pm.model, p_dc_fr[d] + p_dc_to[d] == 0)
+                    else
+                             g = 1 / r[d]
+                             display(JuMP.@NLconstraint(pm.model, p_dc_fr[d] ==  g * vmdc_fr[k] * (vmdc_fr[k] - vmdc_to[k])))
+                             display(JuMP.@NLconstraint(pm.model, p_dc_to[d] ==  g * vmdc_to[k] * (vmdc_to[k] - vmdc_fr[k])))
+                        end
+                     end
+                # end
+
+                # for (line, d) in bus_arcs_dcgrid_cond[(t_bus, k)]
+                #     # JuMP.@NLconstraint(pm.model, p_dc_to[d] ==  g * vmdc_to[k] * (vmdc_to[k] - vmdc_fr[k]))
+                # end
+            end
+
+            # JuMP.@NLconstraint(pm.model, p_dc_fr[c] ==  g * vmdc_fr[c] * (vmdc_fr[c] - vmdc_to[c]))
+            # JuMP.@NLconstraint(pm.model, p_dc_to[c] ==  g * vmdc_to[c] * (vmdc_to[c] - vmdc_fr[c]))
+        # end
+    # end
 end
 "`vdc[i] == vdcm`"
 function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::Int,  i)
@@ -63,7 +82,7 @@ function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::I
 
         bus_convs_dc_cond =  _PM.ref(pm, n, :bus_convs_dc_cond)
         # total_cond = _PM.ref(pm, n, :busdc,i)["conductors"]
-        # following loop, only for k in 1:2, because k=3's voltage can not be set
+        # following loop, only for k in 1:2, because k=3's voltage can not be set #(no more valid)
          for k in 1:2
             for (c,d) in bus_convs_dc_cond[(dc_bus, k)]
                 if c==i

@@ -34,7 +34,7 @@ function constraint_converter_dc_ground(pm::_PM.AbstractDCPModel, n::Int,  i::In
     display(JuMP.@constraint(pm.model, pconv_dc[total_conv_cond+1]==sum(pconv_dcg[cond_g] for cond_g=1:total_conv_cond)))
 end
 
-function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractPowerModel, n::Int)
+function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractDCPModel, n::Int)
     pconv_dcg_shunt=_PM.var(pm, n, :pconv_dcg_shunt)
     bus_convs_grounding_shunt=_PM.ref(pm, n, :bus_convs_grounding_shunt)
 

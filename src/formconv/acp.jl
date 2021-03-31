@@ -90,8 +90,10 @@ function constraint_converter_dc_ground(pm::_PM.AbstractACPModel, n::Int,  i::In
     display(JuMP.@constraint(pm.model, pconv_dc[total_conv_cond+1]==sum(pconv_dcg[cond_g] for cond_g=1:total_conv_cond)))
 end
 
-function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractACPModel, n::Int)
+function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::Int)
     pconv_dcg_shunt=_PM.var(pm, n, :pconv_dcg_shunt)
+    iconv_dcg_shunt=_PM.var(pm, n, :iconv_dcg_shunt)
+
     bus_convs_grounding_shunt=_PM.ref(pm, n, :bus_convs_grounding_shunt)
     r_earth=0
     # sum(pconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, k)
@@ -100,15 +102,31 @@ function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractACPModel, n::I
      # display(bus_convs_grounding_shunt)
      #
          # JuMP.@constraint(pm.model, sum(pconv_dcg_shunt[c] for (i,c) in bus_convs_grounding_shunt)==0)
-         display(JuMP.@NLconstraint(pm.model, sum(sum((pconv_dcg_shunt[c]/_PM.var(pm, n,  :vdcm,i)[3]) for c in bus_convs_grounding_shunt[(i, 3)]) for i in _PM.ids(pm, n, :busdc))==0))
+         # display(JuMP.@NLconstraint(pm.model, sum(sum((pconv_dcg_shunt[c]/_PM.var(pm, n,  :vdcm,i)[3]) for c in b[(i, 3)]) for i in _PM.ids(pm, n, :busdc))==0))
          for i in _PM.ids(pm, n, :busdc)
             vdc= _PM.var(pm, n,  :vdcm,i)
+            display("the final check")
+            # JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[1]==0)
+            # JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[2]==0)
+            # JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[3]==0)
+
              for c in bus_convs_grounding_shunt[(i, 3)]
                  conv = _PM.ref(pm, n, :convdc, c)
                  r=conv["ground_z"]+ r_earth
-                 JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c]==(1/r)*vdc[3]^2)
+
+                 display(JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c]==(1/r)*vdc[3]^2))
+                 display(JuMP.@NLconstraint(pm.model, iconv_dcg_shunt[c]==(1/r)*vdc[3]))
+
              end
          end
+end
+
+function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractACPModel, n::Int)
+    iconv_dcg_shunt=_PM.var(pm, n, :iconv_dcg_shunt)
+    bus_convs_grounding_shunt=_PM.ref(pm, n, :bus_convs_grounding_shunt)
+
+         display(JuMP.@NLconstraint(pm.model, sum(sum(iconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, 3)]) for i in _PM.ids(pm, n, :busdc))==0))
+
 end
 
 """

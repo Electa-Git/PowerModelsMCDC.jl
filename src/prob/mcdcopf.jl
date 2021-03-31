@@ -65,4 +65,5 @@ function post_mcdcopf(pm::_PM.AbstractPowerModel)
         end
     end
     constraint_converter_dc_ground_shunt_kcl(pm)
+    constraint_converter_dc_ground_shunt_ohm(pm)
 end

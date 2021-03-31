@@ -95,8 +95,8 @@ function build_mc_data!(base_data)
         if conv["conv_confi"]==1
             conv["connect_at"]=2
             # conv["conv_confi"]=2
-            # conv["ground_type"]=0
         end
+        conv["ground_type"]=0
     end
 
     for (c,conv) in mp_data["convdc"]
@@ -178,7 +178,8 @@ s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
 # result_mcdc = PowerModelsMCDC.run_mcdcpf(datadc_new, _PM.DCPPowerModel, gurobi_solver, setting = s)
 result_mcdc = PowerModelsMCDC.run_mcdcpf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
-result_acdc = _PMACDC.run_acdcpf(dc_data, _PM.DCPPowerModel, gurobi_solver, setting = s)
+result_acdc = _PMACDC.run_acdcpf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+result_acdc = _PMACDC.run_acdcpf(dc_data, _PM.DCPPowerModel, ipopt_solver, setting = s)
 
 for i in 1:5
     display(result_acdc["solution"]["gen"]["$i"]["pg"])
@@ -189,8 +190,19 @@ end
 #      # display("power from grid to dc at converter $i")
 #      display("power pconv at converter $i")
 #     display(result_acdc["solution"]["convdc"]["$i"]["pconv"])
-# end
+# # end
 # for i in 1:3
 #     display("flow of over dc branch $i")
 #     display(result_mcdc["solution"]["branchdc"]["$i"])
 # end
+for (i,branch) in result_mcdc["solution"]["branchdc"]
+    flow_from=branch["pf"]
+    flow_to=branch["pt"]
+    display("$i, $flow_from, $flow_to")
+end
+
+for (i,bus) in result_mcdc["solution"]["busdc"]
+    vm=bus["vm"]
+    # flow_to=branch["pt"]
+    display("$i, $vm")
+end

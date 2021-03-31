@@ -60,13 +60,12 @@ function constraint_converter_dc_ground(pm::_PM.AbstractPowerModel, i::Int; nw::
         constraint_converter_dc_ground(pm, nw, i,pconv_dc, pconv_dcg, total_conv_cond)
 end
 
+function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractPowerModel, nw::Int=pm.cnw)
+            constraint_converter_dc_ground_shunt_ohm(pm, nw)
+end
+
 function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractPowerModel, nw::Int=pm.cnw)
-    # conv = _PM.ref(pm, nw, :convdc, i)
-    #     total_conv_cond=conv["conductors"]
-    #     pconv_dc = _PM.var(pm, nw, :pconv_dc, i)
-    #     pconv_dcg= _PM.var(pm, nw, :pconv_dcg, i)
-        # constraint_converter_dc_ground(pm, nw, i,pconv_dc, pconv_dcg, total_conv_cond)
-        constraint_converter_dc_ground_shunt_kcl(pm, nw)
+            constraint_converter_dc_ground_shunt_kcl(pm, nw)
 end
 
 function constraint_converter_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
