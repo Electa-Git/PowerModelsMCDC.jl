@@ -27,6 +27,7 @@ function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int
         for (i, busdc) in _PM.ref(pm, nw, :busdc)
             JuMP.set_lower_bound.(vdcm[i],  busdc["Vdcmin"])
             JuMP.set_upper_bound.(vdcm[i],  busdc["Vdcmax"])
+
         end
     end
 
@@ -67,6 +68,37 @@ function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=pm
     report && _IM.sol_component_value_edge(pm, nw, :branchdc, :pf, :pt, _PM.ref(pm, nw, :arcs_dcgrid_from), _PM.ref(pm, nw, :arcs_dcgrid_to), p)
 end
 
+"variable: `i_dcgrid[l,i,j]` for `(l,i,j)` in `arcs_dcgrid`"
+function variable_mc_dcbranch_current(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+
+     ibr = _PM.var(pm, nw)[:i_dcgrid] = Dict((l,i,j) =>JuMP.@variable(pm.model,
+        [c in 1:_PM.ref(pm, nw, :branchdc, l)["conductors"]], base_name="$(nw)_idcgrid_$((l,i,j))",
+        start = comp_start_value(_PM.ref(pm, nw, :branchdc, l), "i_start", c, 0.0),
+        ) for (l,i,j) in _PM.ref(pm, nw, :arcs_dcgrid)
+    )
+        "need to think about starting value and bounds"
+    if bounded
+    for arc in _PM.ref(pm, nw, :arcs_dcgrid)
+        l,i,j = arc
+        JuMP.set_lower_bound.(ibr[arc],-_PM.ref(pm, nw, :branchdc, l)["rateA"])
+        JuMP.set_upper_bound.(ibr[arc],  _PM.ref(pm, nw, :branchdc, l)["rateA"])
+    end
+    end
+
+#
+    # println("dc branch power p")
+    # display(p)
+    # display("from index of dcgrid arcs= $(_PM.ref(pm, nw, :arcs_dcgrid_from))")
+
+    # for i in _PM.ids(pm, nw, :busdc)
+    #     display(_PM.ref(pm, nw, :busdc)[i]["conductors"])
+    #     println("ref and ids")
+    #     break
+        # display(_PM.ids(pm, nw, :busdc))
+    # end
+# #
+    report && _IM.sol_component_value_edge(pm, nw, :branchdc, :i_from, :i_to, _PM.ref(pm, nw, :arcs_dcgrid_from), _PM.ref(pm, nw, :arcs_dcgrid_to), ibr)
+end
 
 
 

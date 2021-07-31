@@ -14,14 +14,17 @@ end
 
 ""
 function post_mcdcopf(pm::_PM.AbstractPowerModel)
-    _PM.variable_bus_voltage(pm)
-    _PM.variable_gen_power(pm)
-    _PM.variable_branch_power(pm)
+    _PM.variable_bus_voltage(pm, bounded = true)
+    _PM.variable_gen_power(pm, bounded = true)
+    _PM.variable_branch_power(pm, bounded = true)
 
-    variable_mc_active_dcbranch_flow(pm)
-    variable_mcdcgrid_voltage_magnitude(pm)
-    variable_dcbranch_current(pm)
-    variable_mcdc_converter(pm)
+    variable_mc_active_dcbranch_flow(pm, bounded = true)
+    variable_mcdcgrid_voltage_magnitude(pm, bounded = true)
+    # variable_dcbranch_current(pm, bounded = true)
+    variable_mcdc_converter(pm, bounded = true)
+
+    variable_mc_dcbranch_current(pm, bounded = true)
+
 
     _PM.objective_min_fuel_cost(pm)
 
@@ -64,6 +67,7 @@ function post_mcdcopf(pm::_PM.AbstractPowerModel)
             constraint_conv_firing_angle(pm, i)
         end
     end
-    constraint_converter_dc_ground_shunt_kcl(pm)
+    # constraint_converter_dc_ground_shunt_kcl(pm)
     constraint_converter_dc_ground_shunt_ohm(pm)
+    # constraint_dc_grid_neutral_voltage(pm)
 end

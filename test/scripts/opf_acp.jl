@@ -17,25 +17,26 @@ using Memento
 using Gurobi
 
 
-ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=1)
+ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-8, print_level=1)
 gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
 
 
 function build_mc_data!(base_data)
     mp_data = PowerModels.parse_file(base_data)
+
     #changing the connection point
        for (c,bn) in mp_data["branchdc"]
            # if bn["line_confi"]==1
-           #     bn["connect_at"]=2
-           #     # bn["line_confi"]=2
+           #     # bn["connect_at"]=2
+           #     bn["line_confi"]=2
            # end
        end
        for (c,conv) in mp_data["convdc"]
            # display("configuration of $c is")
            # display(conv["conv_confi"])
            # if conv["conv_confi"]==1
-           #     conv["connect_at"]=2
-           #     # conv["conv_confi"]=2
+           #     # conv["connect_at"]=2
+           #     conv["conv_confi"]=2
            #     # conv["ground_type"]=0
            # end
            if conv["ground_type"]== 1 #or 0
@@ -44,7 +45,7 @@ function build_mc_data!(base_data)
              # conv["ground_type"]=0
        end
 
-       #making lossless conv paramteres
+       #making lossless conv paramteres and impedances
      for (c,conv) in mp_data["convdc"]
         # conv["transformer"]=0
         # conv["filter"]=0
@@ -53,6 +54,18 @@ function build_mc_data!(base_data)
         # conv["LossB"]=0
         # conv["LossCrec"]=0
         # conv["LossCinv"]=0
+        if conv["conv_confi"]==2
+            conv["rtf"]=2*conv["rtf"]
+            conv["xtf"]=2*conv["xtf"]
+            conv["bf"]=0.5*conv["bf"]
+            conv["rc"]=2*conv["rc"]
+            conv["xc"]=2*conv["xc"]
+            conv["LossB"]=conv["LossB"]
+            conv["LossA"]=0.5*conv["LossA"]
+            conv["LossCrec"]=2*conv["LossCrec"]
+            conv["LossCinv"]=2*conv["LossCinv"]
+        end
+           # transformer tm    filter
     end
 
     PowerModelsMCDC.process_additional_data!(mp_data)
@@ -63,7 +76,7 @@ function build_mc_data!(base_data)
             bn["rateA"]=bn["rateA"]/2
             bn["rateB"]=bn["rateB"]/2
             bn["rateC"]=bn["rateC"]/2
-            bn["r"]=bn["r"]/2
+            # bn["r"]=bn["r"]/2
         end
         metalic_cond_number= bn["conductors"]
         # bn["rateA"][metalic_cond_number]=bn["rateA"][metalic_cond_number]*0.1
@@ -101,8 +114,20 @@ s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
 result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
 #--------------------------------------------------------------------------------------------------------
-# result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting = s)
-#
+file="./test/data/matacdc_scripts/case5_2grids_MC.m"
+dc_data= PowerModels.parse_file(file)
+_PMACDC.process_additional_data!(dc_data)
+for (c,conv) in dc_data["convdc"]
+    # conv["transformer"]=0
+    # conv["filter"]=0
+    # conv["reactor"]=0
+    # conv["LossA"]=0
+    # conv["LossB"]=0
+    # conv["LossCrec"]=0
+    # conv["LossCinv"]=0
+end
+result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+
 # for i in 1:5
 #     display(result_acdc["solution"]["gen"]["$i"]["pg"])
 # end
@@ -188,8 +213,8 @@ end
 
 println(".....DC branch flows....")
 for (i,branch) in result_mcdc["solution"]["branchdc"]
-    flow_from=branch["pf"]
-    flow_to=branch["pt"]
+    flow_from=branch["i_from"]
+    flow_to=branch["i_to"]
     display("$i, $flow_from, $flow_to")
 end
 
@@ -199,12 +224,61 @@ end
 # end
 
 println(".....DC branch losses....")
-for (i,branch) in result_mcdc["solution"]["branchdc"]
-    flow_from=branch["pf"]
-    flow_to=branch["pt"]
-    c=flow_from+flow_to
-    # display("$i, $flow_from, $flow_to, $c")
-    display("$i, $c")
-end
+# for (i,branch) in result_mcdc["solution"]["branchdc"]
+#     flow_from=branch["pf"]
+#     flow_to=branch["pt"]
+#     c=flow_from+flow_to
+#     # display("$i, $flow_from, $flow_to, $c")
+#     display("$i, $c")
+# end
 
 println("termination status of the pf is:", result_mcdc["termination_status"])
+
+println("AC branch flows")
+for (i,branch) in datadc_new["branchdc"]
+    r=branch["r"]
+    display("$i, $r")
+end
+
+# println("...total system losses..")
+# Tot_gen= sum(gen["pg"] for (i,gen) in result_mcdc["solution"]["gen"])
+# tot_load=sum(load["pd"] for (i,load) in datadc_new["load"])
+# tot_loss=Tot_gen-tot_load
+
+"........pd[11] variation results....."
+N=10
+vm_0= Dict([(l, Dict([(i, 0.0000) for (i, dcbus) in result_mcdc["solution"]["busdc"]])) for l in 1:N])
+#
+# load_0=0.0
+for (i, load) in datadc_new["load"]
+    if load["load_bus"] == 11
+        load_0= load["pd"]
+    end
+end
+#
+# for k=1:N
+#     for (i, load) in datadc_new["load"]
+#         if load["load_bus"] == 11
+#             load["pd"]= k*0.1*load_0
+#             display("load_update",)
+#             display(load["pd"])
+#         end
+#     end
+#
+#   result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
+#     for (i, dcbus) in result_mcdc["solution"]["busdc"]
+#          b=dcbus["vm"][3]
+#          vm_0[k]["$i"]= b
+#      end
+#
+# end
+#
+#
+#  # bc= Dict([(i, Dict([(j, 0) for j in 1:3]) ) for i in 1:2])
+#
+# for (itr, bus) in vm_0
+# # for k=1:N
+#     display(bus["3"])
+#     # display(itr, bus["1"], bus["2"], bus["3"], bus["4"])
+# end
+#

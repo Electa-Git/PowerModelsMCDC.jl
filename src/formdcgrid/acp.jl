@@ -37,9 +37,46 @@ Creates Ohms constraints for DC branches
 p[f_idx] == p * g[l] * vmdc[f_bus] * (vmdc[f_bus] - vmdc[t_bus])
 ```
 """
+# function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int,  f_bus, t_bus, f_idx, t_idx, r, p, total_cond)
+#     p_dc_fr = _PM.var(pm, n,  :p_dcgrid, f_idx)
+#     p_dc_to = _PM.var(pm, n,  :p_dcgrid, t_idx)
+#     vmdc_fr = _PM.var(pm, n,  :vdcm, f_bus)
+#     vmdc_to = _PM.var(pm, n,  :vdcm, t_bus)
+#
+#     bus_arcs_dcgrid_cond = _PM.ref(pm, n, :bus_arcs_dcgrid_cond)
+#
+#     # for c = 1: total_cond
+#     #     if r[c] == 0
+#     #         JuMP.@constraint(pm.model, p_dc_fr[c] + p_dc_to[c] == 0)
+#     #     else
+#             # g = 1 / r[c]
+#             #doubt about p in following equation
+#             for k=1:3
+#                 for (line, d) in bus_arcs_dcgrid_cond[(f_bus, k)]
+#                     if r[d] == 0
+#                          JuMP.@constraint(pm.model, p_dc_fr[d] + p_dc_to[d] == 0)
+#                     else
+#                              g = 1 / r[d]
+#                              display(JuMP.@NLconstraint(pm.model, p_dc_fr[d] ==  g * vmdc_fr[k] * (vmdc_fr[k] - vmdc_to[k])))
+#                              display(JuMP.@NLconstraint(pm.model, p_dc_to[d] ==  g * vmdc_to[k] * (vmdc_to[k] - vmdc_fr[k])))
+#                         end
+#                      end
+#                 # end
+#
+#                 # for (line, d) in bus_arcs_dcgrid_cond[(t_bus, k)]
+#                 #     # JuMP.@NLconstraint(pm.model, p_dc_to[d] ==  g * vmdc_to[k] * (vmdc_to[k] - vmdc_fr[k]))
+#                 # end
+#             end
+#
+#             # JuMP.@NLconstraint(pm.model, p_dc_fr[c] ==  g * vmdc_fr[c] * (vmdc_fr[c] - vmdc_to[c]))
+#             # JuMP.@NLconstraint(pm.model, p_dc_to[c] ==  g * vmdc_to[c] * (vmdc_to[c] - vmdc_fr[c]))
+#         # end
+#     # end
+# end
+
 function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int,  f_bus, t_bus, f_idx, t_idx, r, p, total_cond)
-    p_dc_fr = _PM.var(pm, n,  :p_dcgrid, f_idx)
-    p_dc_to = _PM.var(pm, n,  :p_dcgrid, t_idx)
+    i_dc_fr = _PM.var(pm, n,  :i_dcgrid, f_idx)
+    i_dc_to = _PM.var(pm, n,  :i_dcgrid, t_idx)
     vmdc_fr = _PM.var(pm, n,  :vdcm, f_bus)
     vmdc_to = _PM.var(pm, n,  :vdcm, t_bus)
 
@@ -54,18 +91,13 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int,  f_bus, t_b
             for k=1:3
                 for (line, d) in bus_arcs_dcgrid_cond[(f_bus, k)]
                     if r[d] == 0
-                         JuMP.@constraint(pm.model, p_dc_fr[d] + p_dc_to[d] == 0)
+                         JuMP.@constraint(pm.model, i_dc_fr[d] + i_dc_to[d] == 0)
                     else
                              g = 1 / r[d]
-                             display(JuMP.@NLconstraint(pm.model, p_dc_fr[d] ==  g * vmdc_fr[k] * (vmdc_fr[k] - vmdc_to[k])))
-                             display(JuMP.@NLconstraint(pm.model, p_dc_to[d] ==  g * vmdc_to[k] * (vmdc_to[k] - vmdc_fr[k])))
+                             display(JuMP.@NLconstraint(pm.model, i_dc_fr[d] ==  g * (vmdc_fr[k] - vmdc_to[k])))
+                             display(JuMP.@NLconstraint(pm.model, i_dc_to[d] ==  g * (vmdc_to[k] - vmdc_fr[k])))
                         end
                      end
-                # end
-
-                # for (line, d) in bus_arcs_dcgrid_cond[(t_bus, k)]
-                #     # JuMP.@NLconstraint(pm.model, p_dc_to[d] ==  g * vmdc_to[k] * (vmdc_to[k] - vmdc_fr[k]))
-                # end
             end
 
             # JuMP.@NLconstraint(pm.model, p_dc_fr[c] ==  g * vmdc_fr[c] * (vmdc_fr[c] - vmdc_to[c]))
@@ -73,6 +105,10 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int,  f_bus, t_b
         # end
     # end
 end
+
+
+
+
 "`vdc[i] == vdcm`"
 function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::Int,  i)
 
@@ -142,25 +178,4 @@ function constraint_ohms_dc_branch_ne(pm::_PM.AbstractACPModel, n::Int,  f_bus, 
         JuMP.@NLconstraint(pm.model, p_dc_fr == z * p * g * vmdc_fr * (vmdc_fr - vmdc_to))
         JuMP.@NLconstraint(pm.model, p_dc_to == z * p * g * vmdc_to * (vmdc_to - vmdc_fr))
     end
-end
-
-# V or W as input, the function returns V or W with existing dc bus and dc_ne bus voltages
-function contraint_ohms_dc_branch_busvoltage_structure(pm::_PM.AbstractACPModel, n::Int, f_bus, t_bus, vmdc_to, vmdc_fr)
-    for i in _PM.ids(pm, n, :busdc_ne)
-        if t_bus == i
-            vmdc_to = _PM.var(pm, n, :vdcm_ne, t_bus)
-        end
-        if f_bus == i
-            vmdc_fr = _PM.var(pm, n, :vdcm_ne, f_bus)
-        end
-    end
-    for i in _PM.ids(pm, n, :busdc)
-        if t_bus == i
-            vmdc_to = _PM.var(pm, n, :vdcm, t_bus)
-        end
-        if f_bus == i
-            vmdc_fr = _PM.var(pm, n, :vdcm, f_bus)
-        end
-    end
-    return vmdc_to, vmdc_fr
 end

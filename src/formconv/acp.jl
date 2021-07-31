@@ -124,11 +124,21 @@ end
 function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractACPModel, n::Int)
     iconv_dcg_shunt=_PM.var(pm, n, :iconv_dcg_shunt)
     bus_convs_grounding_shunt=_PM.ref(pm, n, :bus_convs_grounding_shunt)
-
-         display(JuMP.@NLconstraint(pm.model, sum(sum(iconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, 3)]) for i in _PM.ids(pm, n, :busdc))==0))
+    display(iconv_dcg_shunt)
+    display(bus_convs_grounding_shunt)
+    # Ig_sum= sum(sum(iconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, 3)]) for i in _PM.ids(pm, n, :busdc))
+        # display(Ig_sum)
+         # display(JuMP.@NLconstraint(pm.model, Ig_sum ==0))
 
 end
 
+function constraint_dc_grid_neutral_voltage(pm::_PM.AbstractACPModel, n::Int)
+    for i in _PM.ids(pm, n, :busdc)
+       vdc= _PM.var(pm, n,  :vdcm,i)
+       display(vdc)
+       display(JuMP.@NLconstraint(pm.model, (vdc[3])*(vdc[3])>=1e-6))
+   end
+end
 """
 Converter transformer constraints
 ```

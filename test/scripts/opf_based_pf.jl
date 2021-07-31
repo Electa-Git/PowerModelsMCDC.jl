@@ -105,10 +105,9 @@ datadc_new = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
 
 s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
 result_mcdc_opf = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
-# result_mcdc_opf = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, juniper, setting = s)
+result_mcdc_pf = PowerModelsMCDC.run_mcdcpf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
 data = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
-# data = build_mc_data!("./test/data/matacdc_scripts/3grids_MC.m")
 
 for (g, gen) in data["gen"]
     bus = gen["gen_bus"]
@@ -125,8 +124,8 @@ for (cv, convdc) in data["convdc"]
                     convdc["Vdcset"]= result_mcdc_opf["solution"]["busdc"]["$busdc"]["vm"]                # display(convdc["Vdcset"])
             end
 
-             # convdc["Q_g"] = result_mcdc_opf["solution"]["convdc"]["$cv"]["qgrid"]
-             convdc["P_g"] = result_mcdc_opf["solution"]["convdc"]["$cv"]["pgrid"]
+             convdc["Q_g"] = -result_mcdc_opf["solution"]["convdc"]["$cv"]["qgrid"]
+             convdc["P_g"] = -result_mcdc_opf["solution"]["convdc"]["$cv"]["pgrid"]
 
             display("p and v setting")
             display(convdc["P_g"])
@@ -137,210 +136,261 @@ for (bd, busdc) in data["busdc"]
     busdc["vm"] = result_mcdc_opf["solution"]["busdc"][bd]["vm"]
 
 end
-#
+
 for (b, bus) in data["bus"]
     bus["vm"] = result_mcdc_opf["solution"]["bus"][b]["vm"]
     bus["va"] = result_mcdc_opf["solution"]["bus"][b]["va"] * 180/pi
 
 end
 
-    """to see the difference of initial point"""
-# data = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
-# result_mcdc_pf = PowerModelsMCDC.run_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+result_mcdc_opf1 = PowerModelsMCDC.run_mcdcopf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+result_mcdc_pf1 = PowerModelsMCDC.run_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
-result_mcdc_pf = PowerModelsMCDC.run_mcdcopf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
-# result_mcdc_pf = PowerModelsMCDC.run_mcdcopf(data, _PM.ACPPowerModel, juniper, setting = s)
+for (cv, convdc) in data["convdc"]
+            busdc = convdc["busdc_i"]
+            if convdc["conv_confi"]==1 && convdc["connect_at"]==2
+                convdc["Vdcset"][1] = result_mcdc_opf1["solution"]["busdc"]["$busdc"]["vm"][2]
+                # display(result_mcdc_opf["solution"]["busdc"]["$busdc"]["vm"])
+            else
+                    convdc["Vdcset"]= result_mcdc_opf1["solution"]["busdc"]["$busdc"]["vm"]                # display(convdc["Vdcset"])
+            end
 
-#DC grid side
-for (i,dcbus) in result_mcdc_pf["solution"]["busdc"]
-    b=dcbus["vm"]
-    display("$i, $b")
+             convdc["Q_g"] = -result_mcdc_opf1["solution"]["convdc"]["$cv"]["qgrid"]
+             convdc["P_g"] = -result_mcdc_opf1["solution"]["convdc"]["$cv"]["pgrid"]
 end
 
-#conv
-for (i,conv) in result_mcdc_pf["solution"]["convdc"]
-     # display("power from grid to dc at converter $i")
-     a= conv["pgrid"]
-    display("$i, $a")
+result_mcdc_opf2 = PowerModelsMCDC.run_mcdcopf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+result_mcdc_pf2 = PowerModelsMCDC.run_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+
+for (cv, convdc) in data["convdc"]
+            busdc = convdc["busdc_i"]
+            if convdc["conv_confi"]==1 && convdc["connect_at"]==2
+                convdc["Vdcset"][1] = result_mcdc_opf2["solution"]["busdc"]["$busdc"]["vm"][2]
+                # display(result_mcdc_opf["solution"]["busdc"]["$busdc"]["vm"])
+            else
+                    convdc["Vdcset"]= result_mcdc_opf2["solution"]["busdc"]["$busdc"]["vm"]                # display(convdc["Vdcset"])
+            end
+
+             convdc["Q_g"] = -result_mcdc_opf2["solution"]["convdc"]["$cv"]["qgrid"]
+             convdc["P_g"] = -result_mcdc_opf2["solution"]["convdc"]["$cv"]["pgrid"]
 end
 
-for (i,conv) in result_mcdc_pf["solution"]["convdc"]
-     a= conv["pdcg_shunt"]
-    display("$i, $a")
-end
-
-for (i,branch) in result_mcdc_pf["solution"]["branchdc"]
-    flow_from=branch["pf"]
-    flow_to=branch["pt"]
-    c=flow_from+flow_to
-    display("$i, $flow_from, $flow_to, $c")
-    # display("$i, $c")
-
-end
+result_mcdc_opf3 = PowerModelsMCDC.run_mcdcopf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+result_mcdc_pf3 = PowerModelsMCDC.run_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
 
 
-#-------------------------------
-#"""comparison of opf and pf"""
-#-------------------------------
-
-# #
-for (g,gen) in data["gen"]
-        a= result_mcdc_opf["solution"]["gen"][g]["pg"]
-        b=result_mcdc_pf["solution"]["gen"][g]["pg"]
-        display("$g,$a, $b")
-end
 #
-# # sum(demand["pd"] for (d, demand) in data["load"] )
-# sum(gen["pg"] for (i,gen) in result_mcdc_opf["solution"]["gen"])
-# sum(gen["pg"] for (i,gen) in result_mcdc_pf["solution"]["gen"])
-#
-# for (i,gen) in result_mcdc_opf["solution"]["gen"]
-#     g=gen["pg"]
-#     display("$i, $g")
+# #DC grid side
+# for (i,dcbus) in result_mcdc_pf["solution"]["busdc"]
+#     b=dcbus["vm"]
+#     display("$i, $b")
 # end
 #
-for (i,bus) in result_mcdc_opf["solution"]["bus"]
-    a=bus["va"]
-    b=bus["vm"]
-    c=result_mcdc_pf["solution"]["bus"]["$i"]["va"]
-    d=result_mcdc_pf["solution"]["bus"]["$i"]["vm"]
-    # display("$i, $b, $d, mag")
-    display("$i, $a, $c")
-
-    # display(a b)
-end
 #
-for (i,bus) in result_mcdc_opf["solution"]["busdc"]
-    a=result_mcdc_opf["solution"]["busdc"]["$i"]["vm"]
-    b=result_mcdc_pf["solution"]["busdc"]["$i"]["vm"]
-    display("$i, $a, $b")
-end
 #
-# for (i,conv) in result_mcdc_opf["solution"]["convdc"]
+# #conv
+# for (i,conv) in result_mcdc_pf["solution"]["convdc"]
 #      # display("power from grid to dc at converter $i")
 #      a= conv["pgrid"]
 #     display("$i, $a")
 # end
 #
-for (i,conv) in result_mcdc_opf["solution"]["convdc"]
-     a= conv["pgrid"]
-     b=result_mcdc_pf["solution"]["convdc"]["$i"]["pgrid"]
-     display("$i, $a, $b")
-end
-#
-for (i,conv) in result_mcdc_opf["solution"]["convdc"]
-     a= conv["pdcg_shunt"]
-     b=result_mcdc_pf["solution"]["convdc"]["$i"]["pdcg_shunt"]
-     display("$i, $a, $b")
-end
-#
-for (i,conv) in result_mcdc_opf["solution"]["convdc"]
-     a= conv["pdcg"]
-     b=result_mcdc_pf["solution"]["convdc"]["$i"]["pdcg"]
-     display("$i, $a, $b")
-     # display("$i, $b")
-end
-
-# for (i,branch) in result_mcdc_opf["solution"]["branchdc"]
-#     a=branch["pf"]
-#     b=result_mcdc_pf["solution"]["branchdc"]["$i"]["pf"]
-#     display("$i, $a, $b")
-#
-#     # display("$i, $b")
-#
+# for (i,conv) in result_mcdc_pf["solution"]["convdc"]
+#      a= conv["pdcg_shunt"]
+#     display("$i, $a")
 # end
-
-# for (i,branch) in result_mcdc_opf["solution"]["branchdc"]
+#
+# for (i,branch) in result_mcdc_pf["solution"]["branchdc"]
 #     flow_from=branch["pf"]
 #     flow_to=branch["pt"]
+#     c=flow_from+flow_to
+#     display("$i, $flow_from, $flow_to, $c")
+#     # display("$i, $c")
+#
+# end
+#
+#
+#
+# #-------------------------------
+# #"""comparison of opf and pf"""
+# #-------------------------------
+#
+# # #
+# for (g,gen) in data["gen"]
+#         a= result_mcdc_opf["solution"]["gen"][g]["pg"]
+#         b=result_mcdc_pf["solution"]["gen"][g]["pg"]
+#         display("$g,$a, $b")
+# end
+# #
+# # # sum(demand["pd"] for (d, demand) in data["load"] )
+# # sum(gen["pg"] for (i,gen) in result_mcdc_opf["solution"]["gen"])
+# # sum(gen["pg"] for (i,gen) in result_mcdc_pf["solution"]["gen"])
+# #
+# # for (i,gen) in result_mcdc_opf["solution"]["gen"]
+# #     g=gen["pg"]
+# #     display("$i, $g")
+# # end
+# #
+# for (i,bus) in result_mcdc_opf["solution"]["bus"]
+#     a=bus["va"]
+#     b=bus["vm"]
+#     c=result_mcdc_pf["solution"]["bus"]["$i"]["va"]
+#     d=result_mcdc_pf["solution"]["bus"]["$i"]["vm"]
+#     # display("$i, $b, $d, mag")
+#     display("$i, $a, $c")
+#
+#     # display(a b)
+# end
+# #
+# for (i,bus) in result_mcdc_opf["solution"]["busdc"]
+#     a=result_mcdc_opf["solution"]["busdc"]["$i"]["vm"]
+#     b=result_mcdc_pf["solution"]["busdc"]["$i"]["vm"]
+#     display("$i, $a, $b")
+# end
+# #
+# # for (i,conv) in result_mcdc_opf["solution"]["convdc"]
+# #      # display("power from grid to dc at converter $i")
+# #      a= conv["pgrid"]
+# #     display("$i, $a")
+# # end
+# #
+# for (i,conv) in result_mcdc_opf["solution"]["convdc"]
+#      a= conv["pgrid"]
+#      b=result_mcdc_pf["solution"]["convdc"]["$i"]["pgrid"]
+#      display("$i, $a, $b")
+# end
+# #
+# for (i,conv) in result_mcdc_opf["solution"]["convdc"]
+#      a= conv["pdcg_shunt"]
+#      b=result_mcdc_pf["solution"]["convdc"]["$i"]["pdcg_shunt"]
+#      display("$i, $a, $b")
+# end
+# #
+# for (i,conv) in result_mcdc_opf["solution"]["convdc"]
+#      a= conv["pdcg"]
+#      b=result_mcdc_pf["solution"]["convdc"]["$i"]["pdcg"]
+#      display("$i, $a, $b")
+#      # display("$i, $b")
+# end
+#
+# # for (i,branch) in result_mcdc_opf["solution"]["branchdc"]
+# #     a=branch["pf"]
+# #     b=result_mcdc_pf["solution"]["branchdc"]["$i"]["pf"]
+# #     display("$i, $a, $b")
+# #
+# #     # display("$i, $b")
+# #
+# # end
+#
+# # for (i,branch) in result_mcdc_opf["solution"]["branchdc"]
+# #     flow_from=branch["pf"]
+# #     flow_to=branch["pt"]
+# #     display("$i, $flow_from, $flow_to")
+# # end
+#
+#
+# for (i,branch) in result_mcdc_opf["solution"]["branch"]
+#     flow_from=branch["pf"]
+#     flow_to=result_mcdc_pf["solution"]["branch"]["$i"]["pf"]
 #     display("$i, $flow_from, $flow_to")
 # end
-
-
-for (i,branch) in result_mcdc_opf["solution"]["branch"]
-    flow_from=branch["pf"]
-    flow_to=result_mcdc_pf["solution"]["branch"]["$i"]["pf"]
-    display("$i, $flow_from, $flow_to")
-end
-
-
-for (i,conv) in data["convdc"]
-     a= conv["ground_type"]
-     # b=result_mcdc_pf["solution"]["convdc"]["$i"]["pgrid"]
-     # a=conv["ground_z"]
-     # a=conv["type_dc"]
-     display("$i, $a")
-end
-
-for (i,dcbranch) in data["branchdc"]
-     a= dcbranch["r"]
-     # b=result_mcdc_pf["solution"]["convdc"]["$i"]["pgrid"]
-     display("$i, $a")
-end
-
-for (i, branch) in result_mcdc_pf["solution"]["branch"]
-    flow_from=branch["pf"]
-    flow_to=branch["pt"]
-
-    a=result_mcdc_opf["solution"]["branch"]["$i"]["pf"]
-    b=flow_from
-     # b=result_mcdc_pf["solution"]["convdc"]["$i"]["pgrid"]
-     # display("$i, $flow_from, $flow_to")
-     display("$i, $a, $b")
-end
-
-println("termination status of the pf is:", result_mcdc_pf["termination_status"])
-#################
 #
-#
-for (g, gen) in data["gen"]
-    bus = gen["gen_bus"]
-    a1=gen["pg"]
-    b1= result_mcdc_opf["solution"]["gen"][g]["pg"]
-    a2=gen["qg"]
-    b2= result_mcdc_opf["solution"]["gen"][g]["qg"]
-    a3=gen["vg"]
-    b3= result_mcdc_opf["solution"]["bus"]["$bus"]["vm"]
-    # display("$g, $a1, $b1")
-    # display("$g, $a2, $b2")
-    display("$g, $a3, $b3")
-end
-# for (cv, convdc) in data["convdc"]
-#             busdc = convdc["busdc_i"]
-#             if convdc["conv_confi"]==1 && convdc["connect_at"]==2
-#                 convdc["Vdcset"][1] = result_mcdc_opf["solution"]["busdc"]["$busdc"]["vm"][2]
-#                 # display(result_mcdc_opf["solution"]["busdc"]["$busdc"]["vm"])
-#                 else
-#                     convdc["Vdcset"]= result_mcdc_opf["solution"]["busdc"]["$busdc"]["vm"]                # display(convdc["Vdcset"])
-#             end
-#
-#
-#             convdc["Q_g"] = -result_mcdc_opf["solution"]["convdc"]["$busdc"]["qgrid"]
-#             convdc["P_g"] = -result_mcdc_opf["solution"]["convdc"]["$busdc"]["pgrid"]
-#             # display(convdc["busdc_i"])
-#             # display(result_mcdc_opf["solution"]["convdc"]["$busdc"]["qconv"])
-#
+# #
+# for (i,conv) in data["convdc"]
+#      a= conv["ground_type"]
+#      # b=result_mcdc_pf["solution"]["convdc"]["$i"]["pgrid"]
+#      # a=conv["ground_z"]
+#      # a=conv["type_dc"]
+#      display("$i, $a")
 # end
 #
-# for (bd, busdc) in data["busdc"]
-#     a=busdc["vm"]
-#     b= result_mcdc_opf["solution"]["busdc"][bd]["vm"]
+# for (i,dcbranch) in data["branchdc"]
+#      a= dcbranch["r"]
+#      # b=result_mcdc_pf["solution"]["convdc"]["$i"]["pgrid"]
+#      display("$i, $a")
+# end
+#
+# for (i, branch) in result_mcdc_pf["solution"]["branch"]
+#     flow_from=branch["pf"]
+#     flow_to=branch["pt"]
+#
+#     a=result_mcdc_opf["solution"]["branch"]["$i"]["pf"]
+#     b=flow_from
+#      # b=result_mcdc_pf["solution"]["convdc"]["$i"]["pgrid"]
+#      # display("$i, $flow_from, $flow_to")
+#      display("$i, $a, $b")
+# end
+#
+# println("termination status of the pf is:", result_mcdc_pf["termination_status"])
+# #################
+# #
+# #
+# for (g, gen) in data["gen"]
+#     bus = gen["gen_bus"]
+#     a1=gen["pg"]
+#     b1= result_mcdc_opf["solution"]["gen"][g]["pg"]
+#     a2=gen["qg"]
+#     b2= result_mcdc_opf["solution"]["gen"][g]["qg"]
+#     a3=gen["vg"]
+#     b3= result_mcdc_opf["solution"]["bus"]["$bus"]["vm"]
+#     # display("$g, $a1, $b1")
+#     # display("$g, $a2, $b2")
+#     display("$g, $a3, $b3")
+# end
+# # for (cv, convdc) in data["convdc"]
+# #             busdc = convdc["busdc_i"]
+# #             if convdc["conv_confi"]==1 && convdc["connect_at"]==2
+# #                 convdc["Vdcset"][1] = result_mcdc_opf["solution"]["busdc"]["$busdc"]["vm"][2]
+# #                 # display(result_mcdc_opf["solution"]["busdc"]["$busdc"]["vm"])
+# #                 else
+# #                     convdc["Vdcset"]= result_mcdc_opf["solution"]["busdc"]["$busdc"]["vm"]                # display(convdc["Vdcset"])
+# #             end
+# #
+# #
+# #             convdc["Q_g"] = -result_mcdc_opf["solution"]["convdc"]["$busdc"]["qgrid"]
+# #             convdc["P_g"] = -result_mcdc_opf["solution"]["convdc"]["$busdc"]["pgrid"]
+# #             # display(convdc["busdc_i"])
+# #             # display(result_mcdc_opf["solution"]["convdc"]["$busdc"]["qconv"])
+# #
+# # end
+# #
+# # for (bd, busdc) in data["busdc"]
+# #     a=busdc["vm"]
+# #     b= result_mcdc_opf["solution"]["busdc"][bd]["vm"]
+# #
+# # end
+#
+# for (b, bus) in data["bus"]
+#     a=bus["vm"]
+#     b1= result_mcdc_opf["solution"]["bus"][b]["vm"]
+#     c=bus["va"]
+#     d= result_mcdc_opf["solution"]["bus"][b]["va"] * 180/pi
+#     # display("$b, $a, $b1")
+#     display("$b, $c, $d")
 #
 # end
-
-for (b, bus) in data["bus"]
-    a=bus["vm"]
-    b1= result_mcdc_opf["solution"]["bus"][b]["vm"]
-    c=bus["va"]
-    d= result_mcdc_opf["solution"]["bus"][b]["va"] * 180/pi
-    # display("$b, $a, $b1")
-    display("$b, $c, $d")
-
-end
 
 println("termination status of the opf is:", result_mcdc_opf["termination_status"])
 println("termination status of the pf is:", result_mcdc_pf["termination_status"])
 
 println("Objective value of the opf is:", result_mcdc_opf["objective"])
 println("Objective value of the pf is:", result_mcdc_pf["objective"])
+
+println("termination status of the opf is:", result_mcdc_opf1["termination_status"])
+println("termination status of the pf is:", result_mcdc_pf1["termination_status"])
+
+println("Objective value of the opf is:", result_mcdc_opf1["objective"])
+println("Objective value of the pf is:", result_mcdc_pf1["objective"])
+
+println("termination status of the opf is:", result_mcdc_opf2["termination_status"])
+println("termination status of the pf is:", result_mcdc_pf2["termination_status"])
+
+println("Objective value of the opf is:", result_mcdc_opf2["objective"])
+println("Objective value of the pf is:", result_mcdc_pf2["objective"])
+
+println("termination status of the opf is:", result_mcdc_opf3["termination_status"])
+println("termination status of the pf is:", result_mcdc_pf3["termination_status"])
+
+println("Objective value of the opf is:", result_mcdc_opf3["objective"])
+println("Objective value of the pf is:", result_mcdc_pf3["objective"])
