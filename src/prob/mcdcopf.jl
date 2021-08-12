@@ -47,14 +47,14 @@ function post_mcdcopf(pm::_PM.AbstractPowerModel)
         _PM.constraint_thermal_limit_to(pm, i)
     end
     for i in _PM.ids(pm, :busdc)
-        display("Now it is callig dc grid kcl for bus $i")
+        # display("Now it is callig dc grid kcl for bus $i")
         constraint_kcl_shunt_dcgrid(pm, i)
     end
     for i in _PM.ids(pm, :branchdc)
         constraint_ohms_dc_branch(pm, i)
     end
     for i in _PM.ids(pm, :convdc)
-        display("Now it is callig all converter constraints")
+        # display("Now it is callig all converter constraints")
         constraint_converter_losses(pm, i)
         constraint_converter_dc_ground(pm, i)
         constraint_converter_current(pm, i)
@@ -62,7 +62,7 @@ function post_mcdcopf(pm::_PM.AbstractPowerModel)
         constraint_conv_transformer(pm, i)
         constraint_conv_reactor(pm, i)
         constraint_conv_filter(pm, i)
-        display("end of constraints for converter $i")
+        # display("end of constraints for converter $i")
         if pm.ref[:nw][pm.cnw][:convdc][i]["islcc"] == 1
             constraint_conv_firing_angle(pm, i)
         end

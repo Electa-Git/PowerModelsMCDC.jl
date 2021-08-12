@@ -248,7 +248,7 @@ function variable_dcside_current_grounding_shunt(pm::_PM.AbstractPowerModel; nw:
 
             if bounded
                 for i in _PM.ids(pm, nw, :convdc)
-                    display(_PM.ref(pm, nw, :convdc)[i]["ground_type"])
+                    # display(_PM.ref(pm, nw, :convdc)[i]["ground_type"])
                     JuMP.set_lower_bound.(icdcg_shunt[i],  -_PM.ref(pm, nw, :convdc)[i]["Imax"][1]*0.1 * bigM*_PM.ref(pm, nw, :convdc)[i]["ground_type"])
                     JuMP.set_upper_bound.(icdcg_shunt[i],   _PM.ref(pm, nw, :convdc)[i]["Imax"][1] *0.1* bigM*_PM.ref(pm, nw, :convdc)[i]["ground_type"])
                     # end
@@ -314,7 +314,7 @@ function variable_dcside_grounding_shunt_power(pm::_PM.AbstractPowerModel; nw::I
 
     if bounded
         for i in _PM.ids(pm, nw, :convdc)
-            display(_PM.ref(pm, nw, :convdc)[i]["ground_type"])
+            # display(_PM.ref(pm, nw, :convdc)[i]["ground_type"])
             JuMP.set_lower_bound.(pcdcg_shunt[i],  -_PM.ref(pm, nw, :convdc)[i]["Pacrated"][1]*0.1 * bigM*_PM.ref(pm, nw, :convdc)[i]["ground_type"])
             JuMP.set_upper_bound.(pcdcg_shunt[i],   _PM.ref(pm, nw, :convdc)[i]["Pacrated"][1] *0.1* bigM*_PM.ref(pm, nw, :convdc)[i]["ground_type"])
             # end

@@ -21,7 +21,7 @@ using Juniper
 using AmplNLWriter
 using Couenne_jll
 # ,print_level=1
-ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-9,print_level=1)
+ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6,print_level=1)
 gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
 # couenne_solver= JuMP.with_optimizer("Users/cjat/Downloads/couenne-osx/couenne.exe", print_level =0)
 # couenne_solver= JuMP.with_optimizer("Users/cjat/Downloads/couenne-osx/couenne", print_level =0)
@@ -109,15 +109,15 @@ function build_mc_data!(base_data)
     return mp_data
 end
 
-datadc_new = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
-# datadc_new = build_mc_data!("./test/data/matacdc_scripts/4_case5_2grids_MC.m")
+# datadc_new = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
+datadc_new = build_mc_data!("./test/data/matacdc_scripts/4_case5_2grids_MC.m")
 
 s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
 result_mcdc_opf = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
 result_mcdc_pf = PowerModelsMCDC.run_mcdcpf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
-data = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
-# data = build_mc_data!("./test/data/matacdc_scripts/4_case5_2grids_MC.m")
+# data = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
+data = build_mc_data!("./test/data/matacdc_scripts/4_case5_2grids_MC.m")
 
 for (g, gen) in data["gen"]
     bus = gen["gen_bus"]
@@ -188,13 +188,13 @@ for (bd, busdc) in data["gen"]
 
 end
 
-# for (bd, bus) in data["bus"]
-#     # a=bus["va"]
-#     b= result_mcdc_opf1["solution"]["bus"][bd]["va"]
-#     c=result_mcdc_pf1["solution"]["bus"][bd]["va"]
-#     display("$bd, $b, $c")
-#     # display("$bd, $c")
-# end
+for (bd, bus) in data["bus"]
+    # a=bus["va"]
+    b= result_mcdc_opf1["solution"]["bus"][bd]["va"]
+    c=result_mcdc_pf1["solution"]["bus"][bd]["va"]
+    display("$bd, $b, $c")
+    # display("$bd, $c")
+end
 
 println(".....pdc opf....")
 for (i,conv) in result_mcdc_opf1["solution"]["convdc"]
@@ -205,5 +205,17 @@ end
 println(".....pdc pf....")
 for (i,conv) in result_mcdc_pf1["solution"]["convdc"]
      a= conv["pdc"]
+    display("$i, $a")
+end
+
+println(".....pgrid opf....")
+for (i,conv) in result_mcdc_opf1["solution"]["convdc"]
+     a= conv["pgrid"]
+    display("$i, $a")
+end
+
+println(".....pgrid pf....")
+for (i,conv) in result_mcdc_pf1["solution"]["convdc"]
+     a= conv["pgrid"]
     display("$i, $a")
 end

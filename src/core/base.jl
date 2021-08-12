@@ -139,7 +139,7 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                     Memento.warn(_PM._LOGGER, "For converter $conv_id is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
                 end
                 convbus_ac = conv["busac_i"]
-                 display(conv["Vmmax"])
+                 # display(conv["Vmmax"])
                 # if conv["Vmmax"] < nw_ref[:bus][convbus_ac]["vmin"]
                 #     Memento.warn(_PM._LOGGER, "The maximum AC side voltage of converter $conv_id is smaller than the minimum AC bus voltage")
                 # end

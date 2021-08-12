@@ -1,5 +1,5 @@
 using LinearAlgebra
-using LinearAlgebra: I
+# using LinearAlgebra: I
 import PowerModels
 const _PM = PowerModels
 using PowerModelsMCDC
@@ -17,8 +17,10 @@ using Memento
 using Gurobi
 
 
-ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-8, print_level=1)
-gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
+# ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-8, print_level=1)
+# gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
+
+ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
 
 
 function build_mc_data!(base_data)
@@ -83,8 +85,13 @@ function build_mc_data!(base_data)
         # bn["rateB"][metalic_cond_number]=bn["rateB"][metalic_cond_number]*0.1
         # bn["rateC"][metalic_cond_number]=bn["rateC"][metalic_cond_number]*0.1
 
-        bn["return_z"]=0.5 # adjust metallic resistance
+        bn["return_z"]=0.052 # adjust metallic resistance
         bn["r"][metalic_cond_number]=bn["return_z"]
+        # if bn["line_confi"]==1
+        #     bn["return_z"]=0.052 # adjust metallic resistance
+        #     bn["r"][metalic_cond_number]=bn["return_z"]
+        # end
+
     end
 
       # Adjusting conveter limits
@@ -246,22 +253,17 @@ end
 # tot_loss=Tot_gen-tot_load
 
 "........pd[11] variation results....."
-N=10
-vm_0= Dict([(l, Dict([(i, 0.0000) for (i, dcbus) in result_mcdc["solution"]["busdc"]])) for l in 1:N])
+# N=10
+# # vm_0= Dict([(l, Dict([(i, 0.0000) for (i, dcbus) in result_mcdc["solution"]["busdc"]])) for l in 1:N])
 #
-# load_0=0.0
-for (i, load) in datadc_new["load"]
-    if load["load_bus"] == 11
-        load_0= load["pd"]
-    end
-end
+# vm_0= Dict([(l, Dict([("$i", 0.0000) for i in 1:4+2])) for l in 1:N])
+# vm_term=Dict([(l, Dict()) for l in 1:N])
+#  load_0=0.5
 #
 # for k=1:N
 #     for (i, load) in datadc_new["load"]
 #         if load["load_bus"] == 11
 #             load["pd"]= k*0.1*load_0
-#             display("load_update",)
-#             display(load["pd"])
 #         end
 #     end
 #
@@ -270,15 +272,72 @@ end
 #          b=dcbus["vm"][3]
 #          vm_0[k]["$i"]= b
 #      end
-#
+#      obj= result_mcdc["objective"]
+#      pg5=result_mcdc["solution"]["gen"]["5"]["pg"]
+#      # term=result_mcdc["termination_status"]
+#      vm_0[k]["5"]= obj
+#      vm_0[k]["6"]= pg5
+#      # push!(vm_term[k], term)
 # end
 #
 #
-#  # bc= Dict([(i, Dict([(j, 0) for j in 1:3]) ) for i in 1:2])
+# for (itr, bus) in vm_0
+# # for k=1:N
+#     a=bus["1"]
+#     b=bus["2"]
+#     c=bus["3"]
+#     d=bus["4"]
+#     obj=bus["5"]
+#     pg5=bus["6"]
+#     display("$itr, $a, $b, $c, $d, $obj,$pg5")
+#     # display("$bus["1"], $bus["3"]")
+#     # display("itr, bus["1"], bus["2"], bus["3"], bus["4"])
+# end
+#
+
+ ".......rd0 variation results....."
+#
+# N=10
+# # vm_0= Dict([(l, Dict([(i, 0.0000) for (i, dcbus) in result_mcdc["solution"]["busdc"]])) for l in 1:N])
+#
+# vm_0= Dict([(l, Dict([("$i", 0.0000) for i in 1:4+2])) for l in 1:N])
+# vm_term=Dict([(l, Dict()) for l in 1:N])
+#  # load_0=0.5
+#
+# for k=1:N
+#     for (c,bn) in datadc_new["branchdc"]
+#         metalic_cond_number= bn["conductors"]
+#         bn["return_z"]=0.52 # adjust metallic resistance
+#         bn["r"][metalic_cond_number]=bn["return_z"]
+#         if bn["line_confi"]==1
+#             bn["r"][metalic_cond_number]=k*0.052
+#         end
+#     end
+#
+#   result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
+#     for (i, dcbus) in result_mcdc["solution"]["busdc"]
+#          b=dcbus["vm"][3]
+#          vm_0[k]["$i"]= b
+#      end
+#      obj= result_mcdc["objective"]
+#      pg5=result_mcdc["solution"]["gen"]["5"]["pg"]
+#      # term=result_mcdc["termination_status"]
+#      vm_0[k]["5"]= obj
+#      vm_0[k]["6"]= pg5
+#      # push!(vm_term[k], term)
+# end
+#
 #
 # for (itr, bus) in vm_0
 # # for k=1:N
-#     display(bus["3"])
-#     # display(itr, bus["1"], bus["2"], bus["3"], bus["4"])
+#     a=bus["1"]
+#     b=bus["2"]
+#     c=bus["3"]
+#     d=bus["4"]
+#     obj=bus["5"]
+#     pg5=bus["6"]
+#     display("$itr, $a, $b, $c, $d, $obj,$pg5")
+#     # display("$bus["1"], $bus["3"]")
+#     # display("itr, bus["1"], bus["2"], bus["3"], bus["4"])
 # end
 #

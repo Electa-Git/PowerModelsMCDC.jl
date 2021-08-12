@@ -101,7 +101,7 @@ end
 
 function constraint_reactive_conv_setpoint(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     conv = _PM.ref(pm, nw, :convdc, i)
-    display(i)
+    # display(i)
     for cond in 1:conv["conductors"]
         constraint_reactive_conv_setpoint(pm, nw, i, conv["Q_g"][cond], cond)
     end

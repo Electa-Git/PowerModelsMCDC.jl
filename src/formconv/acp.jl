@@ -17,14 +17,14 @@ function constraint_converter_losses(pm::_PM.AbstractACPModel, n::Int,  i::Int, 
     pconv_dcg= _PM.var(pm, n, :pconv_dcg, i)[cond]
     iconv = _PM.var(pm, n, :iconv_ac, i)[cond]
 
-    display("reached to acp conveter losses")
+    # display("reached to acp conveter losses")
     # display("$pconv_ac; $pconv_dc; $pconv_dcg")
     # v = 1 #pu, assumption to approximate current
     # cm_conv_ac = pconv_ac/v # can actually be negative, not a very nice model...
     # if pm.setting["conv_losses_mp"] == true
         # _PM.con(pm, n, :conv_loss)[i] = JuMP.@constraint(pm.model, pconv_ac + pconv_dc == a + b*cm_conv_ac ...a + b*cm_conv_ac)
             # JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == 0 )
-        display(JuMP.@NLconstraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == a + b*iconv + c*iconv^2 ))
+        (JuMP.@NLconstraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == a + b*iconv + c*iconv^2 ))
     # else
     #     # _PM.con(pm, n, :conv_loss)[i] = JuMP.@constraint(pm.model, pconv_ac + pconv_dc >= a + b*cm_conv_ac )
     #     # _PM.con(pm, n, :conv_loss_aux)[i] = JuMP.@constraint(pm.model, pconv_ac + pconv_dc >= a - b*cm_conv_ac )
@@ -64,21 +64,21 @@ function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::In
      for k in 1:total_cond
         for (c,d) in bus_convs_dc_cond[(dc_bus, k)]
             if c==i
-                display("c,d,k == $c,$d,$k")
-                display(JuMP.@NLconstraint(pm.model, pconv_dc[c][d]==iconv_dc[c][d]*vdcm[dc_bus][k]))
+                # display("c,d,k == $c,$d,$k")
+                (JuMP.@NLconstraint(pm.model, pconv_dc[c][d]==iconv_dc[c][d]*vdcm[dc_bus][k]))
             end
         end
     end
 
   # neutral is always connected at bus conductor "3"
-  display("conv_cond= $conv_cond")
+  # display("conv_cond= $conv_cond")
     for g in 1:conv_cond
-        display(JuMP.@NLconstraint(pm.model, pconv_dcg[i][g]==iconv_dcg[i][g]*vdcm[dc_bus][3]))
-        display(JuMP.@NLconstraint(pm.model, iconv_dc[i][g]+iconv_dcg[i][g]==0))
+        (JuMP.@NLconstraint(pm.model, pconv_dcg[i][g]==iconv_dcg[i][g]*vdcm[dc_bus][3]))
+        (JuMP.@NLconstraint(pm.model, iconv_dc[i][g]+iconv_dcg[i][g]==0))
     end
 
 
-    display(JuMP.@NLconstraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1)==0))
+    (JuMP.@NLconstraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1)==0))
 
 
 end
@@ -87,7 +87,7 @@ end
 function constraint_converter_dc_ground(pm::_PM.AbstractACPModel, n::Int,  i::Int, pconv_dc,pconv_dcg,total_conv_cond)
     # constraint_converter_dc_ground(pm, nw, i,pconv_dc,pconv_dcg,total_conv_cond)
     # JuMP.@constraint(pm.model, pconv_dc[total_conv_cond+1]==sum(pconv_dcg[cond_g] for cond_g=1:total_conv_cond))
-    display(JuMP.@constraint(pm.model, pconv_dc[total_conv_cond+1]==sum(pconv_dcg[cond_g] for cond_g=1:total_conv_cond)))
+    (JuMP.@constraint(pm.model, pconv_dc[total_conv_cond+1]==sum(pconv_dcg[cond_g] for cond_g=1:total_conv_cond)))
 end
 
 function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::Int)
@@ -105,7 +105,7 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::I
          # display(JuMP.@NLconstraint(pm.model, sum(sum((pconv_dcg_shunt[c]/_PM.var(pm, n,  :vdcm,i)[3]) for c in b[(i, 3)]) for i in _PM.ids(pm, n, :busdc))==0))
          for i in _PM.ids(pm, n, :busdc)
             vdc= _PM.var(pm, n,  :vdcm,i)
-            display("the final check")
+            # display("the final check")
             # JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[1]==0)
             # JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[2]==0)
             # JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[3]==0)
@@ -114,8 +114,8 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::I
                  conv = _PM.ref(pm, n, :convdc, c)
                  r=conv["ground_z"]+ r_earth
 
-                 display(JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c]==(1/r)*vdc[3]^2))
-                 display(JuMP.@NLconstraint(pm.model, iconv_dcg_shunt[c]==(1/r)*vdc[3]))
+                 (JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c]==(1/r)*vdc[3]^2))
+                 (JuMP.@NLconstraint(pm.model, iconv_dcg_shunt[c]==(1/r)*vdc[3]))
 
              end
          end
@@ -124,8 +124,8 @@ end
 function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractACPModel, n::Int)
     iconv_dcg_shunt=_PM.var(pm, n, :iconv_dcg_shunt)
     bus_convs_grounding_shunt=_PM.ref(pm, n, :bus_convs_grounding_shunt)
-    display(iconv_dcg_shunt)
-    display(bus_convs_grounding_shunt)
+    # display(iconv_dcg_shunt)
+    # display(bus_convs_grounding_shunt)
     # Ig_sum= sum(sum(iconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, 3)]) for i in _PM.ids(pm, n, :busdc))
         # display(Ig_sum)
          # display(JuMP.@NLconstraint(pm.model, Ig_sum ==0))
@@ -135,8 +135,8 @@ end
 function constraint_dc_grid_neutral_voltage(pm::_PM.AbstractACPModel, n::Int)
     for i in _PM.ids(pm, n, :busdc)
        vdc= _PM.var(pm, n,  :vdcm,i)
-       display(vdc)
-       display(JuMP.@NLconstraint(pm.model, (vdc[3])*(vdc[3])>=1e-6))
+       # display(vdc)
+       (JuMP.@NLconstraint(pm.model, (vdc[3])*(vdc[3])>=1e-6))
    end
 end
 """
