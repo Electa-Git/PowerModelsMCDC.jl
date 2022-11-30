@@ -33,7 +33,7 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=p
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
     total_cond = _PM.ref(pm, nw, :branchdc, i)["conductors"]
-
+    # display("$i")
     p = _PM.ref(pm, nw, :dcpol)
     # display("p for bus $i is $p")
     constraint_ohms_dc_branch(pm, nw, f_bus, t_bus, f_idx, t_idx, branch["r"], p, total_cond)
@@ -60,16 +60,12 @@ function constraint_converter_dc_ground(pm::_PM.AbstractPowerModel, i::Int; nw::
         constraint_converter_dc_ground(pm, nw, i,pconv_dc, pconv_dcg, total_conv_cond)
 end
 
-function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractPowerModel, nw::Int=pm.cnw)
+function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw)
             constraint_converter_dc_ground_shunt_ohm(pm, nw)
 end
 
-function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractPowerModel, nw::Int=pm.cnw)
+function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw)
             constraint_converter_dc_ground_shunt_kcl(pm, nw)
-end
-
-function constraint_dc_grid_neutral_voltage(pm::_PM.AbstractPowerModel, nw::Int=pm.cnw)
-    constraint_dc_grid_neutral_voltage(pm, nw)
 end
 
 function constraint_converter_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=pm.cnw)

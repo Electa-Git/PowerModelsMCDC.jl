@@ -196,8 +196,8 @@ end
 #     display(result_mcdc["solution"]["branchdc"]["$i"])
 # end
 for (i,branch) in result_mcdc["solution"]["branchdc"]
-    flow_from=branch["pf"]
-    flow_to=branch["pt"]
+    flow_from=branch["i_from"]
+    flow_to=branch["i_from"]
     display("$i, $flow_from, $flow_to")
 end
 

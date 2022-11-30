@@ -13,8 +13,8 @@ function constraint_kcl_shunt(pm::_PM.AbstractACPModel, n::Int,  i::Int, bus_arc
     pconv_grid_ac = _PM.var(pm, n,  :pconv_tf_fr)
     qconv_grid_ac = _PM.var(pm, n,  :qconv_tf_fr)
     # display("constraint_kcl_shunt for ac bus $i")
-    (JuMP.@NLconstraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n,  :pconv_tf_fr, c))) for c in bus_convs_ac)  == sum(pg[g] for g in bus_gens)   - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*vm^2))
-    JuMP.@NLconstraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n,  :pconv_tf_fr, c))) for c in bus_convs_ac)  == sum(qg[g] for g in bus_gens)  - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts)*vm^2)
+    display(JuMP.@NLconstraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n,  :pconv_tf_fr, c))) for c in bus_convs_ac)  == sum(pg[g] for g in bus_gens)   - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*vm^2))
+    JuMP.@NLconstraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(qconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n,  :qconv_tf_fr, c))) for c in bus_convs_ac)  == sum(qg[g] for g in bus_gens)  - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts)*vm^2)
 end
 
 #copied from dcp
@@ -89,14 +89,19 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int,  f_bus, t_b
             # g = 1 / r[c]
             #doubt about p in following equation
             for k=1:3
+                # display("$k")
                 for (line, d) in bus_arcs_dcgrid_cond[(f_bus, k)]
-                    if r[d] == 0
-                         JuMP.@constraint(pm.model, i_dc_fr[d] + i_dc_to[d] == 0)
-                    else
-                             g = 1 / r[d]
-                             (JuMP.@NLconstraint(pm.model, i_dc_fr[d] ==  g * (vmdc_fr[k] - vmdc_to[k])))
-                             (JuMP.@NLconstraint(pm.model, i_dc_to[d] ==  g * (vmdc_to[k] - vmdc_fr[k])))
-                        end
+                    if line == f_idx
+                        if r[d] == 0
+                             JuMP.@constraint(pm.model, i_dc_fr[d] + i_dc_to[d] == 0)
+                             JuMP.@constraint(pm.model, vmdc_fr[k] - vmdc_to[k] == 0)
+                        else
+                                 g = 1 / r[d]
+                                 # display("$line, $d")
+                                (JuMP.@NLconstraint(pm.model, i_dc_fr[d] ==  g * (vmdc_fr[k] - vmdc_to[k])))
+                                (JuMP.@NLconstraint(pm.model, i_dc_to[d] ==  g * (vmdc_to[k] - vmdc_fr[k])))
+                            end
+                         end
                      end
             end
 

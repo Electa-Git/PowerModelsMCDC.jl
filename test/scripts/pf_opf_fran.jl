@@ -68,7 +68,7 @@ function build_mc_data!(base_data)
             bn["rateA"]=bn["rateA"]/2
             bn["rateB"]=bn["rateB"]/2
             bn["rateC"]=bn["rateC"]/2
-            bn["r"]=bn["r"]/2
+            # bn["r"]=bn["r"]/2
         end
         metalic_cond_number= bn["conductors"]
         # bn["rateA"][metalic_cond_number]=bn["rateA"][metalic_cond_number]*0.1
@@ -76,7 +76,7 @@ function build_mc_data!(base_data)
         # bn["rateC"][metalic_cond_number]=bn["rateC"][metalic_cond_number]*0.1
         display(bn["r"][metalic_cond_number])
 
-        bn["return_z"]=0.5 # adjust metallic resistance
+        bn["return_z"]=0.001384 # adjust metallic resistance
         bn["r"][metalic_cond_number]=bn["return_z"]
     end
 
@@ -86,6 +86,7 @@ function build_mc_data!(base_data)
              conv["Pacmax"]=conv["Pacmax"]/2
              conv["Pacmin"]=conv["Pacmin"]/2
              conv["Pacrated"]=conv["Pacrated"]/2
+
          end
       end
       # Adjusting metallic return bus voltage limits
@@ -146,73 +147,146 @@ end
 
 # file="./test/data/matacdc_scripts/case5_2grids_MC.m"
 # file="./test/data/matacdc_scripts/case67mcdc_scopf.m"
-# file="./test/data/matacdc_scripts/fran_bipolarlink_testcase.m"
-file="./test/data/matacdc_scripts/case39_mcdc.m"
+file="./test/data/matacdc_scripts/fran_bipolarlink_testcase_case1.m"
 
 s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
 resultAC = _PMACDC.run_acdcopf(file, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
+data=build_mc_data!(file)
+resultMC_opf = PowerModelsMCDC.run_mcdcopf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
 # file="./test/data/matacdc_scripts/case5_2grids_MC.m"
 
-data= PowerModels.parse_file(file)
-PowerModelsMCDC.process_additional_data!(data)
+# data= PowerModels.parse_file(file)
+# PowerModelsMCDC.process_additional_data!(data)
+#
+# for (g, gen) in data["gen"]
+#     bus = gen["gen_bus"]
+#     gen["pg"] = resultAC["solution"]["gen"][g]["pg"]
+#     gen["qg"] = resultAC["solution"]["gen"][g]["qg"]
+#     gen["vg"] = resultAC["solution"]["bus"]["$bus"]["vm"]
+# end
+# for (cv, convdc) in data["convdc"]
+#             busdc = convdc["busdc_i"]
+#             convdc["Vdcset"] = resultAC["solution"]["busdc"]["$busdc"]["vm"]
+#             convdc["Q_g"] = -resultAC["solution"]["convdc"]["$busdc"]["qgrid"]
+#             convdc["P_g"] = -resultAC["solution"]["convdc"]["$busdc"]["pgrid"]
+#             display(convdc["busdc_i"])
+#             display(resultAC["solution"]["convdc"]["$busdc"]["qconv"])
+#
+# end
+# for (bd, busdc) in data["busdc"]
+#     busdc["vm"] = resultAC["solution"]["busdc"][bd]["vm"]
+# end
+# for (b, bus) in data["bus"]
+#     bus["vm"] = resultAC["solution"]["bus"][b]["vm"]
+#     bus["va"] = resultAC["solution"]["bus"][b]["va"] * 180/pi
+# end
+#
+# resultAC_pf = _PMACDC.run_acdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+#
+# data1= build_mc_data_pf_ac!(data)
+# # data3= build_mc_data!(file)
+#
+# resultMC_pf = PowerModelsMCDC.run_mcdcpf(data1, _PM.ACPPowerModel, ipopt_solver, setting = s)
+# println("termination status of the pf is:", resultMC_pf["termination_status"])
+#
+# for (bd, busdc) in data["busdc"]
+#     a=busdc["vm"]
+#     b= resultAC["solution"]["busdc"][bd]["vm"]
+#     c=resultMC_pf["solution"]["busdc"][bd]["vm"]
+#     display("$bd, $b, $c")
+#     # display("$bd, $c")
+#
+# end
 
-for (g, gen) in data["gen"]
-    bus = gen["gen_bus"]
-    gen["pg"] = resultAC["solution"]["gen"][g]["pg"]
-    gen["qg"] = resultAC["solution"]["gen"][g]["qg"]
-    gen["vg"] = resultAC["solution"]["bus"]["$bus"]["vm"]
+println("..objective value opf =", resultAC["objective"])
+ # resultAC["objective"]
+
+println(".....Pg opf....")
+for (i,gen) in resultMC_opf["solution"]["gen"]
+    a= gen["pg"]
+    b= gen["qg"]
+   display("$i, $a, $b")
 end
-for (cv, convdc) in data["convdc"]
-            busdc = convdc["busdc_i"]
-            convdc["Vdcset"] = resultAC["solution"]["busdc"]["$busdc"]["vm"]
-            convdc["Q_g"] = -resultAC["solution"]["convdc"]["$busdc"]["qgrid"]
-            convdc["P_g"] = -resultAC["solution"]["convdc"]["$busdc"]["pgrid"]
-            display(convdc["busdc_i"])
-            display(resultAC["solution"]["convdc"]["$busdc"]["qconv"])
 
-end
-for (bd, busdc) in data["busdc"]
-    busdc["vm"] = resultAC["solution"]["busdc"][bd]["vm"]
-end
-for (b, bus) in data["bus"]
-    bus["vm"] = resultAC["solution"]["bus"][b]["vm"]
-    bus["va"] = resultAC["solution"]["bus"][b]["va"] * 180/pi
+println(".....AC bus volatage opf....")
+for (i,bus) in resultMC_opf["solution"]["bus"]
+    a= bus["vm"]
+    b= bus["va"]
+   display("$i, $a,$b")
 end
 
-resultAC_pf = _PMACDC.run_acdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
-
-data1= build_mc_data_pf_ac!(data)
-# data3= build_mc_data!(file)
-
-resultMC_pf = PowerModelsMCDC.run_mcdcpf(data1, _PM.ACPPowerModel, ipopt_solver, setting = s)
-println("termination status of the pf is:", resultMC_pf["termination_status"])
-
-for (bd, busdc) in data["busdc"]
-    a=busdc["vm"]
-    b= resultAC["solution"]["busdc"][bd]["vm"]
-    c=resultMC_pf["solution"]["busdc"][bd]["vm"]
-    display("$bd, $b, $c")
-    # display("$bd, $c")
-
+println("..... ac brach flow opf....")
+for (i,conv) in resultMC_opf["solution"]["branch"]
+     a= conv["pt"]
+     b= conv["qt"]
+    display("$i, $a, $b")
 end
 
-println(".....pdc opf....")
-for (i,conv) in resultAC["solution"]["convdc"]
-     a= conv["pdc"]
+println(".....pconv, qconv opf....")
+for (i,conv) in resultMC_opf["solution"]["convdc"]
+     a= conv["pconv"]
+     b= conv["qconv"]
+    display("$i, $a, $b")
+end
+
+println(".....pconv, pdc opf....")
+for (i,conv) in resultMC_opf["solution"]["convdc"]
+     a= conv["iconv"]
+     b= conv["iconv_dc"]
+     c= conv["iconv_dcg"]
+     d= conv["iconv_dcg_shunt"]
+    display("$i, $a, $b, $c, $d")
+end
+
+
+println("..... dc bus voltages opf....")
+for (i,conv) in resultMC_opf["solution"]["busdc"]
+     a= conv["vm"]
     display("$i, $a")
 end
 
-println(".....pdc pf....")
-for (i,conv) in resultMC_pf["solution"]["convdc"]
-     a= conv["pdc"]
+println("..... dc brach flow opf....")
+for (i,conv) in resultMC_opf["solution"]["branchdc"]
+     a= conv["i_from"]
     display("$i, $a")
 end
 
-for (bd, busdc) in data["busdc"]
-    a=busdc["vm"]
-    b= resultAC["solution"]["busdc"][bd]["vm"]
-    c=resultMC_pf["solution"]["busdc"][bd]["vm"]
-    display("$bd, $b, $c")
-    # display("$bd, $c")
-end
+
+# println(".....mcdc pconv opf....")
+# for (i,conv) in resultMC_opf["solution"]["convdc"]
+#      a= conv["pconv"]
+#     display("$i, $a")
+# end
+
+# println(".....mcdc Pg opf....")
+# for (i,conv) in resultMC_opf["solution"]["gen"]
+#      a= conv["pg"]
+#     display("$i, $a")
+# end
+
+# println("..... mcdc ac brach flow opf....")
+# for (i,conv) in resultMC_opf["solution"]["branch"]
+#      a= conv["pt"]
+#     display("$i, $a")
+# end
+#
+# println("..... mcdc dc brach flow opf....")
+# for (i,conv) in resultMC_opf["solution"]["branchdc"]
+#      a= conv["i_from"]
+#     display("$i, $a")
+# end
+
+# println(".....pdc pf....")
+# for (i,conv) in resultMC_pf["solution"]["convdc"]
+#      a= conv["pdc"]
+#     display("$i, $a")
+# end
+
+# for (bd, busdc) in data["busdc"]
+#     a=busdc["vm"]
+#     b= resultAC["solution"]["busdc"][bd]["vm"]
+#     c=resultMC_pf["solution"]["busdc"][bd]["vm"]
+#     display("$bd, $b, $c")
+#     # display("$bd, $c")
+# end

@@ -44,12 +44,12 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int,
 
     # display("KCL at bus:$i")
     for k = 1: total_cond
-            for c in bus_convs_grounding_shunt[(i, k)]
-                 # for c in bus_convs_grounding_shunt[(i, k)]
-                # display("value of c is: $c")
-                # display(iconv_dcg_shunt[c])
-            end
-        (JuMP.@constraint(pm.model, sum(i_dcgrid[c][d] for (c,d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(iconv_dc[c][d] for (c,d) in bus_convs_dc_cond[(i, k)])+sum(iconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, k)]) == 0))
+            # for c in bus_convs_grounding_shunt[(i, k)]
+            #      # for c in bus_convs_grounding_shunt[(i, k)]
+            #     display("value of c is: $c")
+            #     display(iconv_dcg_shunt[c])
+            # end
+        display(JuMP.@constraint(pm.model, sum(i_dcgrid[c][d] for (c,d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(iconv_dc[c][d] for (c,d) in bus_convs_dc_cond[(i, k)])+sum(iconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, k)]) == 0))
          # display(JuMP.@constraint(pm.model, sum(p_dcgrid[c][d] for (c,d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(pconv_dc[c][d] for (c,d) in bus_convs_dc_cond[(i, k)]) == (-pd[k])))
          # display(JuMP.@constraint(pm.model, sum(p_dcgrid[c][d] for (c,d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(pconv_dc[c][d] for (c,d) in bus_convs_dc_cond[(i, k)]) == (-pd[k])))
 

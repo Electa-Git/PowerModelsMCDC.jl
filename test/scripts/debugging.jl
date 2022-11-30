@@ -110,14 +110,19 @@ function build_mc_data!(base_data)
 end
 
 # datadc_new = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
-datadc_new = build_mc_data!("./test/data/matacdc_scripts/4_case5_2grids_MC.m")
+# file="./test/data/matacdc_scripts/4_case5_2grids_MC.m"
+# file="./test/data/matacdc_scripts/case5_2grids_MC.m"
+# file="./test/data/matacdc_scripts/case39_mcdc.m"
+file="./test/data/matacdc_scripts/case67mcdc_scopf.m"
+
+datadc_new = build_mc_data!(file)
 
 s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
 result_mcdc_opf = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
 result_mcdc_pf = PowerModelsMCDC.run_mcdcpf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
 # data = build_mc_data!("./test/data/matacdc_scripts/case5_2grids_MC.m")
-data = build_mc_data!("./test/data/matacdc_scripts/4_case5_2grids_MC.m")
+data = build_mc_data!(file)
 
 for (g, gen) in data["gen"]
     bus = gen["gen_bus"]
