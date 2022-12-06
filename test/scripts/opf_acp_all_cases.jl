@@ -32,12 +32,12 @@ function build_mc_data!(base_data)
                # bn["connect_at"]=2
                bn["line_confi"]=2
            end
-           # if c == "2"
-           #     # display(bn["fbusdc"])
-           #     # display(bn["tbusdc"])
-           #     bn["connect_at"]=1
-           #     bn["line_confi"]=1
-           # end
+        #    if c == "1"
+        #        # display(bn["fbusdc"])
+        #        # display(bn["tbusdc"])
+        #        bn["connect_at"]=2
+        #        bn["line_confi"]=1
+        #    end
        end
        for (c,conv) in mp_data["convdc"]
            # display("configuration of $c is")
@@ -48,7 +48,7 @@ function build_mc_data!(base_data)
                # conv["ground_type"]=0
            end
            "for simulating a single pole outage"
-           if c == "1"
+           if c == "0"
                conv["conv_confi"]=1
                 conv["connect_at"]=2
                # conv["ground_type"]=0
@@ -135,20 +135,11 @@ function build_mc_data!(base_data)
 end
 
 
-# file="./test/data/matacdc_scripts/case5_2grids_MC.m"
-# file="./test/data/matacdc_scripts/case39_mcdc.m"
-# file="./test/data/matacdc_scripts/case3120sp_acdc.m"
-# file="./test/data/matacdc_scripts/case5_2grids_MC.m"
-
-# file="./test/data/matacdc_scripts/case5_2grids_MC.m"
-# file="./test/data/matacdc_scripts/case67mcdc_scopf.m"
-# file="./test/data/matacdc_scripts/case67acdc_scopf.m"
-# file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
 
 file="./test/data/matacdc_scripts/case5_2grids_MC.m"
 # file="./test/data/matacdc_scripts/case39_mcdc.m"
-# file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
-# file="./test/data/matacdc_scripts/case3120sp_acdc.m"
+# file="./test/data/matacdc_scripts/case67mcdc_scopf.m"
+# file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
 
 
 
@@ -220,8 +211,8 @@ println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 #     b=dcbus["vm"]
 #     display("$i, $b")
 # end
-#
 # #
+# # #
 # println(".....conv....")
 # println(".....pgrid....")
 # for (i,conv) in result_mcdc["solution"]["convdc"]
@@ -235,25 +226,25 @@ println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 #      a= conv["pdc"]
 #     display("$i, $a")
 # end
-#
+
 # println(".....pdcg....")
 # for (i,conv) in result_mcdc["solution"]["convdc"]
 #      a= conv["pdcg"]
 #     display("$i, $a")
 # end
-#
+
 # println(".....pdcg_shunt....")
 # for (i,conv) in result_mcdc["solution"]["convdc"]
 #      a= conv["pdcg_shunt"]
 #     display("$i, $a")
 # end
-#
+
 # println(".....iconv_dc....")
 # for (i,conv) in result_mcdc["solution"]["convdc"]
 #      a= conv["iconv_dc"]
 #      display("$i, $a")
 # end
-#
+
 # println(".....iconv_dcg_shunt....")
 # for (i,conv) in result_mcdc["solution"]["convdc"]
 #      a= conv["iconv_dcg_shunt"]
@@ -265,7 +256,7 @@ println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 #         b=conv["ground_z"]
 #         display("$a, $b")
 # end
-#
+
 # println(".....DC branch flows....")
 # for (i,branch) in result_mcdc["solution"]["branchdc"]
 #     flow_from=branch["i_from"]
@@ -298,8 +289,9 @@ println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 # Tot_gen= sum(gen["pg"] for (i,gen) in result_mcdc["solution"]["gen"])
 # tot_load=sum(load["pd"] for (i,load) in datadc_new["load"])
 # tot_loss=Tot_gen-tot_load
+# display(tot_loss)
 
-"........pd[11] variation results....."
+# "........pd[11] variation results....."
 # N=10
 # # vm_0= Dict([(l, Dict([(i, 0.0000) for (i, dcbus) in result_mcdc["solution"]["busdc"]])) for l in 1:N])
 #
