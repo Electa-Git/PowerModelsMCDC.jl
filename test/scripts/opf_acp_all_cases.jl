@@ -136,10 +136,10 @@ end
 
 
 
-file="./test/data/matacdc_scripts/case5_2grids_MC.m"
+# file="./test/data/matacdc_scripts/case5_2grids_MC.m"
 # file="./test/data/matacdc_scripts/case39_mcdc.m"
-# file="./test/data/matacdc_scripts/case67mcdc_scopf.m"
-# file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
+# file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
+file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
 
 
 
@@ -182,207 +182,29 @@ println("termination status of the mcdc_opf is:", result_mcdc["termination_statu
 println(" Objective mcdc_opf is:", result_mcdc["objective"])
 println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 
-# println("#######ACgrid side#######")
-# println("generation")
-# for (i,gen) in result_mcdc["solution"]["gen"]
-#     g=gen["pg"]
-#     display("$i, $g")
-# end
-# println("AC Bus Va and Vm")
-# for (i,bus) in result_mcdc["solution"]["bus"]
-#     a=bus["va"]
-#     b=bus["vm"]
-#     display("$i, $a, $b")
-#     # display(a b)
-# end
-#
-# println("AC branch flows")
-# for (i,branch) in result_mcdc["solution"]["branch"]
-#     flow_from=branch["pf"]
-#     flow_to=branch["pt"]
-#     display("$i, $flow_from, $flow_to")
-# end
-#
-#
-#
-# println("###DC grid side###")
-# println("DC bus Vm")
-# for (i,dcbus) in result_mcdc["solution"]["busdc"]
-#     b=dcbus["vm"]
-#     display("$i, $b")
-# end
-# #
-# # #
-# println(".....conv....")
-# println(".....pgrid....")
-# for (i,conv) in result_mcdc["solution"]["convdc"]
-#      # display("power from grid to dc at converter $i")
-#      a= conv["pgrid"]
-#     display("$i, $a")
-# end
+#########
 
-# println(".....pdc....")
-# for (i,conv) in result_mcdc["solution"]["convdc"]
-#      a= conv["pdc"]
-#     display("$i, $a")
-# end
+N=10
+solve_time_dc=Dict([(l, Dict([("$i", 0.0000) for i in 1:4])) for l in 1:N])
 
-# println(".....pdcg....")
-# for (i,conv) in result_mcdc["solution"]["convdc"]
-#      a= conv["pdcg"]
-#     display("$i, $a")
-# end
+for k=1:N
 
-# println(".....pdcg_shunt....")
-# for (i,conv) in result_mcdc["solution"]["convdc"]
-#      a= conv["pdcg_shunt"]
-#     display("$i, $a")
-# end
-
-# println(".....iconv_dc....")
-# for (i,conv) in result_mcdc["solution"]["convdc"]
-#      a= conv["iconv_dc"]
-#      display("$i, $a")
-# end
-
-# println(".....iconv_dcg_shunt....")
-# for (i,conv) in result_mcdc["solution"]["convdc"]
-#      a= conv["iconv_dcg_shunt"]
-#      display("$i, $a")
-# end
-# println(".....conv ground status....")
-# for (i,conv) in datadc_new["convdc"]
-#         a=conv["ground_type"]
-#         b=conv["ground_z"]
-#         display("$a, $b")
-# end
-
-# println(".....DC branch flows....")
-# for (i,branch) in result_mcdc["solution"]["branchdc"]
-#     flow_from=branch["i_from"]
-#     flow_to=branch["i_to"]
-#     display("$i, $flow_from, $flow_to")
-# end
-
-# for (i,branch) in datadc_new["branchdc"]
-#     r=branch["r"]
-#     display("$i,$r")
-# end
-
-# println(".....DC branch losses....")
-# for (i,branch) in result_mcdc["solution"]["branchdc"]
-#     flow_from=branch["pf"]
-#     flow_to=branch["pt"]
-#     c=flow_from+flow_to
-#     # display("$i, $flow_from, $flow_to, $c")
-#     display("$i, $c")
-# end
+  result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
+  result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
 
-# println("AC branch flows")
-# for (i,branch) in datadc_new["branchdc"]
-#     r=branch["r"]
-#     display("$i, $r")
-# end
+    #  solve_time_dc[k]["1"] = result_mcdc["termination_status"]
+     solve_time_dc[k]["2"] = result_mcdc["solve_time"]
+    #  solve_time_dc[k]["3"] = result_acdc["termination_status"]
+     solve_time_dc[k]["4"] = result_acdc["solve_time"]
+     
+end
 
-# println("...total system losses..")
-# Tot_gen= sum(gen["pg"] for (i,gen) in result_mcdc["solution"]["gen"])
-# tot_load=sum(load["pd"] for (i,load) in datadc_new["load"])
-# tot_loss=Tot_gen-tot_load
-# display(tot_loss)
+avg_solvetime_mcdc= sum(solve_time_dc[k]["2"] for k in 1:N)/N
+avg_solvetime_acdc= sum(solve_time_dc[k]["4"] for k in 1:N)/N
 
-# "........pd[11] variation results....."
-# N=10
-# # vm_0= Dict([(l, Dict([(i, 0.0000) for (i, dcbus) in result_mcdc["solution"]["busdc"]])) for l in 1:N])
-#
-# vm_0= Dict([(l, Dict([("$i", 0.0000) for i in 1:4+2])) for l in 1:N])
-# vm_term=Dict([(l, Dict()) for l in 1:N])
-#  load_0=0.5
-#
-# for k=1:N
-#     for (i, load) in datadc_new["load"]
-#         if load["load_bus"] == 11
-#             load["pd"]= k*0.1*load_0
-#         end
-#     end
-#
-#   result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
-#     for (i, dcbus) in result_mcdc["solution"]["busdc"]
-#          b=dcbus["vm"][3]
-#          vm_0[k]["$i"]= b
-#      end
-#      obj= result_mcdc["objective"]
-#      pg5=result_mcdc["solution"]["gen"]["5"]["pg"]
-#      # term=result_mcdc["termination_status"]
-#      vm_0[k]["5"]= obj
-#      vm_0[k]["6"]= pg5
-#      # push!(vm_term[k], term)
-# end
-#
-#
-# for (itr, bus) in vm_0
-# # for k=1:N
-#     a=bus["1"]
-#     b=bus["2"]
-#     c=bus["3"]
-#     d=bus["4"]
-#     obj=bus["5"]
-#     pg5=bus["6"]
-#     display("$itr, $a, $b, $c, $d, $obj,$pg5")
-#     # display("$bus["1"], $bus["3"]")
-#     # display("itr, bus["1"], bus["2"], bus["3"], bus["4"])
-# end
-#
+println(" Objective mcdc_opf is:", result_mcdc["objective"])
+println(" Objective acdc_opf is:", result_acdc["objective"])
 
- ".......rd0 variation results....."
-#
-# N=10
-# # vm_0= Dict([(l, Dict([(i, 0.0000) for (i, dcbus) in result_mcdc["solution"]["busdc"]])) for l in 1:N])
-#
-# vm_0= Dict([(l, Dict([("$i", 0.0000) for i in 1:4+2])) for l in 1:N])
-# vm_term=Dict([(l, Dict()) for l in 1:N])
-#  # load_0=0.5
-#
-# for k=1:N
-#     for (c,bn) in datadc_new["branchdc"]
-#         metalic_cond_number= bn["conductors"]
-#         bn["return_z"]=0.52 # adjust metallic resistance
-#         bn["r"][metalic_cond_number]=bn["return_z"]
-#         if bn["line_confi"]==1
-#             bn["r"][metalic_cond_number]=k*0.052
-#         end
-#     end
-#
-#   result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
-#     for (i, dcbus) in result_mcdc["solution"]["busdc"]
-#          b=dcbus["vm"][3]
-#          vm_0[k]["$i"]= b
-#      end
-#      obj= result_mcdc["objective"]
-#      pg5=result_mcdc["solution"]["gen"]["5"]["pg"]
-#      # term=result_mcdc["termination_status"]
-#      vm_0[k]["5"]= obj
-#      vm_0[k]["6"]= pg5
-#      # push!(vm_term[k], term)
-# end
-#
-#
-# for (itr, bus) in vm_0
-# # for k=1:N
-#     a=bus["1"]
-#     b=bus["2"]
-#     c=bus["3"]
-#     d=bus["4"]
-#     obj=bus["5"]
-#     pg5=bus["6"]
-#     display("$itr, $a, $b, $c, $d, $obj,$pg5")
-#     # display("$bus["1"], $bus["3"]")
-#     # display("itr, bus["1"], bus["2"], bus["3"], bus["4"])
-# end
-#
-
-# display(length(dc_data["bus"]))
-# display(length(dc_data["branch"]))
-# display(length(dc_data["busdc"]))
-# display(length(dc_data["branchdc"]))
-# display(length(dc_data["convdc"]))
+println(" avg_solvetime_mcdcf is:",avg_solvetime_mcdc)
+println(" avg_solvetime_acdcf is:",avg_solvetime_acdc)
