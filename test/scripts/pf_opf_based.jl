@@ -1,3 +1,4 @@
+# chandra pf branch check 
 using LinearAlgebra
 using LinearAlgebra: I
 import PowerModels
@@ -112,10 +113,11 @@ function build_mc_data!(base_data)
     return mp_data
 end
 
-# file="./test/data/matacdc_scripts/case39_mcdc.m"
-file="./test/data/matacdc_scripts/case67mcdc_scopf.m"
-
 # file="./test/data/matacdc_scripts/case5_2grids_MC.m"
+# file="./test/data/matacdc_scripts/case39_mcdc.m"
+# file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
+file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
+
 
 datadc_new = build_mc_data!(file)
 # datadc_new = build_mc_data!("./test/data/matacdc_scripts/3grids_MC.m")

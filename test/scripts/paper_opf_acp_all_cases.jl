@@ -27,30 +27,30 @@ function build_mc_data!(base_data)
     mp_data = PowerModels.parse_file(base_data)
 
     #changing the connection point
-       for (c,bn) in mp_data["branchdc"]
-           if bn["line_confi"]==1
-               # bn["connect_at"]=2
-               bn["line_confi"]=2
-           end
-        #    if c == "1"
-        #        # display(bn["fbusdc"])
-        #        # display(bn["tbusdc"])
-        #        bn["connect_at"]=2
-        #        bn["line_confi"]=1
-        #    end
-       end
+    #    for (c,bn) in mp_data["branchdc"]
+    #        if bn["line_confi"]==1
+    #            # bn["connect_at"]=2
+    #            bn["line_confi"]=2
+    #        end
+    #        if c == "0"
+    #            # display(bn["fbusdc"])
+    #            # display(bn["tbusdc"])
+    #            bn["connect_at"]=1
+    #            bn["line_confi"]=1
+    #        end
+    #    end
        for (c,conv) in mp_data["convdc"]
-           # display("configuration of $c is")
-           # display(conv["conv_confi"])
+           display("configuration of $c is")
+           display(conv["conv_confi"])
            if conv["conv_confi"]==1
                # conv["connect_at"]=2
                conv["conv_confi"]=2
                # conv["ground_type"]=0
            end
            "for simulating a single pole outage"
-           if c == "0"
+           if c == "2"
                conv["conv_confi"]=1
-                conv["connect_at"]=2
+                conv["connect_at"]=1
                # conv["ground_type"]=0
                conv["rtf"]=2*conv["rtf"]
                conv["xtf"]=2*conv["xtf"]
@@ -141,6 +141,16 @@ end
 # file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
 file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
 
+# file="./test/data/matacdc_scripts_opf_paper/balanced/case5_2grids_MC.m"
+# file="./test/data/matacdc_scripts_opf_paper/balanced/case39_mcdc.m"
+# file="./test/data/matacdc_scripts_opf_paper/balanced/case67mcdc_scopf4.m"
+# file="./test/data/matacdc_scripts_opf_paper/balanced/case3120sp_mcdc.m"
+
+# file="./test/data/matacdc_scripts_opf_paper/unbalanced/case5_2grids_MC.m"
+# file="./test/data/matacdc_scripts_opf_paper/unbalanced/case39_mcdc.m"
+# file="./test/data/matacdc_scripts_opf_paper/unbalanced/case67mcdc_scopf4.m"
+# file="./test/data/matacdc_scripts_opf_paper/unbalanced/case3120sp_mcdc.m"
+
 
 
 datadc_new = build_mc_data!(file)
@@ -184,27 +194,29 @@ println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 
 #########
 
-N=10
-solve_time_dc=Dict([(l, Dict([("$i", 0.0000) for i in 1:4])) for l in 1:N])
+# N=100
+# solve_time_dc=Dict([(l, Dict([("$i", 0.0000) for i in 1:4])) for l in 1:N])
 
-for k=1:N
+# for k=1:N
 
-  result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
-  result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+#   result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
+#   result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
 
-    #  solve_time_dc[k]["1"] = result_mcdc["termination_status"]
-     solve_time_dc[k]["2"] = result_mcdc["solve_time"]
-    #  solve_time_dc[k]["3"] = result_acdc["termination_status"]
-     solve_time_dc[k]["4"] = result_acdc["solve_time"]
+#     #  solve_time_dc[k]["1"] = result_mcdc["termination_status"]
+#      solve_time_dc[k]["2"] = result_mcdc["solve_time"]
+#     #  solve_time_dc[k]["3"] = result_acdc["termination_status"]
+#      solve_time_dc[k]["4"] = result_acdc["solve_time"]
      
-end
+# end
 
-avg_solvetime_mcdc= sum(solve_time_dc[k]["2"] for k in 1:N)/N
-avg_solvetime_acdc= sum(solve_time_dc[k]["4"] for k in 1:N)/N
+# avg_solvetime_mcdc= sum(solve_time_dc[k]["2"] for k in 1:N)/N
+# avg_solvetime_acdc= sum(solve_time_dc[k]["4"] for k in 1:N)/N
 
-println(" Objective mcdc_opf is:", result_mcdc["objective"])
-println(" Objective acdc_opf is:", result_acdc["objective"])
+# println(" Objective mcdc_opf is:", result_mcdc["objective"])
+# println(" Objective acdc_opf is:", result_acdc["objective"])
 
-println(" avg_solvetime_mcdcf is:",avg_solvetime_mcdc)
-println(" avg_solvetime_acdcf is:",avg_solvetime_acdc)
+# println(" avg_solvetime_mcdcf is:",avg_solvetime_mcdc)
+# println(" avg_solvetime_acdcf is:",avg_solvetime_acdc)
+
+# 0.55165  0.887  5.77  5.77
