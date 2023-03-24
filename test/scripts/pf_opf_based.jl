@@ -14,19 +14,20 @@ const _IM=InfrastructureModels
 using JuMP
 using Ipopt
 using Memento
-using Gurobi
+# using Gurobi
 using Cbc
 using Juniper
 
  # print_level=1
 ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6,print_level=1)
-gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
-
+# gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
 # couenne_solver=JuMP.with_optimizer(“C:/Users/mayar.madboly/Downloads/couenne-win64.exe”, print_level =0)
 
 # ipopt = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-4, print_level=1)
-cbc_solver = JuMP.with_optimizer(Cbc.Optimizer)
-juniper = JuMP.with_optimizer(Juniper.Optimizer, mip_solver=cbc_solver, nl_solver = ipopt_solver)
+# cbc_solver = JuMP.with_optimizer(Cbc.Optimizer)
+# juniper = JuMP.with_optimizer(Juniper.Optimizer, mip_solver=cbc_solver, nl_solver = ipopt_solver)
+
+ipopt_solver =JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" =>1e-6, "print_level"=>1)
 
 function build_mc_data!(base_data)
     mp_data = PowerModels.parse_file(base_data)
