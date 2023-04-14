@@ -185,27 +185,27 @@ println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 
 #########
 
-N=10
-solve_time_dc=Dict([(l, Dict([("$i", 0.0000) for i in 1:4])) for l in 1:N])
+# N=10
+# solve_time_dc=Dict([(l, Dict([("$i", 0.0000) for i in 1:4])) for l in 1:N])
 
-for k=1:N
+# for k=1:N
 
-  result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
-  result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+#   result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
+#   result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
 
-    #  solve_time_dc[k]["1"] = result_mcdc["termination_status"]
-     solve_time_dc[k]["2"] = result_mcdc["solve_time"]
-    #  solve_time_dc[k]["3"] = result_acdc["termination_status"]
-     solve_time_dc[k]["4"] = result_acdc["solve_time"]
+#     #  solve_time_dc[k]["1"] = result_mcdc["termination_status"]
+#      solve_time_dc[k]["2"] = result_mcdc["solve_time"]
+#     #  solve_time_dc[k]["3"] = result_acdc["termination_status"]
+#      solve_time_dc[k]["4"] = result_acdc["solve_time"]
      
-end
+# end
 
-avg_solvetime_mcdc= sum(solve_time_dc[k]["2"] for k in 1:N)/N
-avg_solvetime_acdc= sum(solve_time_dc[k]["4"] for k in 1:N)/N
+# avg_solvetime_mcdc= sum(solve_time_dc[k]["2"] for k in 1:N)/N
+# avg_solvetime_acdc= sum(solve_time_dc[k]["4"] for k in 1:N)/N
 
-println(" Objective mcdc_opf is:", result_mcdc["objective"])
-println(" Objective acdc_opf is:", result_acdc["objective"])
+# println(" Objective mcdc_opf is:", result_mcdc["objective"])
+# println(" Objective acdc_opf is:", result_acdc["objective"])
 
-println(" avg_solvetime_mcdcf is:",avg_solvetime_mcdc)
-println(" avg_solvetime_acdcf is:",avg_solvetime_acdc)
+# println(" avg_solvetime_mcdcf is:",avg_solvetime_mcdc)
+# println(" avg_solvetime_acdcf is:",avg_solvetime_acdc)

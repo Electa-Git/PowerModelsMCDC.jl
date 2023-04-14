@@ -5,7 +5,8 @@ using DataFrames
 # mva_base = data["1"]["baseMVA"]
 
 # result=result_mcdc_pf1
-result=result_mcdc
+# result=result_mcdc
+result=result_mcdc_opf
 
 
 conv_sp = DataFrame( c2 = [], c3 = [], c4 = [], c5 = [], c6 = [])
@@ -95,7 +96,7 @@ push!(comp_details, [result["termination_status"],result["solve_time"],result["o
 # CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April14/basecasevdc.csv", basecase_vdc, append = true)
 # CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April14/basecase_br.csv", basecase_br, append = true)
 # CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April14/basecase_brdc.csv", basecase_brdc, append = true)
-conv_settings
+# conv_settings
 # CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April14/conv_settings.csv", conv_sp, append = true)
 CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April14/conv_sp.csv", conv_sp, append = true)
 CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April14/gen_sp.csv", gen_sp, append = true)

@@ -32,26 +32,26 @@ ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "p
 function build_mc_data!(base_data)
     mp_data = PowerModels.parse_file(base_data)
     #changing the connection point
-    for (c, bn) in mp_data["branchdc"]
-        if bn["line_confi"] == 1
-            bn["connect_at"] = 2
-            # bn["line_confi"]=2
-        end
-    end
-    for (c, conv) in mp_data["convdc"]
-        # display("configuration of $c is")
-        # display(conv["conv_confi"])
-        if conv["conv_confi"] == 1
-            conv["connect_at"] = 2
-            # conv["conv_confi"]=2
-            # conv["ground_type"]=0
-        end
-        # conv["ground_type"]=1
-        if conv["ground_type"] == 1 #or 0
-            conv["ground_z"] = 0.5
-        end
+    # for (c, bn) in mp_data["branchdc"]
+    #     if bn["line_confi"] == 1
+    #         bn["connect_at"] = 2
+    #         # bn["line_confi"]=2
+    #     end
+    # end
+    # for (c, conv) in mp_data["convdc"]
+    #     # display("configuration of $c is")
+    #     # display(conv["conv_confi"])
+    #     if conv["conv_confi"] == 1
+    #         conv["connect_at"] = 2
+    #         # conv["conv_confi"]=2
+    #         # conv["ground_type"]=0
+    #     end
+    #     # conv["ground_type"]=1
+    #     if conv["ground_type"] == 1 #or 0
+    #         conv["ground_z"] = 0.5
+    #     end
 
-    end
+    # end
 
     #making lossless conv paramteres
     for (c, conv) in mp_data["convdc"]
