@@ -14,7 +14,7 @@ const _IM=InfrastructureModels
 using JuMP
 using Ipopt
 using Memento
-using Gurobi
+# using Gurobi
 
 a=1
 # ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-8, print_level=1)
@@ -139,8 +139,9 @@ end
 # file="./test/data/matacdc_scripts/case5_2grids_MC.m"
 # file="./test/data/matacdc_scripts/case39_mcdc.m"
 # file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
-file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
+# file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
 
+file="./test/data/matacdc_scripts/case5_2grids_MC_pf.m"
 
 
 datadc_new = build_mc_data!(file)

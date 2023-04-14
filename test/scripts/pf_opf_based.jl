@@ -116,7 +116,7 @@ end
 # file="./test/data/matacdc_scripts/case39_mcdc.m"
 # file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
 # file="./test/data/matacdc_scripts/case5_2grids_MC.m"
-file = "./test/data/matacdc_scripts/case5_3grids_MC_pf.m"
+file = "./test/data/matacdc_scripts/case5_2grids_MC_pf.m"
 
 datadc_new = build_mc_data!(file)
 # datadc_new = build_mc_data!("./test/data/matacdc_scripts/3grids_MC.m")
@@ -174,8 +174,11 @@ for (cv, convdc) in data["convdc"]
 
     convdc["Q_g"] = -result_mcdc_opf["solution"]["convdc"]["$cv"]["qgrid"]
     convdc["P_g"] = -result_mcdc_opf["solution"]["convdc"]["$cv"]["pgrid"]
-    '''' to introduce change'''
-    if cv==2
+    
+    " to introduce change"
+    if cv=="2"
+        # display("to introduce change in conv", "$cv")
+        # display(convdc["P_g"])
         convdc["P_g"]=1.1*convdc["P_g"]
     end
     display("p and v setting")
@@ -196,6 +199,15 @@ end
 
 result_mcdc_opf1 = PowerModelsMCDC.run_mcdcopf(data, _PM.ACPPowerModel, ipopt_solver, setting=s)
 result_mcdc_pf1 = PowerModelsMCDC.run_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting=s)
+
+# for (cv, convdc) in data["convdc"]
+#     a=convdc["P_g"]
+#     b=convdc["Q_g"]
+#     # println("$cv", "$a", "$b") 
+#     display(convdc["P_g"], convdc["P_g"])
+# end
+
+
 
 # for (cv, convdc) in data["convdc"]
 #             busdc = convdc["busdc_i"]
@@ -422,20 +434,33 @@ result_mcdc_pf1 = PowerModelsMCDC.run_mcdcpf(data, _PM.ACPPowerModel, ipopt_solv
 #
 # end
 
-println("termination status of the acdc opf is:", resultAC["termination_status"])
-println("termination status of the acdc pf is:", resultAC_pf["termination_status"])
-println("Objective value of the ac opf is:", resultAC["objective"])
-println("Objective value of the ac pf is:", resultAC_pf["objective"])
+# println("termination status of the acdc opf is:", resultAC["termination_status"])
+# println("termination status of the acdc pf is:", resultAC_pf["termination_status"])
+# println("Objective value of the ac opf is:", resultAC["objective"])
+# println("Objective value of the ac pf is:", resultAC_pf["objective"])
 
-println("termination status of the opf is:", result_mcdc_opf["termination_status"])
-println("termination status of the pf is:", result_mcdc_pf["termination_status"])
-println("Objective value of the opf is:", result_mcdc_opf["objective"])
-println("Objective value of the pf is:", result_mcdc_pf["objective"])
-
+# println("termination status of the opf is:", result_mcdc_opf["termination_status"])
+# println("termination status of the pf is:", result_mcdc_pf["termination_status"])
+# println("Objective value of the opf is:", result_mcdc_opf["objective"])
+# println("Objective value of the pf is:", result_mcdc_pf["objective"])
 println("termination status of the opf is:", result_mcdc_opf1["termination_status"])
 println("termination status of the pf is:", result_mcdc_pf1["termination_status"])
 println("Objective value of the opf is:", result_mcdc_opf1["objective"])
 println("Objective value of the pf is:", result_mcdc_pf1["objective"])
+
+# println(".....conv....")
+# println(".....pgrid....")
+# for (i,conv) in result_mcdc_pf1["solution"]["convdc"]
+#      # display("power from grid to dc at converter $i")
+#      a= conv["pgrid"]
+#     display("$i, $a")
+# end
+
+# println("DC bus Vm")
+# for (i,dcbus) in result_mcdc_pf1["solution"]["busdc"]
+#     b=dcbus["vm"]
+#     display("$i, $b")
+# end
 
 # println("termination status of the opf is:", result_mcdc_opf2["termination_status"])
 # println("termination status of the pf is:", result_mcdc_pf2["termination_status"])
