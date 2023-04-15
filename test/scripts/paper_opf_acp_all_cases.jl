@@ -14,15 +14,14 @@ const _IM=InfrastructureModels
 using JuMP
 using Ipopt
 using Memento
-using Gurobi
+# using Gurobi
 
-a=1
 # ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-8, print_level=1)
 # gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
 
 ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
 
-
+"This function should be taken inside the surce file"
 function build_mc_data!(base_data)
     mp_data = PowerModels.parse_file(base_data)
 
@@ -42,26 +41,26 @@ function build_mc_data!(base_data)
        for (c,conv) in mp_data["convdc"]
            display("configuration of $c is")
            display(conv["conv_confi"])
-           if conv["conv_confi"]==1
-               # conv["connect_at"]=2
-               conv["conv_confi"]=2
-               # conv["ground_type"]=0
-           end
+        #    if conv["conv_confi"]==1
+        #        # conv["connect_at"]=2
+        #        conv["conv_confi"]=2
+        #        # conv["ground_type"]=0
+        #    end
            "for simulating a single pole outage"
-           if c == "2"
-               conv["conv_confi"]=1
-                conv["connect_at"]=1
-               # conv["ground_type"]=0
-               conv["rtf"]=2*conv["rtf"]
-               conv["xtf"]=2*conv["xtf"]
-               conv["bf"]=0.5*conv["bf"]
-               conv["rc"]=2*conv["rc"]
-               conv["xc"]=2*conv["xc"]
-               conv["LossB"]=conv["LossB"]
-               conv["LossA"]=0.5*conv["LossA"]
-               conv["LossCrec"]=2*conv["LossCrec"]
-               conv["LossCinv"]=2*conv["LossCinv"]
-           end
+        #    if c == "2"
+        #        conv["conv_confi"]=1
+        #         conv["connect_at"]=1
+        #        # conv["ground_type"]=0
+        #        conv["rtf"]=2*conv["rtf"]
+        #        conv["xtf"]=2*conv["xtf"]
+        #        conv["bf"]=0.5*conv["bf"]
+        #        conv["rc"]=2*conv["rc"]
+        #        conv["xc"]=2*conv["xc"]
+        #        conv["LossB"]=conv["LossB"]
+        #        conv["LossA"]=0.5*conv["LossA"]
+        #        conv["LossCrec"]=2*conv["LossCrec"]
+        #        conv["LossCinv"]=2*conv["LossCinv"]
+        #    end
 
            if conv["ground_type"]== 1 #or 0
                conv["ground_z"]=0.5
@@ -139,7 +138,7 @@ end
 # file="./test/data/matacdc_scripts/case5_2grids_MC.m"
 # file="./test/data/matacdc_scripts/case39_mcdc.m"
 # file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
-file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
+# file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
 
 # file="./test/data/matacdc_scripts_opf_paper/balanced/case5_2grids_MC.m"
 # file="./test/data/matacdc_scripts_opf_paper/balanced/case39_mcdc.m"
@@ -151,12 +150,12 @@ file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
 # file="./test/data/matacdc_scripts_opf_paper/unbalanced/case67mcdc_scopf4.m"
 # file="./test/data/matacdc_scripts_opf_paper/unbalanced/case3120sp_mcdc.m"
 
-
+"power flow related experiments"
+file="./test/data/matacdc_scripts/case5_2grids_MC_pf.m"
 
 datadc_new = build_mc_data!(file)
 # datadc_new = build_mc_data!("./test/data/matacdc_scripts/3grids_MC.m")
 # datadc_new = build_mc_data!("./test/data/matacdc_scripts/4_case5_2grids_MC.m")
-
 
 s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
 result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)

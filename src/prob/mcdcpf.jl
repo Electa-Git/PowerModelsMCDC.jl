@@ -15,16 +15,16 @@ end
 
 ""
 function post_mcdcpf(pm::_PM.AbstractPowerModel)
-    _PM.variable_bus_voltage(pm, bounded = true)
-    _PM.variable_gen_power(pm, bounded = true)
-    _PM.variable_branch_power(pm, bounded = true)
+    _PM.variable_bus_voltage(pm, bounded = false)
+    _PM.variable_gen_power(pm, bounded = false)
+    _PM.variable_branch_power(pm, bounded = false)
 
-    variable_mc_active_dcbranch_flow(pm, bounded = true)
+    variable_mc_active_dcbranch_flow(pm, bounded = false)
     # variable_dcbranch_current(pm, bounded = false)
-    variable_mcdc_converter(pm, bounded = true)
-    variable_mcdcgrid_voltage_magnitude(pm, bounded = true)
+    variable_mcdc_converter(pm, bounded = false)
+    variable_mcdcgrid_voltage_magnitude(pm, bounded = false)
 
-    variable_mc_dcbranch_current(pm, bounded = true)
+    variable_mc_dcbranch_current(pm, bounded = false)
 
     # _PM.objective_min_fuel_cost(pm)
 
@@ -42,12 +42,12 @@ function post_mcdcpf(pm::_PM.AbstractPowerModel)
         constraint_kcl_shunt(pm, i)
         # PV Bus Constraints
         if length(_PM.ref(pm, :bus_gens, i)) > 0 && !(i in _PM.ids(pm,:ref_buses))
-            # this assumes inactive generators are filtered out of bus_gens
-            # @assert bus["bus_type"] == 2
-            # _PM.constraint_voltage_magnitude_setpoint(pm, i)
-            # for j in _PM.ref(pm, :bus_gens, i)
-            #     _PM.constraint_gen_setpoint_active(pm, j)
-            # end
+            #this assumes inactive generators are filtered out of bus_gens
+            @assert bus["bus_type"] == 2
+            _PM.constraint_voltage_magnitude_setpoint(pm, i)
+            for j in _PM.ref(pm, :bus_gens, i)
+                _PM.constraint_gen_setpoint_active(pm, j)
+            end
         end
     end
 
@@ -77,6 +77,27 @@ function post_mcdcpf(pm::_PM.AbstractPowerModel)
                 constraint_reactive_conv_setpoint(pm, c)
             end
         end
+
+        # if conv["type_dc"] == 2 "dc_type =2: Vdc control"
+        #     if conv["type_ac"] == 1  "AC_type =1, Q control; 2= Vac control" 
+        #         constraint_dc_voltage_magnitude_setpoint(pm, c)
+        #         constraint_reactive_conv_setpoint(pm, c)
+        #     elseif  conv["type_ac"] == 2
+        #         constraint_dc_voltage_magnitude_setpoint(pm, c)
+        #         # constraint_ac_voltage_setpoint(pm, c)
+        #     else
+        #         "for the droop==> future"
+        #     end
+
+        # else "dc_type =1: Pdc control"
+        #     if conv["type_ac"] == 1 "AC_type =1, Q control; 2= Vac control"
+        #         constraint_active_conv_setpoint(pm, c)
+        #         constraint_reactive_conv_setpoint(pm, c)
+        #     else 
+        #         constraint_active_conv_setpoint(pm, c)
+        #         # constraint_ac_voltage_setpoint(pm, c)
+        #     end
+        # end
 
         constraint_converter_losses(pm, c)
         # constraint_converter_dc_ground(pm, c) #important remove

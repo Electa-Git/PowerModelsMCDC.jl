@@ -15,13 +15,13 @@ const _IM=InfrastructureModels
 using JuMP
 using Ipopt
 using Memento
-using Gurobi
+# using Gurobi
 using Cbc
 using Juniper
 
  # print_level=1
 ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6,print_level=1)
-gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
+# gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
 
 # couenne_solver=JuMP.with_optimizer(“C:/Users/mayar.madboly/Downloads/couenne-win64.exe”, print_level =0)
 
@@ -31,29 +31,10 @@ juniper = JuMP.with_optimizer(Juniper.Optimizer, mip_solver=cbc_solver, nl_solve
 
 function build_mc_data!(base_data)
     mp_data = PowerModels.parse_file(base_data)
-    #changing the connection point
-       for (c,bn) in mp_data["branchdc"]
-           if bn["line_confi"]==1
-               bn["connect_at"]=2
-               # bn["line_confi"]=2
-           end
-       end
-       for (c,conv) in mp_data["convdc"]
-           # display("configuration of $c is")
-           # display(conv["conv_confi"])
-           if conv["conv_confi"]==1
-               conv["connect_at"]=2
-               # conv["conv_confi"]=2
-               # conv["ground_type"]=0
-           end
-           # conv["ground_type"]=1
-           if conv["ground_type"]== 1 #or 0
-               conv["ground_z"]=0.5
-           end
 
-       end
+  
 
-       #making lossless conv paramteres
+       #making lossless conv paramteres and impedances
      for (c,conv) in mp_data["convdc"]
         # conv["transformer"]=0
         # conv["filter"]=0
@@ -73,6 +54,7 @@ function build_mc_data!(base_data)
             conv["LossCrec"]=2*conv["LossCrec"]
             conv["LossCinv"]=2*conv["LossCinv"]
         end
+           # transformer tm    filter
     end
 
     PowerModelsMCDC.process_additional_data!(mp_data)
@@ -85,12 +67,9 @@ function build_mc_data!(base_data)
             bn["rateC"]=bn["rateC"]/2
             # bn["r"]=bn["r"]/2
         end
-        metalic_cond_number= bn["conductors"]
-        # bn["rateA"][metalic_cond_number]=bn["rateA"][metalic_cond_number]*0.1
-        # bn["rateB"][metalic_cond_number]=bn["rateB"][metalic_cond_number]*0.1
-        # bn["rateC"][metalic_cond_number]=bn["rateC"][metalic_cond_number]*0.1
 
-        bn["return_z"]=0.052 # adjust metallic resistance
+        metalic_cond_number= bn["conductors"]
+        # bn["return_z"]=0.052 # adjust metallic resistance
         bn["r"][metalic_cond_number]=bn["return_z"]
 
     end
@@ -105,10 +84,10 @@ function build_mc_data!(base_data)
       end
       # Adjusting metallic return bus voltage limits
       for (i,busdc) in mp_data["busdc"]
-         busdc["Vdcmax"][3]=0.1
-         busdc["Vdcmin"][3]=-0.1
-         busdc["Vdcmax"][2]=-0.9
-         busdc["Vdcmin"][2]=-1.1
+         busdc["Vdcmax"][3]=busdc["Vdcmax"][1]-1.0
+         busdc["Vdcmin"][3]=-(1-busdc["Vdcmin"][1])
+         busdc["Vdcmax"][2]=-busdc["Vdcmin"][1]
+         busdc["Vdcmin"][2]=-busdc["Vdcmax"][1]
       end
     return mp_data
 end
@@ -116,13 +95,15 @@ end
 # file="./test/data/matacdc_scripts/case5_2grids_MC.m"
 # file="./test/data/matacdc_scripts/case39_mcdc.m"
 # file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
-file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
+# file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
+
+file="./test/data/matacdc_scripts/case5_2grids_MC_pf.m"
 
 
 datadc_new = build_mc_data!(file)
 # datadc_new = build_mc_data!("./test/data/matacdc_scripts/3grids_MC.m")
 s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
-resultAC = _PMACDC.run_acdcopf(file, _PM.ACPPowerModel, ipopt_solver, setting = s)
+resultAC_opf = _PMACDC.run_acdcopf(file, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
 data= PowerModels.parse_file(file)
 PowerModelsMCDC.process_additional_data!(data)
@@ -175,7 +156,13 @@ for (cv, convdc) in data["convdc"]
 
              convdc["Q_g"] = -result_mcdc_opf["solution"]["convdc"]["$cv"]["qgrid"]
              convdc["P_g"] = -result_mcdc_opf["solution"]["convdc"]["$cv"]["pgrid"]
-
+            
+             #"to introduce change"
+             if cv=="3"
+                 # display("to introduce change in conv", "$cv")
+                 # display(convdc["P_g"])
+                 convdc["P_g"]=1*convdc["P_g"]
+             end
             display("p and v setting")
             display(convdc["P_g"])
             display(convdc["Vdcset"])
