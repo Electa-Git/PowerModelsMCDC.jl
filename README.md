@@ -37,4 +37,5 @@ If you find PowerModelsMCDC useful in your work, we kindly request that you cite
 If you have something to discuss about the package or related work please feel to reach out at [chandrakant.jat@kuleuven.be](chandrakant.jat@kuleuven.be).
 
 ## License
-This code is provided under a BSD license.
+
+This code is provided under a [BSD 3-Clause License](/LICENSE).
