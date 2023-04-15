@@ -34,7 +34,7 @@ If you find PowerModelsMCDC useful in your work, we kindly request that you cite
 ```
 
 ## Contact Details
-If you have something to discuss about the package or related work please feel to reach out at [chandrakant.jat@kuleuven.be](chandrakant.jat@kuleuven.be).
+If you have something to discuss about the package or related work please feel free to reach out at [chandrakant.jat@kuleuven.be](chandrakant.jat@kuleuven.be).
 
 ## License
 
