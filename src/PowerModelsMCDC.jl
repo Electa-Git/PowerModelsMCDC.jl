@@ -13,8 +13,6 @@ import InfrastructureModels
 # import InfrastructureModels: ids, ref, var, con, sol, nw_ids, nws, optimize_model!, @im_fields
 const _IM = InfrastructureModels
 
-import JuMP: with_optimizer
-export with_optimizer
 
 # Create our module level logger (this will get precompiled)
 const _LOGGER = Memento.getlogger(@__MODULE__)
@@ -46,5 +44,25 @@ include("formconv/acp.jl")
 # include("prob/acdcopf.jl")
 include("prob/mcdcopf.jl")
 include("prob/mcdcpf.jl")
+
+
+# The following items are exported for user-friendlyness when calling
+# `using PowerModelsMCDC`, so that users do not need to import JuMP to use a solver with
+# PowerModelsMCDC.
+import JuMP: optimizer_with_attributes
+export optimizer_with_attributes
+
+# TODO: after dropping support for JuMP 0.21, remove `.MOI` from the following line and from
+# the @eval below.
+import JuMP.MOI: TerminationStatusCode, ResultStatusCode
+export TerminationStatusCode, ResultStatusCode
+
+
+for status_code_enum in [TerminationStatusCode, ResultStatusCode]
+    for status_code in instances(status_code_enum)
+        @eval import JuMP.MOI: $(Symbol(status_code))
+        @eval export $(Symbol(status_code))
+    end
+end
 
 end
