@@ -15,7 +15,6 @@ conv_sp = DataFrame( c2 = [], c3 = [], c4 = [], c5 = [], c6 = [])
 push!(conv_sp, ["Conv no","Pc","Qc","Pdc","Pdcg"])
 # #for (n,nw) in result["solution"]
 	for (i, conv) in result["solution"]["convdc"]
-		
 		pdc=result["solution"]["convdc"]["$i"]["pdc"]
 		pdcg=result["solution"]["convdc"]["$i"]["pdcg"]
 	push!(conv_sp, [ "$i", result["solution"]["convdc"]["$i"]["pgrid"], result["solution"]["convdc"]["$i"]["qgrid"], pdc, pdcg ])
@@ -93,22 +92,22 @@ push!(comp_details, [result["termination_status"],result["solve_time"],result["o
 # end
 # for writing the dataframes to csv files
 
-# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/basecase_gen.csv", basecase_gen, append = true)
-# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/basecase_conv.csv", basecase_conv, append = true)
-# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/basecasev.csv", basecase_v, append = true)
-# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/basecasevdc.csv", basecase_vdc, append = true)
-# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/basecase_br.csv", basecase_br, append = true)
-# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/basecase_brdc.csv", basecase_brdc, append = true)
+# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/basecase_gen.csv", basecase_gen, append = true)
+# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/basecase_conv.csv", basecase_conv, append = true)
+# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/basecasev.csv", basecase_v, append = true)
+# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/basecasevdc.csv", basecase_vdc, append = true)
+# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/basecase_br.csv", basecase_br, append = true)
+# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/basecase_brdc.csv", basecase_brdc, append = true)
 # conv_settings
-# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/conv_settings.csv", conv_sp, append = true)
-CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/conv_sp.csv", conv_sp, append = true)
-CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/gen_sp.csv", gen_sp, append = true)
-CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/volt.csv", volt, append = true)
-CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/voltdc.csv", voltdc, append = true)
-# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/cost_total.csv", cost_total, append = true)
-# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/cost_nw.csv", cost_nw, append = true)
-# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/loadsp.csv", loadsp, append = true)
-CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/brAC.csv", brsp, append = true)
-CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/brdcAC.csv", brdcsp, append = true)
-CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April15/comp_details.csv", comp_details, append = true)
+# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/conv_settings.csv", conv_sp, append = true)
+CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/conv_sp.csv", conv_sp, append = true)
+CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/gen_sp.csv", gen_sp, append = true)
+CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/volt.csv", volt, append = true)
+CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/voltdc.csv", voltdc, append = true)
+# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/cost_total.csv", cost_total, append = true)
+# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/cost_nw.csv", cost_nw, append = true)
+# CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/loadsp.csv", loadsp, append = true)
+CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/brAC.csv", brsp, append = true)
+CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/brdcAC.csv", brdcsp, append = true)
+CSV.write("/Users/cjat/OneDrive - Energyville/PM MCDC PF/simulations/April16/case4/comp_details.csv", comp_details, append = true)
 

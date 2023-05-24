@@ -16,7 +16,7 @@ end
 
 
 "variable: `vdcm[i]` for `i` in `dcbus`es"
-function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true)
     vdcm = _PM.var(pm, nw)[:vdcm] = Dict(i =>JuMP.@variable(pm.model,
     [c in 1:_PM.ref(pm, nw, :busdc)[i]["conductors"]], base_name="$(nw)_vdcm_$(i)",
     start = comp_start_value(_PM.ref(pm, nw, :busdc, i), "Vdc", c, 1.0)
@@ -31,10 +31,10 @@ function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :busdc, :vm, _PM.ids(pm, nw, :busdc), vdcm)
+    report && _PM.sol_component_value(pm, nw, :busdc, :vm, _PM.ids(pm, nw, :busdc), vdcm)
 end
 
-# function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractLPACModel; nw::Int=pm.cnw, bounded = true, report::Bool=true)
+# function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractLPACModel; nw::Int=_PM.nw_id_default, bounded = true, report::Bool=true)
 #     phivdcm = _PM.var(pm, nw)[:phi_vdcm] = Dict(i =>JuMP.JuMP.@variable(pm.model,
 #     [c in 1:_PM.ref(pm, nw, :busdc)[i]["conductors"]], base_name="$(nw)_phi_vdcm_$(i)",
 #     start = comp_start_value(_PM.ref(pm, nw, :busdc, i), "Vdc", c, 1.0)
@@ -53,7 +53,7 @@ end
 # end
 
 "variable: `vdcm[i]` for `i` in `dcbus`es"
-# function variable_mcdcgrid_voltage_magnitude_sqr(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+# function variable_mcdcgrid_voltage_magnitude_sqr(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true)
 #     wdc = _PM.var(pm, nw)[:wdc] = Dict(i =>JuMP.@variable(pm.model,
 #     [c in 1:_PM.ref(pm, nw, :busdc)[i]["conductors"]], base_name="$(nw)_wdc_$(i)",
 #     start = comp_start_value(_PM.ref(pm, nw, :busdc, i), "Vdc", c, 1.0)^2
@@ -88,7 +88,7 @@ end
 
 
 "variable: `p_dcgrid[l,i,j]` for `(l,i,j)` in `arcs_dcgrid`"
-function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true)
 
      p = _PM.var(pm, nw)[:p_dcgrid] = Dict((l,i,j) =>JuMP.@variable(pm.model,
         [c in 1:_PM.ref(pm, nw, :branchdc, l)["conductors"]], base_name="$(nw)_pdcgrid_$((l,i,j))",
@@ -116,11 +116,11 @@ function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=pm
         # display(_PM.ids(pm, nw, :busdc))
     # end
     # #
-    report && _IM.sol_component_value_edge(pm, nw, :branchdc, :pf, :pt, _PM.ref(pm, nw, :arcs_dcgrid_from), _PM.ref(pm, nw, :arcs_dcgrid_to), p)
+    report && _PM.sol_component_value_edge(pm, nw, :branchdc, :pf, :pt, _PM.ref(pm, nw, :arcs_dcgrid_from), _PM.ref(pm, nw, :arcs_dcgrid_to), p)
 end
 
 "variable: `i_dcgrid[l,i,j]` for `(l,i,j)` in `arcs_dcgrid`"
-function variable_mc_dcbranch_current(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+function variable_mc_dcbranch_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true)
 
      ibr = _PM.var(pm, nw)[:i_dcgrid] = Dict((l,i,j) =>JuMP.@variable(pm.model,
         [c in 1:_PM.ref(pm, nw, :branchdc, l)["conductors"]], base_name="$(nw)_idcgrid_$((l,i,j))",
@@ -148,10 +148,10 @@ function variable_mc_dcbranch_current(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw
         # display(_PM.ids(pm, nw, :busdc))
     # end
  # #
-    report && _IM.sol_component_value_edge(pm, nw, :branchdc, :i_from, :i_to, _PM.ref(pm, nw, :arcs_dcgrid_from), _PM.ref(pm, nw, :arcs_dcgrid_to), ibr)
+    report && _PM.sol_component_value_edge(pm, nw, :branchdc, :i_from, :i_to, _PM.ref(pm, nw, :arcs_dcgrid_from), _PM.ref(pm, nw, :arcs_dcgrid_to), ibr)
 end
 
-# function variable_dcbranch_current_sqr(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+# function variable_dcbranch_current_sqr(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true)
 #     vpu = 0.8;
 #     cc = _PM.var(pm, nw)[:ccm_dcgrid] = JuMP.@variable(pm.model,
 #     [c in 1:_PM.ref(pm, nw, :branchdc, l)["conductors"]], base_name="$(nw)_ccm_dcgrid_$((l,i,j))",
@@ -185,7 +185,7 @@ end
 # function variable_dcbranch_current_ne(pm::_PM.AbstractPowerModel; kwargs...)
 # end
 #
-function variable_mcdcgrid_voltage_magnitude_ne(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+function variable_mcdcgrid_voltage_magnitude_ne(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true)
     vdcm_ne = _PM.var(pm, nw)[:vdcm_ne] = Dict(i =>JuMP.@variable(pm.model,
     [c in 1:_PM.ref(pm, nw, :busdc_ne)[i]["conductors"]], base_name="$(nw)_vdcm_ne_$(i)",
     start = comp_start_value(_PM.ref(pm, nw, :busdc_ne, i), "Vdc", c, 1.0)
@@ -200,11 +200,11 @@ function variable_mcdcgrid_voltage_magnitude_ne(pm::_PM.AbstractPowerModel; nw::
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :busdc_ne, :vm, _PM.ids(pm, nw, :busdc_ne), vdcm_ne)
+    report && _PM.sol_component_value(pm, nw, :busdc_ne, :vm, _PM.ids(pm, nw, :busdc_ne), vdcm_ne)
 end
 
 
-# # function variable_dcgrid_voltage_magnitude_ne(pm::_PM.AbstractLPACModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+# # function variable_dcgrid_voltage_magnitude_ne(pm::_PM.AbstractLPACModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true)
 # #         phivdcm_ne = _PM.var(pm, nw)[:phi_vdcm_ne] = JuMP.@variable(pm.model,
 # #         [i in _PM.ids(pm, nw, :busdc_ne)], base_name="$(nw)_phi_vdcm_ne",
 # #         lower_bound = _PM.ref(pm, nw, :busdc_ne, i, "Vdcmin") - 1,
@@ -249,7 +249,7 @@ end
 # # end
 #
 # "variable: `vdcm[i]` for `i` in `dcbus`es"
-# # function variable_dcgrid_voltage_magnitude_sqr_ne(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+# # function variable_dcgrid_voltage_magnitude_sqr_ne(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true)
 # #     bi_bp = Dict([(i, (b["fbusdc"], b["tbusdc"])) for (i,b) in _PM.ref(pm, nw, :branchdc_ne)])
 # #     bus_vdcmax = merge(Dict([(b,bus["Vdcmax"]) for (b,bus) in _PM.ref(pm, nw, :busdc)]),
 # #     Dict([(b,bus["Vdcmax"]) for (b,bus) in _PM.ref(pm, nw, :busdc_ne)]))
@@ -278,7 +278,7 @@ end
 # #         report && _PM.sol_component_value(pm, nw, :busdc_ne, :wdcr_ne, _PM.ids(pm, nw, :busdc_ne), wdcr_ne)
 # # end
 #
-# # function variable_dcgrid_voltage_magnitude_sqr_du(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true) # this has to to every branch, different than its counterpart(Wdc_fr) since two candidate branches can be connected to same node and two duplicate variables will be needed
+# # function variable_dcgrid_voltage_magnitude_sqr_du(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true) # this has to to every branch, different than its counterpart(Wdc_fr) since two candidate branches can be connected to same node and two duplicate variables will be needed
 # #     bi_bp = Dict([(i, (b["fbusdc"], b["tbusdc"])) for (i,b) in _PM.ref(pm, nw, :branchdc_ne)])
 # #     wdc_fr_ne = _PM.var(pm, nw)[:wdc_du_fr] = JuMP.@variable(pm.model,
 # #     [i in _PM.ids(pm, nw, :branchdc_ne)], base_name="$(nw)_wdc_du_fr",
@@ -310,7 +310,7 @@ end
 # # end
 
 # "variable: `p_dcgrid[l,i,j]` for `(l,i,j)` in `arcs_dcgrid`"
-# function variable_mc_active_dcbranch_flow_ne(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+# function variable_mc_active_dcbranch_flow_ne(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true)
 #         p = _PM.var(pm, nw)[:p_dcgrid_ne]= Dict((l,i,j) =>JuMP.@variable(pm.model,
 #         [c in 1:_PM.ref(pm, nw, :branchdc, l)["conductors"]], base_name="$(nw)_pdcgrid_ne_$((l,i,j))",
 #         start = _PM.comp_start_value(_PM.ref(pm, nw, :branchdc_ne, l), "p_start",  1.0)
@@ -334,7 +334,7 @@ end
 # end
 
 # "variable: `ccm_dcgrid[l]` for `(l)` in `branchdc`"
-# # function variable_dcbranch_current_sqr_ne(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+# # function variable_dcbranch_current_sqr_ne(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true)
 # #     vpu = 0.8
 # #     cc= _PM.var(pm, nw)[:ccm_dcgrid_ne] = JuMP.@variable(pm.model,
 # #     [l in _PM.ids(pm, nw, :branchdc_ne)], base_name="$(nw)_ccm_dcgrid_ne",
@@ -352,7 +352,7 @@ end
 # # end
 #
 # "variable: `0 <= convdc_ne[c] <= 1` for `c` in `candidate converters"
-# function variable_branch_ne(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+# function variable_branch_ne(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, relax::Bool=false, report::Bool=true)
 #     if !relax
 #         Z_dc_branch_ne = _PM.var(pm, nw)[:branch_ne] = JuMP.@variable(pm.model, #branch_ne is also name in PowerModels, branchdc_ne is candidate branches
 #         [l in _PM.ids(pm, nw, :branchdc_ne)], base_name="$(nw)_branch_ne",
@@ -370,7 +370,7 @@ end
 #     report && _PM.sol_component_value(pm, nw, :branchdc_ne, :isbuilt, _PM.ids(pm, nw, :branchdc_ne), Z_dc_branch_ne)
 # end
 #
-function variable_mc_dcbranch_current_ne(pm::_PM.AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
+function variable_mc_dcbranch_current_ne(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool = true, report::Bool=true)
 
      ibr_ne = _PM.var(pm, nw)[:i_dcgrid] = Dict((l,i,j) =>JuMP.@variable(pm.model,
         [c in 1:_PM.ref(pm, nw, :branchdc_ne, l)["conductors"]], base_name="$(nw)_idcgrid_ne_$((l,i,j))",
@@ -398,5 +398,5 @@ function variable_mc_dcbranch_current_ne(pm::_PM.AbstractPowerModel; nw::Int=pm.
         # display(_PM.ids(pm, nw, :busdc))
     # end
 
-    report && _IM.sol_component_value_edge(pm, nw, :branchdc_ne, :i_from, :i_to, _PM.ref(pm, nw, :arcs_dcgrid_from_ne), _PM.ref(pm, nw, :arcs_dcgrid_to_ne), ibr_ne)
+    report && _PM.sol_component_value_edge(pm, nw, :branchdc_ne, :i_from, :i_to, _PM.ref(pm, nw, :arcs_dcgrid_from_ne), _PM.ref(pm, nw, :arcs_dcgrid_to_ne), ibr_ne)
 end

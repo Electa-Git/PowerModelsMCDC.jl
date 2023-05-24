@@ -74,7 +74,7 @@
             data = build_mc_data!(joinpath(_PMMCDC_dir, "test/data/matacdc_scripts/case5_2grids_MC.m"))
             # End TODO =====================================================================
 
-            result = _PMMCDC.run_mcdcopf(data, _PM.ACPPowerModel, nlp_optimizer)
+            result = _PMMCDC.solve_mcdcopf(data, _PM.ACPPowerModel, nlp_optimizer)
 
             @test result["termination_status"] == _PMMCDC.LOCALLY_SOLVED
             @test result["objective"] ≈ 869.1 rtol = 1e-3

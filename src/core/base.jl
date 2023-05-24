@@ -1,5 +1,5 @@
 function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
-    for (n, nw_ref) in ref[:nw]
+    for (n, nw_ref) in ref[:it][_PM.pm_it_sym][:nw]
         if haskey(nw_ref, :convdc)
             #Filter converters & DC branches with status 0 as well as wrong bus numbers
             nw_ref[:convdc] = Dict([x for x in nw_ref[:convdc] if (x.second["status"] == 1 && x.second["busdc_i"] in keys(nw_ref[:busdc]) && x.second["busac_i"] in keys(nw_ref[:bus]))])
@@ -288,7 +288,7 @@ function find_all_ac_grids(branches_ac, buses_ac)
 end
 
 function add_candidate_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
-    for (n, nw_ref) in ref[:nw]
+    for (n, nw_ref) in ref[:it][_PM.pm_it_sym][:nw]
         if haskey(nw_ref, :convdc_ne)
             nw_ref[:arcs_dcgrid_from_ne] = [(i,branch["fbusdc"],branch["tbusdc"]) for (i,branch) in nw_ref[:branchdc_ne]]
             nw_ref[:arcs_dcgrid_to_ne]   = [(i,branch["tbusdc"],branch["fbusdc"]) for (i,branch) in nw_ref[:branchdc_ne]]

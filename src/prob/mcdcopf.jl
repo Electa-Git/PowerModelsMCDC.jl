@@ -1,19 +1,19 @@
-export run_mcdcopf
+export solve_mcdcopf
 
 ""
-function run_mcdcopf(file::String, model_type::Type, solver; kwargs...)
+function solve_mcdcopf(file::String, model_type::Type, solver; kwargs...)
     data = _PM.parse_file(file)
     process_additional_data!(data)
-    return run_mcdcopf(data, model_type, solver; ref_extensions = [add_ref_dcgrid!], kwargs...)
+    return solve_mcdcopf(data, model_type, solver; ref_extensions = [add_ref_dcgrid!], kwargs...)
 end
 
 ""
-function run_mcdcopf(data::Dict{String,Any}, model_type::Type, solver; kwargs...)
-    return _PM.run_model(data, model_type, solver, post_mcdcopf; ref_extensions = [add_ref_dcgrid!], kwargs...)
+function solve_mcdcopf(data::Dict{String,Any}, model_type::Type, solver; kwargs...)
+    return _PM.solve_model(data, model_type, solver, build_mcdcopf; ref_extensions = [add_ref_dcgrid!], kwargs...)
 end
 
 ""
-function post_mcdcopf(pm::_PM.AbstractPowerModel)
+function build_mcdcopf(pm::_PM.AbstractPowerModel)
     _PM.variable_bus_voltage(pm, bounded = true)
     _PM.variable_gen_power(pm, bounded = true)
     _PM.variable_branch_power(pm, bounded = true)
@@ -63,7 +63,7 @@ function post_mcdcopf(pm::_PM.AbstractPowerModel)
         constraint_conv_reactor(pm, i)
         constraint_conv_filter(pm, i)
         # display("end of constraints for converter $i")
-        if pm.ref[:nw][pm.cnw][:convdc][i]["islcc"] == 1
+        if pm.ref[:it][_PM.pm_it_sym][:nw][_PM.nw_id_default][:convdc][i]["islcc"] == 1
             constraint_conv_firing_angle(pm, i)
         end
     end

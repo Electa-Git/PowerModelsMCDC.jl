@@ -16,8 +16,8 @@ using Ipopt
 using Memento
 # using Gurobi
 
-# ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-8, print_level=1)
-# gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
+# ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, tol=1e-8, print_level=1)
+# gurobi_solver = JuMP.optimizer_with_attributes(Gurobi.Optimizer)
 
 ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
 
@@ -158,7 +158,7 @@ datadc_new = build_mc_data!(file)
 # datadc_new = build_mc_data!("./test/data/matacdc_scripts/4_case5_2grids_MC.m")
 
 s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
-result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
+result_mcdc = PowerModelsMCDC.solve_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
 #--------------------------------------------------------------------------------------------------------
 # file="./test/data/matacdc_scripts/case5_2grids_MC.m"
@@ -198,7 +198,7 @@ println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 
 # for k=1:N
 
-#   result_mcdc = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
+#   result_mcdc = PowerModelsMCDC.solve_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
 #   result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
 
