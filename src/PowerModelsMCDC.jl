@@ -52,15 +52,12 @@ include("prob/mcdcpf.jl")
 import JuMP: optimizer_with_attributes
 export optimizer_with_attributes
 
-# TODO: after dropping support for JuMP 0.21, remove `.MOI` from the following line and from
-# the @eval below.
-import JuMP.MOI: TerminationStatusCode, ResultStatusCode
+import JuMP: TerminationStatusCode, ResultStatusCode
 export TerminationStatusCode, ResultStatusCode
-
 
 for status_code_enum in [TerminationStatusCode, ResultStatusCode]
     for status_code in instances(status_code_enum)
-        @eval import JuMP.MOI: $(Symbol(status_code))
+        @eval import JuMP: $(Symbol(status_code))
         @eval export $(Symbol(status_code))
     end
 end

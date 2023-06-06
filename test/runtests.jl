@@ -13,4 +13,7 @@ nlp_optimizer = _PMMCDC.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6
     # Problems
     include("prob.jl")
 
+    # Exported symbols
+    include("export.jl")
+
 end;
