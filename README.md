@@ -15,9 +15,9 @@ PowerModelsMCDC.jl is a Julia/JuMP/PowerModels package for hybrid AC/DC systems 
 * AC/DC power flow with different converter control modes: Under development.
 ## Contributors
 
-Chandra Kant Jat (KU Leuven / EnergyVille): Main developer
-Jay Dave (KU Leuven / EnergyVille): Testing and validations
-Hakan Ergun (KU Leuven / EnergyVille): Supervisor
+* Chandra Kant Jat (KU Leuven / EnergyVille): Main developer
+* Jay Dave (KU Leuven / EnergyVille): Testing and validations
+* Hakan Ergun (KU Leuven / EnergyVille): Supervisor
 
 ## Citing PowerModelsMCDC
 
