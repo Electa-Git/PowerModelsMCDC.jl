@@ -1,5 +1,3 @@
-using LinearAlgebra
-# using LinearAlgebra: I
 import PowerModels
 const _PM = PowerModels
 using PowerModelsMCDC

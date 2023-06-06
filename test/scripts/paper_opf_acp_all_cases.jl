@@ -1,5 +1,3 @@
-using LinearAlgebra
-# using LinearAlgebra: I
 import PowerModels
 const _PM = PowerModels
 using PowerModelsMCDC
@@ -206,7 +204,7 @@ println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 #      solve_time_dc[k]["2"] = result_mcdc["solve_time"]
 #     #  solve_time_dc[k]["3"] = result_acdc["termination_status"]
 #      solve_time_dc[k]["4"] = result_acdc["solve_time"]
-     
+
 # end
 
 # avg_solvetime_mcdc= sum(solve_time_dc[k]["2"] for k in 1:N)/N

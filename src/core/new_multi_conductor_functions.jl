@@ -31,7 +31,6 @@ const _DCdata=["busdc", "convdc", "branchdc"]
 const _conductor_matrix = Set(["br_r", "br_x", "rc", "xc", "rtf", "xtf", "bf"])
 
 
-using LinearAlgebra
 function _make_multiconductor_new!(data::Dict{String,<:Any})
     # if haskey(data, "conductors")
     #     Memento.warn(_LOGGER, "skipping network that is already multiconductor")
@@ -53,11 +52,7 @@ function _make_multiconductor_new!(data::Dict{String,<:Any})
                         if param in _conductorless
                             item_ref_data[param] = value
                         else
-                            # if param in _conductor_matrix
-                            #     item_ref_data[param] = LinearAlgebra.diagm(0=>fill(value, conductors))
-                            # else
-                                item_ref_data[param] = fill(value, conductors)
-                            # end
+                            item_ref_data[param] = fill(value, conductors)
                         end
                     end
                     item[item_id] = item_ref_data

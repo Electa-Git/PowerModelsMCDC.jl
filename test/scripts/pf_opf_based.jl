@@ -1,6 +1,4 @@
-# chandra pf branch check 
-using LinearAlgebra
-using LinearAlgebra: I
+# chandra pf branch check
 import PowerModels
 const _PM = PowerModels
 using PowerModelsMCDC
@@ -32,7 +30,7 @@ juniper = JuMP.optimizer_with_attributes(Juniper.Optimizer, mip_solver=cbc_solve
 function build_mc_data!(base_data)
     mp_data = PowerModels.parse_file(base_data)
 
-  
+
 
        #making lossless conv paramteres and impedances
      for (c,conv) in mp_data["convdc"]
@@ -118,8 +116,8 @@ for (g, gen) in data["gen"]
         gen["pg"]=9.05gen["pg"]
         display("change in gen setppoint")
         display(gen["pg"])
-    end 
-   
+    end
+
 
 end
 for (cv, convdc) in data["convdc"]
@@ -174,7 +172,7 @@ for (cv, convdc) in data["convdc"]
 
              convdc["Q_g"] = -result_mcdc_opf["solution"]["convdc"]["$cv"]["qgrid"]
              convdc["P_g"] = -result_mcdc_opf["solution"]["convdc"]["$cv"]["pgrid"]
-            
+
              #"to introduce change in conv setpoints"
              if cv=="4"
                  # display("to introduce change in conv", "$cv")
@@ -189,7 +187,7 @@ for (cv, convdc) in data["convdc"]
              end
 
             #"to introduce change in conv setpoints"
-        
+
 
             display("p and v setting")
             display(convdc["P_g"])
