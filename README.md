@@ -41,4 +41,4 @@ If you have something to discuss about the package or related work please feel f
 
 ## License
 
-This code is provided under a [BSD 3-Clause License](/LICENSE).
+This code is provided under a [BSD 3-Clause License](/LICENSE.md).
