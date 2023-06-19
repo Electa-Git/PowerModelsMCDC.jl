@@ -575,3 +575,60 @@ function converter_bounds(pmin, pmax, loss0, loss1)
     end
     return pminf, pmaxf, pmint, pmaxt
 end
+
+function build_mc_data!(base_data)
+    # mp_data = PowerModels.parse_file(base_data)
+    mp_data= base_data
+
+       #making lossless conv paramteres and impedances
+     for (c,conv) in mp_data["convdc"]
+        if conv["conv_confi"]==2
+            conv["rtf"]=2*conv["rtf"]
+            conv["xtf"]=2*conv["xtf"]
+            conv["bf"]=0.5*conv["bf"]
+            conv["rc"]=2*conv["rc"]
+            conv["xc"]=2*conv["xc"]
+            conv["LossB"]=conv["LossB"]
+            conv["LossA"]=0.5*conv["LossA"]
+            conv["LossCrec"]=2*conv["LossCrec"]
+            conv["LossCinv"]=2*conv["LossCinv"]
+        end
+    end
+         process_additional_data!(mp_data)
+        _make_multiconductor_new!(mp_data)
+    # Adjusting line limits
+    for (c,bn) in mp_data["branchdc"]
+        if bn["line_confi"]==2
+            bn["rateA"]=bn["rateA"]/2
+            bn["rateB"]=bn["rateB"]/2
+            bn["rateC"]=bn["rateC"]/2
+        end
+        metalic_cond_number= bn["conductors"]
+
+        #"To adjust the metalic conductor current rating"
+        # bn["rateA"][metalic_cond_number]=bn["rateA"][metalic_cond_number]*0.1
+        # bn["rateB"][metalic_cond_number]=bn["rateB"][metalic_cond_number]*0.1
+        # bn["rateC"][metalic_cond_number]=bn["rateC"][metalic_cond_number]*0.1
+
+        bn["return_z"]=0.052 # adjust metallic resistance
+        bn["r"][metalic_cond_number]=bn["return_z"]
+
+    end
+
+      # Adjusting conveter limits
+      for (c,conv) in mp_data["convdc"]
+         if conv["conv_confi"]==2
+             conv["Pacmax"]=conv["Pacmax"]/2
+             conv["Pacmin"]=conv["Pacmin"]/2
+             conv["Pacrated"]=conv["Pacrated"]/2
+         end
+      end
+      # Adjusting metallic return bus voltage limits
+      for (i,busdc) in mp_data["busdc"]
+         busdc["Vdcmax"][3]=busdc["Vdcmax"][1]-1.0
+         busdc["Vdcmin"][3]=-(1-busdc["Vdcmin"][1])
+         busdc["Vdcmax"][2]=-busdc["Vdcmin"][1]
+         busdc["Vdcmin"][2]=-busdc["Vdcmax"][1]
+      end
+    return mp_data
+end
