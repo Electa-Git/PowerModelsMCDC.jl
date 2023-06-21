@@ -10,7 +10,8 @@
     @testset "mcdcopf" begin
         @testset "case5_2grids_MC" begin
 
-            result = _PMMCDC.solve_mcdcopf("..test/data/matacdc_scripts/case5_2grids_MC.m", _PM.ACPPowerModel, nlp_optimizer)
+            file=joinpath(_PMMCDC_dir, "test/data/matacdc_scripts/case5_2grids_MC.m")
+            result = _PMMCDC.solve_mcdcopf(file, _PM.ACPPowerModel, nlp_optimizer)
 
             @test result["termination_status"] == _PMMCDC.LOCALLY_SOLVED
             @test result["objective"] ≈ 869.1 rtol = 1e-3
