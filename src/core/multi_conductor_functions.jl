@@ -1,7 +1,7 @@
 "removing predefined conductor"
 
 "Transforms single-conductor network data into multi-conductor data"
-function make_multiconductor_new!(data::Dict{String,<:Any})
+function make_multiconductor!(data::Dict{String,<:Any})
     if _IM.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
             _make_multiconductor!(nw_data)
@@ -19,10 +19,11 @@ const _conductorless = Set(["basekVdc", "source_id", "busdc_i", "grid", "index",
   "basekVac", "type_dc", "filter", "reactor", "transformer", "type_ac", "Vtar",
    "status", "islcc", "ground_type", "line_confi", "connect_at", "conv_confi",
     "ground_z", "type_dc","conductors"])
-#Assumed: control modes and setpoints are not per conductor.
-# "P_g", "Q_g", removed due to conv set point. Should be tacked differently if multiconductor of AC is considered
+#Assumed: control modes and setpoints are not per conductor. Can multiconductorin future.
+# "P_g", "Q_g", removed due to conv set point. Should be tackled differently if multiconductor of AC is considered
 # "dVdcset", "Vdcset", removed for giving pf setpoints
 #"Pdcset", "droop",
+#TODO: "status" can be made multi-conductor when incorporated in the model. 
 
 "only dc side data"
 const _DCdata=["busdc", "convdc", "branchdc"]
@@ -31,7 +32,7 @@ const _DCdata=["busdc", "convdc", "branchdc"]
 const _conductor_matrix = Set(["br_r", "br_x", "rc", "xc", "rtf", "xtf", "bf"])
 
 
-function _make_multiconductor_new!(data::Dict{String,<:Any})
+function _make_multiconductor!(data::Dict{String,<:Any})
     # if haskey(data, "conductors")
     #     Memento.warn(_LOGGER, "skipping network that is already multiconductor")
     #     return
@@ -41,7 +42,6 @@ function _make_multiconductor_new!(data::Dict{String,<:Any})
 
     for (key, item) in data
      if key in _DCdata
-         # display(key)
         if isa(item, Dict{String,Any})
             for (item_id, item_data) in item
                 if isa(item_data, Dict{String,Any})

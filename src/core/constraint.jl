@@ -7,29 +7,6 @@ end
 sum(p_dcgrid[a] for a in bus_arcs_dcgrid) + sum(pconv_dc[c] for c in bus_convs_dc) == pd
 ```
 """
-# function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int, bus_arcs_dcgrid, bus_convs_dc, pd, total_cond)
-#     p_dcgrid = _PM.var(pm, n, :p_dcgrid)
-#     pconv_dc = _PM.var(pm, n, :pconv_dc)
-#
-#     pconv_dcg_shunt=_PM.var(pm, n, :pconv_dcg_shunt)
-#
-#     bus_arcs_dcgrid_cond = _PM.ref(pm, n, :bus_arcs_dcgrid_cond)
-#     bus_convs_dc_cond =  _PM.ref(pm, n, :bus_convs_dc_cond)
-#     bus_convs_grounding_shunt=_PM.ref(pm, n, :bus_convs_grounding_shunt)
-#
-#     display("KCL at bus:$i")
-#     for k = 1: total_cond
-#             for c in bus_convs_grounding_shunt[(i, k)]
-#                  # for c in bus_convs_grounding_shunt[(i, k)]
-#                 display("value of c is: $c")
-#                 display(pconv_dcg_shunt[c])
-#             end
-#         display(JuMP.@constraint(pm.model, sum(p_dcgrid[c][d] for (c,d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(pconv_dc[c][d] for (c,d) in bus_convs_dc_cond[(i, k)])+sum(pconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, k)]) == (-pd[k])))
-#          # display(JuMP.@constraint(pm.model, sum(p_dcgrid[c][d] for (c,d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(pconv_dc[c][d] for (c,d) in bus_convs_dc_cond[(i, k)]) == (-pd[k])))
-#          # display(JuMP.@constraint(pm.model, sum(p_dcgrid[c][d] for (c,d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(pconv_dc[c][d] for (c,d) in bus_convs_dc_cond[(i, k)]) == (-pd[k])))
-#
-#     end
-# end
 
 function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int, bus_arcs_dcgrid, bus_convs_dc, pd, total_cond)
     i_dcgrid = _PM.var(pm, n, :i_dcgrid)
@@ -42,17 +19,8 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int,
     bus_convs_grounding_shunt=_PM.ref(pm, n, :bus_convs_grounding_shunt)
     "load (-pd[k] excluded), to be thought later"
 
-    # display("KCL at bus:$i")
     for k = 1: total_cond
-            # for c in bus_convs_grounding_shunt[(i, k)]
-            #      # for c in bus_convs_grounding_shunt[(i, k)]
-            #     display("value of c is: $c")
-            #     display(iconv_dcg_shunt[c])
-            # end
         (JuMP.@constraint(pm.model, sum(i_dcgrid[c][d] for (c,d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(iconv_dc[c][d] for (c,d) in bus_convs_dc_cond[(i, k)])+sum(iconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, k)]) == 0))
-         # display(JuMP.@constraint(pm.model, sum(p_dcgrid[c][d] for (c,d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(pconv_dc[c][d] for (c,d) in bus_convs_dc_cond[(i, k)]) == (-pd[k])))
-         # display(JuMP.@constraint(pm.model, sum(p_dcgrid[c][d] for (c,d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(pconv_dc[c][d] for (c,d) in bus_convs_dc_cond[(i, k)]) == (-pd[k])))
-
     end
 end
 
@@ -60,7 +28,6 @@ end
 "`pconv[i] == pconv`"
 function constraint_active_conv_setpoint(pm::_PM.AbstractPowerModel, n::Int, i, pconv_cond, cond)
     pconv_var = _PM.var(pm, n, :pconv_tf_fr, i)
-    # println("active power setting for cond $cond is $pconv_cond")
     JuMP.@constraint(pm.model, pconv_var[cond] == -pconv_cond)
 end
 

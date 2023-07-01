@@ -3,7 +3,7 @@ export solve_mcdcopf
 ""
 function solve_mcdcopf(file::String, model_type::Type, solver; kwargs...)
     data = _PM.parse_file(file)
-    PowerModelsMCDC.build_mc_data!(data)
+    build_mc_data!(data)
     return solve_mcdcopf(data, model_type, solver; ref_extensions = [add_ref_dcgrid!], kwargs...)
 end
 
@@ -56,7 +56,6 @@ function build_mcdcopf(pm::_PM.AbstractPowerModel)
     for i in _PM.ids(pm, :convdc)
         # display("Now it is callig all converter constraints")
         constraint_converter_losses(pm, i)
-        # constraint_converter_dc_ground(pm, i)
         constraint_converter_current(pm, i)
         constraint_converter_dc_current(pm, i)
         constraint_conv_transformer(pm, i)

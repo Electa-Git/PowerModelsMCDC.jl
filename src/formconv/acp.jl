@@ -4,46 +4,13 @@ Creates lossy converter model between AC and DC grid
 pconv_ac[i] + pconv_dc[i] == a + bI + cI^2
 ```
 """
-# function constraint_converter_losses(pm::_PM.AbstractACPModel, n::Int, i::Int, a, b, c, plmax)
-#     pconv_ac = _PM.var(pm, n, :pconv_ac, i)
-#     pconv_dc = _PM.var(pm, n, :pconv_dc, i)
-#     iconv = _PM.var(pm, n, :iconv_ac, i)
-#
-#     JuMP.@NLconstraint(pm.model, pconv_ac + pconv_dc == a + b*iconv + c*iconv^2)
-# end
 function constraint_converter_losses(pm::_PM.AbstractACPModel, n::Int,  i::Int, a, b, c, plmax, cond)
     pconv_ac = _PM.var(pm, n, :pconv_ac, i)[cond] #cond defined over conveter
     pconv_dc = _PM.var(pm, n, :pconv_dc, i)[cond]
     pconv_dcg= _PM.var(pm, n, :pconv_dcg, i)[cond]
     iconv = _PM.var(pm, n, :iconv_ac, i)[cond]
 
-#     iconv_dc = _PM.var(pm, n, :iconv_dc, i)[cond]
-
-#     vdcm = _PM.var(pm, n, :vdcm)
-
-#     dc_bus=_PM.ref(pm, n, :convdc,i)["busdc_i"]
-  
-#    vdc_pole= _PM.var(pm, n, :vdcm, dc_bus)[]
-    
-
-#     bus_convs_dc_cond =  _PM.ref(pm, n, :bus_convs_dc_cond)
-
-    # display("reached to acp conveter losses")
-    # display("$pconv_ac; $pconv_dc; $pconv_dcg")
-    # v = 1 #pu, assumption to approximate current
-    # cm_conv_ac = pconv_ac/v # can actually be negative, not a very nice model...
-    # if pm.setting["conv_losses_mp"] == true
-        # _PM.con(pm, n, :conv_loss)[i] = JuMP.@constraint(pm.model, pconv_ac + pconv_dc == a + b*cm_conv_ac ...a + b*cm_conv_ac)
-            # JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == 0 )
         (JuMP.@NLconstraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == a + b*iconv + c*iconv^2 ))
-    # else
-    #     # _PM.con(pm, n, :conv_loss)[i] = JuMP.@constraint(pm.model, pconv_ac + pconv_dc >= a + b*cm_conv_ac )
-    #     # _PM.con(pm, n, :conv_loss_aux)[i] = JuMP.@constraint(pm.model, pconv_ac + pconv_dc >= a - b*cm_conv_ac )
-    #     # _PM.con(pm, n, :conv_loss_plmax)[i] = JuMP.@constraint(pm.model, pconv_ac + pconv_dc <= plmax)
-    #     JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg >= a + b*cm_conv_ac )
-    #     JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg >= a - b*cm_conv_ac )
-    #     JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg <= plmax)
-    # end
 end
 """
 Links converter power & current
@@ -69,10 +36,6 @@ function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::In
 
 
     dc_bus=_PM.ref(pm, n, :convdc,i)["busdc_i"]
-    # display("vdc test")
-    # aplha= vdcm[dc_bus]
-    # beta=_PM.var(pm, n, :vdcm, dc_bus)
-    # display("$aplha, $beta")
 
     conv_cond=_PM.ref(pm, n, :convdc,i)["conductors"]
     bus_convs_dc_cond =  _PM.ref(pm, n, :bus_convs_dc_cond)
@@ -99,34 +62,15 @@ function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::In
 
 end
 
-
-function constraint_converter_dc_ground(pm::_PM.AbstractACPModel, n::Int,  i::Int, pconv_dc,pconv_dcg,total_conv_cond)
-    # constraint_converter_dc_ground(pm, nw, i,pconv_dc,pconv_dcg,total_conv_cond)
-    # JuMP.@constraint(pm.model, pconv_dc[total_conv_cond+1]==sum(pconv_dcg[cond_g] for cond_g=1:total_conv_cond))
-    """written only to calculate the value of neutral power"""
-    (JuMP.@constraint(pm.model, pconv_dc[total_conv_cond+1]==sum(pconv_dcg[cond_g] for cond_g=1:total_conv_cond)))
-end
-
 function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::Int)
     pconv_dcg_shunt=_PM.var(pm, n, :pconv_dcg_shunt)
     iconv_dcg_shunt=_PM.var(pm, n, :iconv_dcg_shunt)
 
     bus_convs_grounding_shunt=_PM.ref(pm, n, :bus_convs_grounding_shunt)
     r_earth=0
-    # sum(pconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, k)
-     # for i in _PM.ids(pm, nw, :convdc)
-     # display(pconv_dcg_shunt)
-     # display(bus_convs_grounding_shunt)
-     #
-         # JuMP.@constraint(pm.model, sum(pconv_dcg_shunt[c] for (i,c) in bus_convs_grounding_shunt)==0)
-         # display(JuMP.@NLconstraint(pm.model, sum(sum((pconv_dcg_shunt[c]/_PM.var(pm, n,  :vdcm,i)[3]) for c in b[(i, 3)]) for i in _PM.ids(pm, n, :busdc))==0))
+    
          for i in _PM.ids(pm, n, :busdc)
             vdc= _PM.var(pm, n,  :vdcm,i)
-            # display("the final check")
-            # JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[1]==0)
-            # JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[2]==0)
-            # JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[3]==0)
-
              for c in bus_convs_grounding_shunt[(i, 3)]
                  conv = _PM.ref(pm, n, :convdc, c)
                  r=conv["ground_z"]+ r_earth
@@ -141,16 +85,6 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::I
          end
 end
 
-function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractACPModel, n::Int)
-    iconv_dcg_shunt=_PM.var(pm, n, :iconv_dcg_shunt)
-    bus_convs_grounding_shunt=_PM.ref(pm, n, :bus_convs_grounding_shunt)
-    # display(iconv_dcg_shunt)
-    # display(bus_convs_grounding_shunt)
-    # Ig_sum= sum(sum(iconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, 3)]) for i in _PM.ids(pm, n, :busdc))
-        # display(Ig_sum)
-         # display(JuMP.@NLconstraint(pm.model, Ig_sum ==0))
-
-end
 
 """
 Converter transformer constraints

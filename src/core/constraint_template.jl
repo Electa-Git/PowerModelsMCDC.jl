@@ -22,7 +22,7 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     bus_arcs_dcgrid = _PM.ref(pm, nw, :bus_arcs_dcgrid, i)
     bus_convs_dc = _PM.ref(pm, nw, :bus_convs_dc, i)
     pd = _PM.ref(pm, nw, :busdc, i)["Pdc"]
-    total_cond = _PM.ref(pm, nw, :busdc,i)["conductors"]
+    total_cond = _PM.ref(pm, nw, :busdc, i)["conductors"]
     constraint_kcl_shunt_dcgrid(pm, nw, i, bus_arcs_dcgrid, bus_convs_dc, pd, total_cond)
 end
 #
@@ -44,71 +44,49 @@ function constraint_converter_losses(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     a = conv["LossA"]
     b = conv["LossB"]
     c = conv["LossCinv"]
-     # plmax = Dict([(i, []) for i in 1:conv["conductors"] ])
+    # plmax = Dict([(i, []) for i in 1:conv["conductors"] ])
     for cond in 1:conv["conductors"]
-          plmax = conv["LossA"][cond] + conv["LossB"][cond] * conv["Pacrated"][cond] + conv["LossCinv"][cond] * (conv["Pacrated"][cond])^2
+        plmax = conv["LossA"][cond] + conv["LossB"][cond] * conv["Pacrated"][cond] + conv["LossCinv"][cond] * (conv["Pacrated"][cond])^2
         # push!(plmax[c], conv["LossA"][c] + conv["LossB"][c] * conv["Pacrated"][c] + conv["LossCinv"][c] * (conv["Pacrated"][c])^2 )
         constraint_converter_losses(pm, nw, i, a[cond], b[cond], c[cond], plmax, cond)
     end
 end
 
-function constraint_converter_dc_ground(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
-    conv = _PM.ref(pm, nw, :convdc, i)
-        total_conv_cond=conv["conductors"]
-        pconv_dc = _PM.var(pm, nw, :pconv_dc, i)
-        pconv_dcg= _PM.var(pm, nw, :pconv_dcg, i)
-        constraint_converter_dc_ground(pm, nw, i,pconv_dc, pconv_dcg, total_conv_cond)
-end
 
 function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default)
-            constraint_converter_dc_ground_shunt_ohm(pm, nw)
+    constraint_converter_dc_ground_shunt_ohm(pm, nw)
 end
 
-function constraint_converter_dc_ground_shunt_kcl(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default)
-            constraint_converter_dc_ground_shunt_kcl(pm, nw)
-end
 
 function constraint_converter_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
     for cond in 1:conv["conductors"]
         Vmax = conv["Vmmax"][cond]
         Imax = conv["Imax"][cond]
-        constraint_converter_current(pm, nw, i, Vmax, Imax,cond)
+        constraint_converter_current(pm, nw, i, Vmax, Imax, cond)
     end
 end
 
 function constraint_converter_dc_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
-    # conv = _PM.ref(pm, nw, :convdc, i)
-    # for cond in 1:conv["conductors"]
-    #     Vmax = conv["Vmmax"][cond]
-    #     Imax = conv["Imax"][cond]
-        constraint_converter_dc_current(pm, nw, i)
-    # end
+    constraint_converter_dc_current(pm, nw, i)
 end
 
 function constraint_active_conv_setpoint(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
 
     for cond in 1:conv["conductors"]
-        # conv["index"][cond]
         constraint_active_conv_setpoint(pm, nw, i, conv["P_g"][cond], cond)
     end
 end
 
 function constraint_reactive_conv_setpoint(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
-    # display(i)
     for cond in 1:conv["conductors"]
         constraint_reactive_conv_setpoint(pm, nw, i, conv["Q_g"][cond], cond)
     end
 end
 ""
 function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
-    # conv = _PM.ref(pm, nw, :convdc, i)
-
-    # for cond in 1:conv["conductors"]
-        # constraint_dc_voltage_magnitude_setpoint(pm, nw, conv["busdc_i"], conv["Vdcset"][cond], cond)
-    # end
     constraint_dc_voltage_magnitude_setpoint(pm, nw, i)
 end
 
@@ -117,9 +95,6 @@ function constraint_conv_reactor(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM
     conv = _PM.ref(pm, nw, :convdc, i)
 
     for cond in 1:conv["conductors"]
-        # display(conv["rc"][cond])
-        # display(conv["xc"][cond])
-        # display(conv["reactor"])
         constraint_conv_reactor(pm, nw, i, conv["rc"][cond], conv["xc"][cond], Bool(conv["reactor"]), cond)
     end
 end
@@ -136,13 +111,8 @@ end
 #
 function constraint_conv_transformer(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
-    # display("template")
     for cond in 1:conv["conductors"]
-        # display(conv["rtf"][cond])
-        # display(conv["xtf"][cond])
-        # display(conv["busac_i"])
-        #  display(conv["tm"][cond])
-     constraint_conv_transformer(pm, nw, i, conv["rtf"][cond], conv["xtf"][cond], conv["busac_i"], conv["tm"][cond], Bool(conv["transformer"]), cond)
+        constraint_conv_transformer(pm, nw, i, conv["rtf"][cond], conv["xtf"][cond], conv["busac_i"], conv["tm"][cond], Bool(conv["transformer"]), cond)
     end
 end
 
@@ -161,7 +131,7 @@ function constraint_conv_firing_angle(pm::_PM.AbstractPowerModel, i::Int; nw::In
 end
 
 function constraint_dc_branch_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
-    vpu = 1;
+    vpu = 1
     branch = _PM.ref(pm, nw, :branchdc, i)
     f_bus = branch["fbusdc"]
     t_bus = branch["tbusdc"]

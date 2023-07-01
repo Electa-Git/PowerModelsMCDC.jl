@@ -66,36 +66,7 @@ function to_pu_single_network!(data)
             set_busdc_pu(busdc, MVAbase)
         end
     end
-    if haskey(data, "convdc_ne")
-        for (i, conv) in data["convdc_ne"]
-            dcbus = conv["busdc_i"]
-            kVbase = conv["basekVac"]
-            Zbase = get_pu_bases(MVAbase, kVbase)["Z"]
-            Ibase = get_pu_bases(MVAbase, kVbase)["I"]
 
-            set_conv_pu_power(conv, MVAbase)
-            set_conv_pu_volt(conv, kVbase*sqrt(3))
-            set_conv_pu_ohm(conv, Zbase)
-        end
-    end
-    if haskey(data, "branchdc_ne")
-        for (i, branchdc) in data["branchdc_ne"]
-            set_branchdc_pu(branchdc, MVAbase)
-        end
-    end
-    if haskey(data, "busdc_ne")
-        new_busdc_ne = Dict{String, Any}()
-        for (i, busdc) in data["busdc_ne"]
-            set_busdc_pu(busdc, MVAbase)
-            new_bus = busdc["busdc_i"] # assigning new bus numbers: continous numbers from dc bus numbers
-            if new_bus == i
-                display("candidate dc buses and existing dc buses should have different bus numbers")
-            end
-            new_busdc_ne[string(new_bus)] = busdc # assigning new bus numbers: continous numbers from dc bus numbers
-            busdc["index"] = new_bus
-        end
-        data["busdc_ne"] = new_busdc_ne # assigning new bus numbers: continous numbers from dc bus numbers
-    end
 end
 
 function to_pu_multinetwork!(data)
@@ -122,38 +93,6 @@ function to_pu_multinetwork!(data)
             for (i, busdc) in data["nw"][n]["busdc"]
                 set_busdc_pu(busdc, MVAbase)
             end
-        end
-        if haskey(data["nw"][n], "convdc_ne")
-            for (i, conv) in data["nw"][n]["convdc_ne"]
-                dcbus = conv["busdc_i"]
-                kVbase = conv["basekVac"]
-                Zbase = get_pu_bases(MVAbase, kVbase)["Z"]
-                Ibase = get_pu_bases(MVAbase, kVbase)["I"]
-
-                set_conv_pu_power(conv, MVAbase)
-                set_conv_pu_volt(conv, kVbase*sqrt(3))
-                set_conv_pu_ohm(conv, Zbase)
-                conv["cost"] = conv["cost"]/length(data["nw"])
-            end
-        end
-        if haskey(data["nw"][n], "branchdc_ne")
-            for (i, branchdc) in data["nw"][n]["branchdc_ne"]
-                set_branchdc_pu(branchdc, MVAbase)
-                branchdc["cost"] = branchdc["cost"]/length(data["nw"])
-            end
-        end
-        if haskey(data["nw"][n], "busdc_ne")
-            new_busdc_ne = Dict{String, Any}()
-            for (i, busdc) in data["nw"][n]["busdc_ne"]
-                set_busdc_pu(busdc, MVAbase)
-                new_bus = busdc["busdc_i"] # assigning new bus numbers: continous numbers from exisiting dc bus numbers
-                if new_bus == i
-                    display("candidate dc buses and existing dc buses should have different bus numbers")
-                end
-                new_busdc_ne[string(new_bus)] = busdc # assigning new bus numbers: continous numbers from dc bus numbers
-                busdc["index"] = new_bus
-            end
-            data["nw"][string(n)]["busdc_ne"] = new_busdc_ne # assigning new bus numbers: continous numbers from exisiting dc bus numbers
         end
     end
 end
@@ -305,16 +244,6 @@ function fix_data_single_network!(data)
     if !haskey(data, "dcpol")
         data["dcpol"] = 2
     end
-    if haskey(data, "convdc_ne")
-        for (i, conv) in data["convdc_ne"]
-            check_conv_parameters(conv)
-        end
-    end
-    if haskey(data, "branchdc_ne")
-        for (i, branchdc) in data["branchdc_ne"]
-            check_branchdc_parameters(branchdc)
-        end
-    end
 end
 
 function fix_data_multinetwork!(data)
@@ -341,16 +270,6 @@ function fix_data_multinetwork!(data)
         end
         if !haskey(data["nw"][n], "dcpol")
             data["nw"][n]["dcpol"] = 2
-        end
-        if haskey(data["nw"][n], "convdc_ne")
-            for (i, conv) in data["nw"][n]["convdc_ne"]
-                check_conv_parameters(conv)
-            end
-        end
-        if haskey(data["nw"][n], "branchdc_ne")
-            for (i, branchdc) in data["nw"][n]["branchdc_ne"]
-                check_branchdc_parameters(branchdc)
-            end
         end
     end
 end
@@ -577,11 +496,9 @@ function converter_bounds(pmin, pmax, loss0, loss1)
 end
 
 function build_mc_data!(base_data)
-    # mp_data = PowerModels.parse_file(base_data)
-    mp_data= base_data
 
        #making lossless conv paramteres and impedances
-     for (c,conv) in mp_data["convdc"]
+     for (c,conv) in base_data["convdc"]
         if conv["conv_confi"]==2
             conv["rtf"]=2*conv["rtf"]
             conv["xtf"]=2*conv["xtf"]
@@ -594,29 +511,28 @@ function build_mc_data!(base_data)
             conv["LossCinv"]=2*conv["LossCinv"]
         end
     end
-         process_additional_data!(mp_data)
-        _make_multiconductor_new!(mp_data)
+         process_additional_data!(base_data)
+        _make_multiconductor!(base_data)
     # Adjusting line limits
-    for (c,bn) in mp_data["branchdc"]
+    for (c,bn) in base_data["branchdc"]
         if bn["line_confi"]==2
             bn["rateA"]=bn["rateA"]/2
             bn["rateB"]=bn["rateB"]/2
             bn["rateC"]=bn["rateC"]/2
         end
-        metalic_cond_number= bn["conductors"]
+        metallic_cond_number= bn["conductors"]
 
-        #"To adjust the metalic conductor current rating"
-        # bn["rateA"][metalic_cond_number]=bn["rateA"][metalic_cond_number]*0.1
-        # bn["rateB"][metalic_cond_number]=bn["rateB"][metalic_cond_number]*0.1
-        # bn["rateC"][metalic_cond_number]=bn["rateC"][metalic_cond_number]*0.1
+        #"To adjust the metallic conductor current rating"
+        # bn["rateA"][metallic_cond_number]=bn["rateA"][metallic_cond_number]*0.1
+        # bn["rateB"][metallic_cond_number]=bn["rateB"][metallic_cond_number]*0.1
+        # bn["rateC"][metallic_cond_number]=bn["rateC"][metallic_cond_number]*0.1
 
-        bn["return_z"]=0.052 # adjust metallic resistance
-        bn["r"][metalic_cond_number]=bn["return_z"]
+        bn["r"][metallic_cond_number]=bn["return_z"]
 
     end
 
       # Adjusting conveter limits
-      for (c,conv) in mp_data["convdc"]
+      for (c,conv) in base_data["convdc"]
          if conv["conv_confi"]==2
              conv["Pacmax"]=conv["Pacmax"]/2
              conv["Pacmin"]=conv["Pacmin"]/2
@@ -624,11 +540,11 @@ function build_mc_data!(base_data)
          end
       end
       # Adjusting metallic return bus voltage limits
-      for (i,busdc) in mp_data["busdc"]
+      for (i,busdc) in base_data["busdc"]
          busdc["Vdcmax"][3]=busdc["Vdcmax"][1]-1.0
          busdc["Vdcmin"][3]=-(1-busdc["Vdcmin"][1])
          busdc["Vdcmax"][2]=-busdc["Vdcmin"][1]
          busdc["Vdcmin"][2]=-busdc["Vdcmax"][1]
       end
-    return mp_data
+    return base_data
 end

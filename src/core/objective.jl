@@ -53,32 +53,6 @@ function _objective_min_polynomial_fuel_cost_quadratic(pm::_PM.AbstractPowerMode
     )
 end
 ""
-function objective_min_polynomial_fuel_cost(pm::_PM.AbstractConicModel)
-    _PM.check_polynomial_cost_models(pm)
-    pg_sqr = Dict()
-    for (n, nw_ref) in _PM.nws(pm)
-        for cnd in _PM.conductor__PM.ids(pm, n)
-            pg_sqr = _PM.var(pm, n, cnd)[:pg_sqr] = JuMP.@variable(pm.model,
-                [i in _PM.ids(pm, n, :gen)], base_name="$(n)_$(cnd)_pg_sqr",
-                lower_bound = _PM.ref(pm, n, :gen, i, "pmin", cnd)^2,
-                upper_bound = _PM.ref(pm, n, :gen, i, "pmax", cnd)^2
-            )
-            for (i, gen) in nw_ref[:gen]
-                JuMP.@constraint(pm.model, [pg_sqr[i], var(pm, n, cnd, :pg, i)/sqrt(2), var(pm, n, cnd, :pg, i)/sqrt(2)] in JuMP.SecondOrderCone())
-            end
-
-        end
-    end
-    print("pipi")
-    return JuMP.@objective(pm.model, Min,
-        sum(
-            sum( gen["cost"][1]*sum(_PM.var(pm, n, cnd, :pg_sqr, i) for cnd in _PM.conductor__PM.ids(pm, n)) +
-                 gen["cost"][2]*sum(_PM.var(pm, n, cnd, :pg, i) for cnd in _PM.conductor__PM.ids(pm, n)) +
-                 gen["cost"][3] for (i,gen) in nw_ref[:gen])
-        for (n, nw_ref) in _PM.nws(pm))
-    )
-end
-""
 function objective_min_pwl_fuel_cost(pm::_PM.AbstractPowerModel)
 
     for (n, nw_ref) in _PM.nws(pm)
@@ -93,7 +67,6 @@ function objective_min_pwl_fuel_cost(pm::_PM.AbstractPowerModel)
                 JuMP.@constraint(pm.model, pg_cost[i] >= line["slope"]*sum(_PM.var(pm, n, cnd, :pg, i) for cnd in _PM.conductor__PM.ids(pm, n)) + line["intercept"])
             end
         end
-
 
     end
 
