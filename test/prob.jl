@@ -7,14 +7,24 @@
 
 @testset "Problem" begin
 
-    @testset "mcdcopf" begin
+    @testset "mcdcopf ACP" begin
         @testset "case5_2grids_MC" begin
 
-            file=joinpath(_PMMCDC_dir, "test/data/matacdc_scripts/case5_2grids_MC.m")
+            file = joinpath(_PMMCDC_dir, "test/data/matacdc_scripts/case5_2grids_MC.m")
             result = _PMMCDC.solve_mcdcopf(file, _PM.ACPPowerModel, nlp_optimizer)
 
             @test result["termination_status"] == _PMMCDC.LOCALLY_SOLVED
             @test result["objective"] ≈ 869.1 rtol = 1e-3
+        end
+    end
+
+    @testset "mcdcopf DCP" begin
+        @testset "case5_2grids_MC" begin
+
+            file = joinpath(_PMMCDC_dir, "test/data/matacdc_scripts/case5_2grids_MC.m")
+            result_dcp = _PMMCDC.solve_mcdcopf(file, _PM.DCPPowerModel, nlp_optimizer)
+            @test result_dcp["termination_status"] == _PMMCDC.LOCALLY_SOLVED
+            @test result_dcp["objective"] ≈ 822.9 rtol = 1e-3
         end
     end
 end

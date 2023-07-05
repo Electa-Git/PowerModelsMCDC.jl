@@ -4,26 +4,26 @@ export solve_mcdcopf
 function solve_mcdcopf(file::String, model_type::Type, solver; kwargs...)
     data = _PM.parse_file(file)
     build_mc_data!(data)
-    return solve_mcdcopf(data, model_type, solver; ref_extensions = [add_ref_dcgrid!], kwargs...)
+    return solve_mcdcopf(data, model_type, solver; ref_extensions=[add_ref_dcgrid!], kwargs...)
 end
 
 ""
 function solve_mcdcopf(data::Dict{String,Any}, model_type::Type, solver; kwargs...)
-    return _PM.solve_model(data, model_type, solver, build_mcdcopf; ref_extensions = [add_ref_dcgrid!], kwargs...)
+    return _PM.solve_model(data, model_type, solver, build_mcdcopf; ref_extensions=[add_ref_dcgrid!], kwargs...)
 end
 
 ""
 function build_mcdcopf(pm::_PM.AbstractPowerModel)
-    _PM.variable_bus_voltage(pm, bounded = true)
-    _PM.variable_gen_power(pm, bounded = true)
-    _PM.variable_branch_power(pm, bounded = true)
+    _PM.variable_bus_voltage(pm, bounded=true)
+    _PM.variable_gen_power(pm, bounded=true)
+    _PM.variable_branch_power(pm, bounded=true)
 
-    variable_mc_active_dcbranch_flow(pm, bounded = true)
-    variable_mcdcgrid_voltage_magnitude(pm, bounded = true)
+    variable_mc_active_dcbranch_flow(pm, bounded=true)
+    variable_mcdcgrid_voltage_magnitude(pm, bounded=true)
     # variable_dcbranch_current(pm, bounded = true)
-    variable_mcdc_converter(pm, bounded = true)
+    variable_mcdc_converter(pm, bounded=true)
 
-    variable_mc_dcbranch_current(pm, bounded = true)
+    variable_mc_dcbranch_current(pm, bounded=true)
 
 
     _PM.objective_min_fuel_cost(pm)

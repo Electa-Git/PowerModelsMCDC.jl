@@ -13,7 +13,7 @@ ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "p
 # file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
 # file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
 
-file="./test/data/matacdc_scripts_opf_paper/balanced/case5_2grids_MC.m"
+file = "./test/data/matacdc_scripts_opf_paper/balanced/case5_2grids_MC.m"
 # file="./test/data/matacdc_scripts_opf_paper/balanced/case39_mcdc.m"
 # file="./test/data/matacdc_scripts_opf_paper/balanced/case67mcdc_scopf4.m"
 # file="./test/data/matacdc_scripts_opf_paper/balanced/case3120sp_mcdc.m"
@@ -25,13 +25,13 @@ file="./test/data/matacdc_scripts_opf_paper/balanced/case5_2grids_MC.m"
 
 
 s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
-result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.ACPPowerModel, ipopt_solver, setting = s)
+result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.ACPPowerModel, ipopt_solver, setting=s)
 
 #--------------------------------------------------------------------------------------------------------
-dc_data= PowerModels.parse_file(file)
+dc_data = PowerModels.parse_file(file)
 _PMACDC.process_additional_data!(dc_data)
 
-result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting=s)
 
 
 #############

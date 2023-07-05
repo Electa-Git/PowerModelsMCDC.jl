@@ -4,22 +4,22 @@ function get_pu_bases(MVAbase, kVbase)
     hourbase = 1 #
 
     Sbase = MVAbase * 1e6
-    Vbase = kVbase  * 1e3
+    Vbase = kVbase * 1e3
     #Zbase = (Vbase)^2 / (Sbase) # TODO
     kAbase = MVAbase / (sqrt(3) * kVbase)
-    Zbase = 1/(kAbase^2 / MVAbase)
-    Ibase = (Sbase)   / (Vbase)
-    timebase = hourbase*3600
+    Zbase = 1 / (kAbase^2 / MVAbase)
+    Ibase = (Sbase) / (Vbase)
+    timebase = hourbase * 3600
     Ebase = Sbase * timebase
 
-    bases = Dict{String, Any}(
-    "Z" => Zbase,         # Impedance (Ω)
-    "I" => Ibase,         # Current (A)
-    "€" => eurobase,      # Currency (€)
-    "t" => timebase,      # Time (s)
-    "S" => Sbase,         # Power (W)
-    "V" => Vbase,         # Voltage (V)
-    "E" => Ebase          # Energy (J)
+    bases = Dict{String,Any}(
+        "Z" => Zbase,         # Impedance (Ω)
+        "I" => Ibase,         # Current (A)
+        "€" => eurobase,      # Currency (€)
+        "t" => timebase,      # Time (s)
+        "S" => Sbase,         # Power (W)
+        "V" => Vbase,         # Voltage (V)
+        "E" => Ebase          # Energy (J)
     )
     return bases
 end
@@ -52,7 +52,7 @@ function to_pu_single_network!(data)
             Ibase = get_pu_bases(MVAbase, kVbase)["I"]
 
             set_conv_pu_power(conv, MVAbase)
-            set_conv_pu_volt(conv, kVbase*sqrt(3))
+            set_conv_pu_volt(conv, kVbase * sqrt(3))
             set_conv_pu_ohm(conv, Zbase)
         end
     end
@@ -80,7 +80,7 @@ function to_pu_multinetwork!(data)
                 Ibase = get_pu_bases(MVAbase, kVbase)["I"]
 
                 set_conv_pu_power(conv, MVAbase)
-                set_conv_pu_volt(conv, kVbase*sqrt(3))
+                set_conv_pu_volt(conv, kVbase * sqrt(3))
                 set_conv_pu_ohm(conv, Zbase)
             end
         end
@@ -109,13 +109,13 @@ function convert_matpowerdcline_to_branchdc_single_network!(data)
     MVAbase = data["baseMVA"]
     if haskey(data, "dcline") && haskey(data["dcline"], "1")
         if !haskey(data, "convdc")
-            data["convdc"] = Dict{String, Any}()
+            data["convdc"] = Dict{String,Any}()
         end
         if !haskey(data, "branchdc")
-            data["branchdc"] = Dict{String, Any}()
+            data["branchdc"] = Dict{String,Any}()
         end
         if !haskey(data, "busdc")
-            data["busdc"] = Dict{String, Any}()
+            data["busdc"] = Dict{String,Any}()
         end
         conv_i = length(data["convdc"])
         branch_i = length(data["branchdc"])
@@ -127,7 +127,7 @@ function convert_matpowerdcline_to_branchdc_single_network!(data)
             data["busdc"]["$bus_i"] = get_busdc(bus_i)
 
             prev_bus = bus_i - 1
-            if haskey(data["busdc"],["$prev_bus"])
+            if haskey(data["busdc"], ["$prev_bus"])
                 data["busdc"]["$bus_i"]["basekVdc"] = data["busdc"]["$prev_bus"]["basekVdc"]
             else
                 data["busdc"]["$bus_i"]["basekVdc"] = 100 # arbitrary choice
@@ -137,7 +137,7 @@ function convert_matpowerdcline_to_branchdc_single_network!(data)
             bus_i = bus_i + 1
             data["busdc"]["$bus_i"] = get_busdc(bus_i)
             prev_bus = bus_i - 1
-            if haskey(data["busdc"],["$prev_bus"])
+            if haskey(data["busdc"], ["$prev_bus"])
                 data["busdc"]["$bus_i"]["basekVdc"] = data["busdc"]["$prev_bus"]["basekVdc"]
             else
                 data["busdc"]["$bus_i"]["basekVdc"] = 100 # arbitrary choice
@@ -145,7 +145,7 @@ function convert_matpowerdcline_to_branchdc_single_network!(data)
 
             branch_i = branch_i + 1
             conv_i = conv_i + 1
-            converter1, converter2, branchdc = convert_to_dcbranch_and_converters(data, dcline, branch_i, conv_i, bus_i-1, bus_i)
+            converter1, converter2, branchdc = convert_to_dcbranch_and_converters(data, dcline, branch_i, conv_i, bus_i - 1, bus_i)
             data["branchdc"]["$branch_i"] = branchdc
             data["convdc"]["$conv_i"] = converter1
             conv_i = conv_i + 1
@@ -160,13 +160,13 @@ function convert_matpowerdcline_to_branchdc_multinetwork!(data)
         MVAbase = network["baseMVA"]
         if haskey(data["nw"][n], "dcline") && haskey(data["nw"][n]["dcline"], "1")
             if !haskey(data["nw"][n], "convdc")
-                data["nw"][n]["convdc"] = Dict{String, Any}()
+                data["nw"][n]["convdc"] = Dict{String,Any}()
             end
             if !haskey(data["nw"][n], "branchdc")
-                data["nw"][n]["branchdc"] = Dict{String, Any}()
+                data["nw"][n]["branchdc"] = Dict{String,Any}()
             end
             if !haskey(data["nw"][n], "busdc")
-                data["nw"][n]["busdc"] = Dict{String, Any}()
+                data["nw"][n]["busdc"] = Dict{String,Any}()
             end
             conv_i = length(data["nw"][n]["convdc"])
             branch_i = length(data["nw"][n]["branchdc"])
@@ -178,7 +178,7 @@ function convert_matpowerdcline_to_branchdc_multinetwork!(data)
                 data["nw"][n]["busdc"]["$bus_i"] = get_busdc(bus_i)
 
                 prev_bus = bus_i - 1
-                if haskey(data["nw"][n]["busdc"],["$prev_bus"])
+                if haskey(data["nw"][n]["busdc"], ["$prev_bus"])
                     data["nw"][n]["busdc"]["$bus_i"]["basekVdc"] = data["nw"][n]["busdc"]["$prev_bus"]["basekVdc"]
                 else
                     data["nw"][n]["busdc"]["$bus_i"]["basekVdc"] = 100 # arbitrary choice
@@ -188,7 +188,7 @@ function convert_matpowerdcline_to_branchdc_multinetwork!(data)
                 bus_i = bus_i + 1
                 data["nw"][n]["busdc"]["$bus_i"] = get_busdc(bus_i)
                 prev_bus = bus_i - 1
-                if haskey(data["nw"][n]["busdc"],["$prev_bus"])
+                if haskey(data["nw"][n]["busdc"], ["$prev_bus"])
                     data["nw"][n]["busdc"]["$bus_i"]["basekVdc"] = data["nw"][n]["busdc"]["$prev_bus"]["basekVdc"]
                 else
                     data["nw"][n]["busdc"]["$bus_i"]["basekVdc"] = 100 # arbitrary choice
@@ -196,7 +196,7 @@ function convert_matpowerdcline_to_branchdc_multinetwork!(data)
 
                 branch_i = branch_i + 1
                 conv_i = conv_i + 1
-                converter1, converter2, branchdc = convert_to_dcbranch_and_converters(data["nw"][n], dcline, branch_i, conv_i, bus_i-1, bus_i)
+                converter1, converter2, branchdc = convert_to_dcbranch_and_converters(data["nw"][n], dcline, branch_i, conv_i, bus_i - 1, bus_i)
                 data["nw"][n]["branchdc"]["$branch_i"] = branchdc
                 data["nw"][n]["convdc"]["$conv_i"] = converter1
                 conv_i = conv_i + 1
@@ -211,7 +211,7 @@ end
 function fix_data!(data)
 
 
-    rescale_energy_cost = x -> (MWhbase/dollarbase)*x
+    rescale_energy_cost = x -> (MWhbase / dollarbase) * x
 
     if is_single_network(data)
         fix_data_single_network!(data)
@@ -222,7 +222,7 @@ end
 
 function fix_data_single_network!(data)
     MVAbase = data["baseMVA"]
-    @assert(MVAbase>0)
+    @assert(MVAbase > 0)
     if haskey(data, "convdc")
         for (i, conv) in data["convdc"]
             check_conv_parameters(conv)
@@ -234,7 +234,7 @@ function fix_data_single_network!(data)
         end
     end
     if haskey(data, "busdc")
-        new_busdc = Dict{String, Any}()
+        new_busdc = Dict{String,Any}()
         for (i, busdc) in data["busdc"]
             new_bus = busdc["busdc_i"] # assigning new bus numbers: continous numbers from dc bus numbers
             new_busdc[string(new_bus)] = busdc # assigning new bus numbers: continous numbers from dc bus numbers
@@ -249,7 +249,7 @@ end
 function fix_data_multinetwork!(data)
     for (n, network) in data["nw"]
         MVAbase = network["baseMVA"]
-        @assert(MVAbase>0)
+        @assert(MVAbase > 0)
         if haskey(data["nw"][n], "convdc")
             for (i, conv) in data["nw"][n]["convdc"]
                 check_conv_parameters(conv)
@@ -261,7 +261,7 @@ function fix_data_multinetwork!(data)
             end
         end
         if haskey(data["nw"][n], "busdc")
-            new_busdc = Dict{String, Any}()
+            new_busdc = Dict{String,Any}()
             for (i, busdc) in data["nw"][n]["busdc"]
                 new_bus = busdc["busdc_i"] # assigning new bus numbers: continous numbers from dc bus numbers
                 new_busdc[string(new_bus)] = busdc # assigning new bus numbers: continous numbers from dc bus numbers
@@ -275,25 +275,25 @@ function fix_data_multinetwork!(data)
 end
 
 function check_branchdc_parameters(branchdc)
-    @assert(branchdc["rateA"]>=0)
-    @assert(branchdc["rateB"]>=0)
-    @assert(branchdc["rateC"]>=0)
+    @assert(branchdc["rateA"] >= 0)
+    @assert(branchdc["rateB"] >= 0)
+    @assert(branchdc["rateC"] >= 0)
 end
 
 function set_branchdc_pu(branchdc, MVAbase)
-    rescale_power = x -> x/MVAbase
+    rescale_power = x -> x / MVAbase
     _PM._apply_func!(branchdc, "rateA", rescale_power)
     _PM._apply_func!(branchdc, "rateB", rescale_power)
     _PM._apply_func!(branchdc, "rateC", rescale_power)
 end
 
 function set_busdc_pu(busdc, MVAbase)
-    rescale_power = x -> x/MVAbase
+    rescale_power = x -> x / MVAbase
     _PM._apply_func!(busdc, "Pdc", rescale_power)
 end
 
 function set_conv_pu_power(conv, MVAbase)
-    rescale_power = x -> x/MVAbase
+    rescale_power = x -> x / MVAbase
     _PM._apply_func!(conv, "P_g", rescale_power)
     _PM._apply_func!(conv, "Q_g", rescale_power)
     _PM._apply_func!(conv, "Pdcset", rescale_power)
@@ -307,7 +307,7 @@ function set_conv_pu_power(conv, MVAbase)
 end
 
 function set_conv_pu_volt(conv, kVbase)
-    rescale_volt = x -> x  / (kVbase)
+    rescale_volt = x -> x / (kVbase)
     _PM._apply_func!(conv, "LossB", rescale_volt)
 end
 
@@ -318,13 +318,13 @@ function set_conv_pu_ohm(conv, Zbase)
 end
 
 function check_conv_parameters(conv)
-    @assert(conv["LossA"]>=0)
-    @assert(conv["LossB"]>=0)
-    @assert(conv["LossCrec"]>=0)
-    @assert(conv["LossCinv"]>=0)
+    @assert(conv["LossA"] >= 0)
+    @assert(conv["LossB"] >= 0)
+    @assert(conv["LossCrec"] >= 0)
+    @assert(conv["LossCinv"] >= 0)
     conv_id = conv["index"]
-    conv["Pacrated"] = max(abs(conv["Pacmax"]),abs(conv["Pacmin"]))
-    conv["Qacrated"] = max(abs(conv["Qacmax"]),abs(conv["Qacmin"]))
+    conv["Pacrated"] = max(abs(conv["Pacmax"]), abs(conv["Pacmin"]))
+    conv["Qacrated"] = max(abs(conv["Qacmax"]), abs(conv["Qacmin"]))
     if conv["Imax"] < sqrt(conv["Pacrated"]^2 + conv["Qacrated"]^2)
         Memento.warn(_PM._LOGGER, "Inconsistent current limit for converter $conv_id, it will be updated.")
         conv["Imax"] = sqrt(conv["Pacrated"]^2 + conv["Qacrated"]^2)
@@ -343,17 +343,17 @@ function check_conv_parameters(conv)
         end
         conv["Qacmax"] = conv["Pacrated"]
         conv["Qacrated"] = conv["Pacrated"]
-        conv["Qacmin"] =  0
+        conv["Qacmin"] = 0
     end
-    @assert(conv["Pacmax"]>=conv["Pacmin"])
-    @assert(conv["Qacmax"]>=conv["Qacmin"])
-    @assert(conv["Pacrated"]>=0)
-    @assert(conv["Qacrated"]>=0)
+    @assert(conv["Pacmax"] >= conv["Pacmin"])
+    @assert(conv["Qacmax"] >= conv["Qacmin"])
+    @assert(conv["Pacrated"] >= 0)
+    @assert(conv["Qacrated"] >= 0)
 end
 
 
 function get_branchdc(matpowerdcline, branch_i, fbusdc, tbusdc)
-    branchdc = Dict{String, Any}()
+    branchdc = Dict{String,Any}()
     branchdc["index"] = branch_i
     branchdc["fbusdc"] = fbusdc
     branchdc["tbusdc"] = tbusdc
@@ -368,7 +368,7 @@ function get_branchdc(matpowerdcline, branch_i, fbusdc, tbusdc)
 end
 
 function get_busdc(bus_i)
-    busdc = Dict{String, Any}()
+    busdc = Dict{String,Any}()
     busdc["index"] = bus_i
     busdc["busdc_i"] = bus_i
     busdc["grid"] = 1
@@ -381,7 +381,7 @@ function get_busdc(bus_i)
 end
 
 function get_converter(conv_i, dcbus, acbus, kVbaseAC, vmax, vmin, status, pac, qac, qmaxac, qminac, vmac, Imax, lossA, lossB, pmaxac, pminac)
-    conv = Dict{String, Any}()
+    conv = Dict{String,Any}()
     conv["index"] = conv_i
     conv["busdc_i"] = dcbus
     conv["busac_i"] = acbus
@@ -399,9 +399,9 @@ function get_converter(conv_i, dcbus, acbus, kVbaseAC, vmax, vmin, status, pac, 
     conv["xc"] = 0
     conv["reactor"] = 0
     conv["basekVac"] = kVbaseAC
-    conv["Vmmax"] =  vmax
-    conv["Vmmin"] =  vmin
-    conv["Imax"] =  Imax # assuming 1pu
+    conv["Vmmax"] = vmax
+    conv["Vmmin"] = vmin
+    conv["Imax"] = Imax # assuming 1pu
     conv["status"] = status
     conv["LossA"] = lossA
     conv["LossB"] = lossB
@@ -427,24 +427,24 @@ function convert_to_dcbranch_and_converters(data, dcline, branchdc_id, conv_i, f
     branchdc = get_branchdc(dcline, branchdc_id, fbusdc, tbusdc)
     vmaxf = data["bus"]["$fbusdc"]["vmax"]
     vminf = data["bus"]["$fbusdc"]["vmin"]
-    vmaxt =  data["bus"]["$tbusdc"]["vmax"]
-    vmint =  data["bus"]["$tbusdc"]["vmin"]
+    vmaxt = data["bus"]["$tbusdc"]["vmax"]
+    vmint = data["bus"]["$tbusdc"]["vmin"]
 
     pac = dcline["pf"]
     qac = dcline["qf"]
     vmac = dcline["vf"]
     acbus = dcline["f_bus"]
     kVbaseAC = data["bus"]["$fbusdc"]["base_kv"]
-    Imax =  sqrt(dcline["pmaxf"]^2 + dcline["qmaxf"]^2) / vminf
+    Imax = sqrt(dcline["pmaxf"]^2 + dcline["qmaxf"]^2) / vminf
     status = dcline["br_status"]
     qmaxac = dcline["qmaxf"]
     qminac = dcline["qminf"]
-    lossA = dcline["loss0"] /2
+    lossA = dcline["loss0"] / 2
     lossB = dcline["loss1"]
     vac = 1
     pmaxac = dcline["pmaxf"]
     pminac = dcline["pminf"]
-    converter1 =  get_converter(conv_i, fbusdc, acbus, kVbaseAC, vmaxf, vminf, status, pac, qac, qmaxac, qminac, vac, Imax, lossA, lossB, pmaxac, pminac)
+    converter1 = get_converter(conv_i, fbusdc, acbus, kVbaseAC, vmaxf, vminf, status, pac, qac, qmaxac, qminac, vac, Imax, lossA, lossB, pmaxac, pminac)
 
 
     # converter 2
@@ -454,21 +454,21 @@ function convert_to_dcbranch_and_converters(data, dcline, branchdc_id, conv_i, f
     qac = dcline["qt"]
     vmac = dcline["vt"]
     kVbaseAC = data["bus"]["$tbusdc"]["base_kv"]
-    Imax =  sqrt(dcline["pmaxt"]^2 + dcline["qmaxt"]^2) / vmint# assuming 1pu
+    Imax = sqrt(dcline["pmaxt"]^2 + dcline["qmaxt"]^2) / vmint# assuming 1pu
     status = dcline["br_status"]
     lossA = dcline["loss0"] / 2
     lossB = 0
-    pmaxac =  dcline["pmaxt"]
-    pminac =  dcline["pmint"]
+    pmaxac = dcline["pmaxt"]
+    pminac = dcline["pmint"]
     qmaxac = dcline["qmaxt"]
     qminac = dcline["qmint"]
-    converter2 =  get_converter(conv_i, tbusdc, acbus, kVbaseAC, vmaxt, vmint, status, pac, qac, qmaxac, qminac, vac, Imax, lossA, lossB, pmaxac, pminac)
+    converter2 = get_converter(conv_i, tbusdc, acbus, kVbaseAC, vmaxt, vmint, status, pac, qac, qmaxac, qminac, vac, Imax, lossA, lossB, pmaxac, pminac)
 
     return converter1, converter2, branchdc
 end
 
 function converter_bounds(pmin, pmax, loss0, loss1)
-    if pmin >= 0 && pmax >=0
+    if pmin >= 0 && pmax >= 0
         pminf = pmin
         pmaxf = pmax
         pmint = loss0 - pmaxf * (1 - loss1)
@@ -477,74 +477,74 @@ function converter_bounds(pmin, pmax, loss0, loss1)
     if pmin >= 0 && pmax < 0
         pminf = pmin
         pmint = pmax
-        pmaxf = (-pmint + loss0) / (1-loss1)
+        pmaxf = (-pmint + loss0) / (1 - loss1)
         pmaxt = loss0 - pminf * (1 - loss1)
     end
     if pmin < 0 && pmax >= 0
         pmaxt = -pmin
         pmaxf = pmax
-        pminf = (-pmaxt + loss0) / (1-loss1)
+        pminf = (-pmaxt + loss0) / (1 - loss1)
         pmint = loss0 - pmaxf * (1 - loss1)
     end
     if pmin < 0 && pmax < 0
         pmaxt = -pmin
         pmint = pmax
-        pmaxf = (-pmint + loss0) / (1-loss1)
-        pminf = (-pmaxt + loss0) / (1-loss1)
+        pmaxf = (-pmint + loss0) / (1 - loss1)
+        pminf = (-pmaxt + loss0) / (1 - loss1)
     end
     return pminf, pmaxf, pmint, pmaxt
 end
 
 function build_mc_data!(base_data)
 
-       #making lossless conv paramteres and impedances
-     for (c,conv) in base_data["convdc"]
-        if conv["conv_confi"]==2
-            conv["rtf"]=2*conv["rtf"]
-            conv["xtf"]=2*conv["xtf"]
-            conv["bf"]=0.5*conv["bf"]
-            conv["rc"]=2*conv["rc"]
-            conv["xc"]=2*conv["xc"]
-            conv["LossB"]=conv["LossB"]
-            conv["LossA"]=0.5*conv["LossA"]
-            conv["LossCrec"]=2*conv["LossCrec"]
-            conv["LossCinv"]=2*conv["LossCinv"]
+    #making lossless conv paramteres and impedances
+    for (c, conv) in base_data["convdc"]
+        if conv["conv_confi"] == 2
+            conv["rtf"] = 2 * conv["rtf"]
+            conv["xtf"] = 2 * conv["xtf"]
+            conv["bf"] = 0.5 * conv["bf"]
+            conv["rc"] = 2 * conv["rc"]
+            conv["xc"] = 2 * conv["xc"]
+            conv["LossB"] = conv["LossB"]
+            conv["LossA"] = 0.5 * conv["LossA"]
+            conv["LossCrec"] = 2 * conv["LossCrec"]
+            conv["LossCinv"] = 2 * conv["LossCinv"]
         end
     end
-         process_additional_data!(base_data)
-        _make_multiconductor!(base_data)
+    process_additional_data!(base_data)
+    _make_multiconductor!(base_data)
     # Adjusting line limits
-    for (c,bn) in base_data["branchdc"]
-        if bn["line_confi"]==2
-            bn["rateA"]=bn["rateA"]/2
-            bn["rateB"]=bn["rateB"]/2
-            bn["rateC"]=bn["rateC"]/2
+    for (c, bn) in base_data["branchdc"]
+        if bn["line_confi"] == 2
+            bn["rateA"] = bn["rateA"] / 2
+            bn["rateB"] = bn["rateB"] / 2
+            bn["rateC"] = bn["rateC"] / 2
         end
-        metallic_cond_number= bn["conductors"]
+        metallic_cond_number = bn["conductors"]
 
         #"To adjust the metallic conductor current rating"
         # bn["rateA"][metallic_cond_number]=bn["rateA"][metallic_cond_number]*0.1
         # bn["rateB"][metallic_cond_number]=bn["rateB"][metallic_cond_number]*0.1
         # bn["rateC"][metallic_cond_number]=bn["rateC"][metallic_cond_number]*0.1
 
-        bn["r"][metallic_cond_number]=bn["return_z"]
+        bn["r"][metallic_cond_number] = bn["return_z"]
 
     end
 
-      # Adjusting conveter limits
-      for (c,conv) in base_data["convdc"]
-         if conv["conv_confi"]==2
-             conv["Pacmax"]=conv["Pacmax"]/2
-             conv["Pacmin"]=conv["Pacmin"]/2
-             conv["Pacrated"]=conv["Pacrated"]/2
-         end
-      end
-      # Adjusting metallic return bus voltage limits
-      for (i,busdc) in base_data["busdc"]
-         busdc["Vdcmax"][3]=busdc["Vdcmax"][1]-1.0
-         busdc["Vdcmin"][3]=-(1-busdc["Vdcmin"][1])
-         busdc["Vdcmax"][2]=-busdc["Vdcmin"][1]
-         busdc["Vdcmin"][2]=-busdc["Vdcmax"][1]
-      end
+    # Adjusting conveter limits
+    for (c, conv) in base_data["convdc"]
+        if conv["conv_confi"] == 2
+            conv["Pacmax"] = conv["Pacmax"] / 2
+            conv["Pacmin"] = conv["Pacmin"] / 2
+            conv["Pacrated"] = conv["Pacrated"] / 2
+        end
+    end
+    # Adjusting metallic return bus voltage limits
+    for (i, busdc) in base_data["busdc"]
+        busdc["Vdcmax"][3] = busdc["Vdcmax"][1] - 1.0
+        busdc["Vdcmin"][3] = -(1 - busdc["Vdcmin"][1])
+        busdc["Vdcmax"][2] = -busdc["Vdcmin"][1]
+        busdc["Vdcmin"][2] = -busdc["Vdcmax"][1]
+    end
     return base_data
 end

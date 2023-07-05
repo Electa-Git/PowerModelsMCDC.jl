@@ -7,7 +7,7 @@ function get_solution_acdc(pm::_PM.AbstractPowerModel, sol::Dict{String,Any})
     if haskey(pm.data, "convdc")
         add_dc_bus_voltage_setpoint(sol, pm)
         add_dcconverter_setpoint(sol, pm)
-        add_dcgrid_flow_setpoint(sol,pm)
+        add_dcgrid_flow_setpoint(sol, pm)
         add_dcbranch_losses(sol, pm)
         add_dcconverter_losses(sol, pm)
         add_dcconverter_voltage_setpoint(sol, pm)
@@ -31,8 +31,8 @@ end
 
 function add_dcgrid_flow_setpoint(sol, pm::_PM.AbstractPowerModel)
     # check the branch flows were requested
-    _PM.add_setpoint!(sol, pm, "branchdc", "pf", :p_dcgrid,  status_name="status",  var_key = (idx,item) -> (idx, item["fbusdc"], item["tbusdc"]))
-    _PM.add_setpoint!(sol, pm, "branchdc", "pt", :p_dcgrid;  status_name="status",  var_key = (idx,item) -> (idx, item["tbusdc"], item["fbusdc"]))
+    _PM.add_setpoint!(sol, pm, "branchdc", "pf", :p_dcgrid, status_name="status", var_key=(idx, item) -> (idx, item["fbusdc"], item["tbusdc"]))
+    _PM.add_setpoint!(sol, pm, "branchdc", "pt", :p_dcgrid; status_name="status", var_key=(idx, item) -> (idx, item["tbusdc"], item["fbusdc"]))
 end
 
 function add_dcbranch_losses(sol, pm::_PM.AbstractPowerModel)
@@ -57,16 +57,16 @@ end
 
 
 function add_dc_bus_voltage_setpoint(sol, pm::_PM.AbstractPowerModel)
-    _PM.add_setpoint!(sol, pm, "busdc", "vm", :vdcm, status_name="Vdc", inactive_status_value = 4)
+    _PM.add_setpoint!(sol, pm, "busdc", "vm", :vdcm, status_name="Vdc", inactive_status_value=4)
 end
 
 function add_dcconverter_voltage_setpoint(sol, pm::_PM.AbstractPowerModel)
-    _PM.add_setpoint!(sol, pm, "convdc", "vmconv", :vmc, status_name="islcc", inactive_status_value = 0)
-    _PM.add_setpoint!(sol, pm, "convdc", "vaconv", :vac, status_name="islcc", inactive_status_value = 0)
-    _PM.add_setpoint!(sol, pm, "convdc", "vmfilt", :vmf, status_name="islcc", inactive_status_value = 0)
-    _PM.add_setpoint!(sol, pm, "convdc", "vafilt", :vaf, status_name="islcc", inactive_status_value = 0)
+    _PM.add_setpoint!(sol, pm, "convdc", "vmconv", :vmc, status_name="islcc", inactive_status_value=0)
+    _PM.add_setpoint!(sol, pm, "convdc", "vaconv", :vac, status_name="islcc", inactive_status_value=0)
+    _PM.add_setpoint!(sol, pm, "convdc", "vmfilt", :vmf, status_name="islcc", inactive_status_value=0)
+    _PM.add_setpoint!(sol, pm, "convdc", "vafilt", :vaf, status_name="islcc", inactive_status_value=0)
 end
 
 function add_dcconverter_firing_angle(sol, pm::_PM.AbstractPowerModel)
-    _PM.add_setpoint!(sol, pm, "convdc", "phi", :phiconv, status_name="islcc", inactive_status_value = 0)
+    _PM.add_setpoint!(sol, pm, "convdc", "phi", :phiconv, status_name="islcc", inactive_status_value=0)
 end
