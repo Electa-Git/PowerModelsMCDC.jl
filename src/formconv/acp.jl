@@ -10,7 +10,7 @@ function constraint_converter_losses(pm::_PM.AbstractACPModel, n::Int, i::Int, a
     pconv_dcg = _PM.var(pm, n, :pconv_dcg, i)[cond]
     iconv = _PM.var(pm, n, :iconv_ac, i)[cond]
 
-    (JuMP.@NLconstraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == a + b * iconv + c * iconv^2))
+    JuMP.@NLconstraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == a + b * iconv + c * iconv^2)
 end
 """
 Links converter power & current
@@ -24,7 +24,7 @@ function constraint_converter_current(pm::_PM.AbstractACPModel, n::Int, i::Int, 
     qconv_ac = _PM.var(pm, n, :qconv_ac, i)[cond]
     iconv = _PM.var(pm, n, :iconv_ac, i)[cond]
 
-    (JuMP.@NLconstraint(pm.model, pconv_ac^2 + qconv_ac^2 == vmc^2 * iconv^2))
+    JuMP.@NLconstraint(pm.model, pconv_ac^2 + qconv_ac^2 == vmc^2 * iconv^2)
 end
 
 function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::Int)
@@ -46,7 +46,7 @@ function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::In
             if c == i
 
                 # display("c,d,k == $c,$d,$k")
-                (JuMP.@NLconstraint(pm.model, pconv_dc[c][d] == iconv_dc[c][d] * vdcm[dc_bus][k]))
+                JuMP.@NLconstraint(pm.model, pconv_dc[c][d] == iconv_dc[c][d] * vdcm[dc_bus][k])
             end
         end
     end
@@ -54,11 +54,11 @@ function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::In
     # neutral is always connected at bus conductor "3"
     # display("conv_cond= $conv_cond")
     for g in 1:conv_cond
-        (JuMP.@NLconstraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm[dc_bus][3]))
-        (JuMP.@constraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0))
+        JuMP.@NLconstraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm[dc_bus][3])
+        JuMP.@constraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0)
     end
 
-    (JuMP.@constraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0))
+    JuMP.@constraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0)
 
 end
 
@@ -77,8 +77,8 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::I
             if r == 0 #solid grounding
                 JuMP.@constraint(pm.model, vdc[3] == 0)
             else
-                (JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c] == (1 / r) * vdc[3]^2))
-                (JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * vdc[3]))
+                JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c] == (1 / r) * vdc[3]^2)
+                JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * vdc[3])
             end
         end
     end

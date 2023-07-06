@@ -40,7 +40,7 @@ function constraint_converter_dc_current(pm::_PM.AbstractDCPModel, n::Int, i::In
             end
 
             if c == i
-                (JuMP.@constraint(pm.model, pconv_dc[c][d] == iconv_dc[c][d] * vdcm))
+                JuMP.@constraint(pm.model, pconv_dc[c][d] == iconv_dc[c][d] * vdcm)
             end
         end
     end
@@ -48,10 +48,10 @@ function constraint_converter_dc_current(pm::_PM.AbstractDCPModel, n::Int, i::In
     # neutral is always connected at bus conductor "3"
     for g in 1:conv_cond
         vdcm = 0
-        (JuMP.@constraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm))
-        (JuMP.@constraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0))
+        JuMP.@constraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm)
+        JuMP.@constraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0)
     end
-    (JuMP.@constraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0))
+    JuMP.@constraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0)
 
 end
 
@@ -73,7 +73,7 @@ function constraint_conv_transformer(pm::_PM.AbstractDCPModel, n::Int, i::Int, r
     if transformer
         btf = imag(1 / (im * xtf)) # classic DC approach to obtain susceptance form
         v = 1 # pu, assumption DC approximation
-        (JuMP.@constraint(pm.model, ptf_fr == -btf * (v^2) / tm * (va - vaf)))
+        JuMP.@constraint(pm.model, ptf_fr == -btf * (v^2) / tm * (va - vaf))
         JuMP.@constraint(pm.model, ptf_to == -btf * (v^2) / tm * (vaf - va))
     else
         JuMP.@constraint(pm.model, va == vaf)
@@ -98,7 +98,7 @@ function constraint_conv_reactor(pm::_PM.AbstractDCPModel, n::Int, i::Int, rc, x
         # display("reactor is present")
         bc = imag(1 / (im * xc))
         v = 1 # pu, assumption DC approximation
-        (JuMP.@constraint(pm.model, ppr_fr == -bc * (v^2) * (vaf - vac)))
+        JuMP.@constraint(pm.model, ppr_fr == -bc * (v^2) * (vaf - vac))
         JuMP.@constraint(pm.model, ppr_to == -bc * (v^2) * (vac - vaf))
     else
         # display("reactor is NOT there")
