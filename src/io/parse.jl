@@ -1,0 +1,11 @@
+"""
+    parse_file(file; <keyword arguments>)
+
+Parse a Matpower .m `file` or PTI (PSS(R)E-v33) .raw `file` into a PowerModelsMCDC data
+structure. Keyword arguments, if any, are forwarded to `PowerModels.parse_file`.
+"""
+function parse_file(file::String; kwargs...)
+    data = _PM.parse_file(file; kwargs...)
+    build_mc_data!(data)
+    return data
+end

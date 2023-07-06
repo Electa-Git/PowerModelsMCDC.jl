@@ -2,8 +2,7 @@ export solve_mcdcopf
 
 ""
 function solve_mcdcopf(file::String, model_type::Type, solver; kwargs...)
-    data = _PM.parse_file(file)
-    build_mc_data!(data)
+    data = parse_file(file)
     return solve_mcdcopf(data, model_type, solver; ref_extensions=[add_ref_dcgrid!], kwargs...)
 end
 
