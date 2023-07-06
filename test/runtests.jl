@@ -1,6 +1,7 @@
 import PowerModels as _PM
 import PowerModelsMCDC as _PMMCDC
 import Ipopt
+import HiGHS
 import Memento
 using Test
 
@@ -13,6 +14,9 @@ const _PMMCDC_dir = dirname(dirname(pathof(_PMMCDC))) # Root directory of PowerM
 
 nlp_optimizer = _PMMCDC.optimizer_with_attributes(
     Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0, "sb" => "yes"
+)
+lp_optimizer = _PMMCDC.optimizer_with_attributes(
+    HiGHS.Optimizer, "output_flag" => false
 )
 
 

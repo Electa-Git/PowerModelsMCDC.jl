@@ -22,9 +22,9 @@
         @testset "case5_2grids_MC" begin
 
             file = joinpath(_PMMCDC_dir, "test/data/matacdc_scripts/case5_2grids_MC.m")
-            result_dcp = _PMMCDC.solve_mcdcopf(file, _PM.DCPPowerModel, nlp_optimizer)
-            @test result_dcp["termination_status"] == _PMMCDC.LOCALLY_SOLVED
-            @test result_dcp["objective"] ≈ 822.9 rtol = 1e-3
+            result_dcp = _PMMCDC.solve_mcdcopf(file, _PM.DCPPowerModel, lp_optimizer)
+            @test result_dcp["termination_status"] == _PMMCDC.OPTIMAL
+            @test result_dcp["objective"] ≈ 823.0 rtol = 1e-3
         end
     end
 end

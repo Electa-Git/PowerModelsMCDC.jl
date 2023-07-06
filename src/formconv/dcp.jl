@@ -17,8 +17,6 @@ function constraint_converter_losses(pm::_PM.AbstractDCPModel, n::Int, i::Int, a
     JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg <= plmax)
 end
 
-
-
 function constraint_converter_dc_current(pm::_PM.AbstractDCPModel, n::Int, i::Int)
     pconv_dc = _PM.var(pm, n, :pconv_dc)
     pconv_dcg = _PM.var(pm, n, :pconv_dcg)
@@ -50,10 +48,10 @@ function constraint_converter_dc_current(pm::_PM.AbstractDCPModel, n::Int, i::In
     # neutral is always connected at bus conductor "3"
     for g in 1:conv_cond
         vdcm = 0
-        (JuMP.@NLconstraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm))
-        (JuMP.@NLconstraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0))
+        (JuMP.@constraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm))
+        (JuMP.@constraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0))
     end
-    (JuMP.@NLconstraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0))
+    (JuMP.@constraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0))
 
 end
 
@@ -145,7 +143,7 @@ Converter firing angle constraint (not applicable)
 function constraint_conv_firing_angle(pm::_PM.AbstractDCPModel, n::Int, i::Int, S, P1, Q1, P2, Q2)
 end
 """
-Converter grounding constraint 
+Converter grounding constraint
 ```
 ```
 """
@@ -153,6 +151,6 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractDCPModel, n::I
 
     for i in _PM.ids(pm, n, :busdc)
         vdc = _PM.var(pm, n, :vdcm, i)
-        JuMP.@NLconstraint(pm.model, vdc[3] == 0)
+        JuMP.@constraint(pm.model, vdc[3] == 0)
     end
 end

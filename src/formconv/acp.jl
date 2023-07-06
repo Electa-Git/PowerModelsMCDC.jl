@@ -55,10 +55,10 @@ function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::In
     # display("conv_cond= $conv_cond")
     for g in 1:conv_cond
         (JuMP.@NLconstraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm[dc_bus][3]))
-        (JuMP.@NLconstraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0))
+        (JuMP.@constraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0))
     end
 
-    (JuMP.@NLconstraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0))
+    (JuMP.@constraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0))
 
 end
 
@@ -74,11 +74,11 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::I
         for c in bus_convs_grounding_shunt[(i, 3)]
             conv = _PM.ref(pm, n, :convdc, c)
             r = conv["ground_z"] + r_earth #The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
-            if r == 0 #solid grounding 
-                JuMP.@NLconstraint(pm.model, vdc[3] == 0)
+            if r == 0 #solid grounding
+                JuMP.@constraint(pm.model, vdc[3] == 0)
             else
                 (JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c] == (1 / r) * vdc[3]^2))
-                (JuMP.@NLconstraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * vdc[3]))
+                (JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * vdc[3]))
             end
         end
     end

@@ -45,8 +45,8 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int, f_bus, t_bu
                 else
                     g = 1 / r[d]
                     # display("$line, $d")
-                    (JuMP.@NLconstraint(pm.model, i_dc_fr[d] == g * (vmdc_fr[k] - vmdc_to[k])))
-                    (JuMP.@NLconstraint(pm.model, i_dc_to[d] == g * (vmdc_to[k] - vmdc_fr[k])))
+                    (JuMP.@constraint(pm.model, i_dc_fr[d] == g * (vmdc_fr[k] - vmdc_to[k])))
+                    (JuMP.@constraint(pm.model, i_dc_to[d] == g * (vmdc_to[k] - vmdc_fr[k])))
                 end
             end
         end
