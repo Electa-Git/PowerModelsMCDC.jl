@@ -1,6 +1,6 @@
 "removing predefined conductor"
 
-"Transforms single-conductor network data into multi-conductor data"
+"Transforms single-conductor network data into multiconductor data"
 function make_multiconductor!(data::Dict{String,<:Any})
     if _IM.ismultinetwork(data)
         for (i, nw_data) in data["nw"]
@@ -13,7 +13,7 @@ end
 
 #TODO put names in the order of .m files so that they are easy to find. Everything that doesn't have a conductorwise choice to be
 #in this field for now
-"feild names that should not be multi-conductor values"
+"feild names that should not be multiconductor values"
 const _conductorless = Set(["basekVdc", "source_id", "busdc_i", "grid", "index",
     "return_type", "status", "confi", "return_z", "fbusdc", "tbusdc", "busac_i",
     "basekVac", "type_dc", "filter", "reactor", "transformer", "type_ac", "Vtar",
@@ -23,12 +23,12 @@ const _conductorless = Set(["basekVdc", "source_id", "busdc_i", "grid", "index",
 # "P_g", "Q_g", removed due to conv set point. Should be tackled differently if multiconductor of AC is considered
 # "dVdcset", "Vdcset", removed for giving pf setpoints
 #"Pdcset", "droop",
-#TODO: "status" can be made multi-conductor when incorporated in the model. 
+#TODO: "status" can be made multiconductor when incorporated in the model. 
 
 "only dc side data"
 const _DCdata = ["busdc", "convdc", "branchdc"]
 
-"feild names that should become multi-conductor matrix not arrays"
+"feild names that should become multiconductor matrix not arrays"
 const _conductor_matrix = Set(["br_r", "br_x", "rc", "xc", "rtf", "xtf", "bf"])
 
 

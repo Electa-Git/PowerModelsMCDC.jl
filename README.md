@@ -3,14 +3,14 @@
 [![CI](https://github.com/Electa-Git/PowerModelsMCDC.jl/workflows/CI/badge.svg)](https://github.com/Electa-Git/PowerModelsMCDC.jl/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Electa-Git/PowerModelsMCDC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/Electa-Git/PowerModelsMCDC.jl)
 
-PowerModelsMCDC.jl is a Julia/JuMP/PowerModels package for hybrid AC/DC systems with multi-conductor model of the DC grid in order to represent unbalanced HVDC grids. The positive and negative poles of bipolar converter stations are modeled separately, and DC buses are modeled using three terminals: the positive, the negative, and the neutral terminal. Each conductor of a DC branch is modeled separately, including the metallic return conductor and converter grounding.
+PowerModelsMCDC.jl is a Julia/JuMP/PowerModels package for hybrid AC/DC systems with multiconductor model of the DC grid in order to represent unbalanced HVDC grids. The positive and negative poles of bipolar converter stations are modeled separately, and DC buses are modeled using three terminals: the positive, the negative, and the neutral terminal. Each conductor of a DC branch is modeled separately, including the metallic return conductor and converter grounding.
 
 ## Core Problem Specification
-* Non-linear AC/DC optimal power flow (OPF) model with multi-conductor DC.
+* Non-linear AC/DC optimal power flow (OPF) model with multiconductor DC.
 * Only ACP formulation is complete. DCP and convex relaxations are currently under development.
 
 ### Other problems (to be added in this package)
-* AC/DC SCOPF with multi-conductor DC (MCDC SCOPF): Complete and planned to be added soon.
+* AC/DC SCOPF with multiconductor DC (MCDC SCOPF): Complete and planned to be added soon.
 * Transmission network expansion planning with mixed monopolar and bipolar HVDC configurations: Complete.
 * AC/DC power flow with different converter control modes: Under development.
 ## Contributors

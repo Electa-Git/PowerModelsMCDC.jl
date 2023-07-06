@@ -12,9 +12,9 @@ function constraint_converter_losses(pm::_PM.AbstractDCPModel, n::Int, i::Int, a
 
     v = 1 #pu, assumption to approximate current
     cm_conv_ac = pconv_ac / v # can actually be negative, not a very nice model...
-        JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg >= a + b * cm_conv_ac)
-        JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg >= a - b * cm_conv_ac)
-        JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg <= plmax)
+    JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg >= a + b * cm_conv_ac)
+    JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg >= a - b * cm_conv_ac)
+    JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg <= plmax)
 end
 
 
@@ -145,38 +145,14 @@ Converter firing angle constraint (not applicable)
 function constraint_conv_firing_angle(pm::_PM.AbstractDCPModel, n::Int, i::Int, S, P1, Q1, P2, Q2)
 end
 """
-Converter droop constraint (not applicable)
-```
-```
-"""
-function constraint_dc_droop_control(pm::_PM.AbstractDCPModel, n::Int, i::Int, busdc_i, vref_dc, pref_dc, k_droop)
-end
-"""
 Converter grounding constraint 
 ```
 ```
 """
 function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractDCPModel, n::Int)
-    pconv_dcg_shunt = _PM.var(pm, n, :pconv_dcg_shunt)
-    iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
-
-    bus_convs_grounding_shunt = _PM.ref(pm, n, :bus_convs_grounding_shunt)
-    r_earth = 0
 
     for i in _PM.ids(pm, n, :busdc)
         vdc = _PM.var(pm, n, :vdcm, i)
         JuMP.@NLconstraint(pm.model, vdc[3] == 0)
-        #  for c in bus_convs_grounding_shunt[(i, 3)]
-        #      conv = _PM.ref(pm, n, :convdc, c)
-        #      r=conv["ground_z"]+ r_earth #The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
-        #      if r==0
-        #         #  JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c]==0)  #maybe it would be more accurate to specify vdc==0 in (but it brings )  
-        #         #  JuMP.@NLconstraint(pm.model, iconv_dcg_shunt[c]==0)
-        #         JuMP.@NLconstraint(pm.model, vdc[3]==0)
-        #      else
-        #          (JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c]==(1/r)*vdc[3]^2))
-        #          (JuMP.@NLconstraint(pm.model, iconv_dcg_shunt[c]==(1/r)*vdc[3]))
-        #     end
-        #  end
     end
 end

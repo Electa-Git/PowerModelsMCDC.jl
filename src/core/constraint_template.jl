@@ -129,24 +129,3 @@ function constraint_conv_firing_angle(pm::_PM.AbstractPowerModel, i::Int; nw::In
     end
 
 end
-
-function constraint_dc_branch_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
-    vpu = 1
-    branch = _PM.ref(pm, nw, :branchdc, i)
-    f_bus = branch["fbusdc"]
-    t_bus = branch["tbusdc"]
-    f_idx = (i, f_bus, t_bus)
-
-    ccm_max = (_PM.comp_start_value(_PM.ref(pm, nw, :branchdc, i), "rateA", 0.0) / vpu)^2
-
-    p = _PM.ref(pm, nw, :dcpol)
-    constraint_dc_branch_current(pm, nw, f_bus, f_idx, ccm_max, p)
-end
-
-function constraint_dc_droop_control(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
-    conv = _PM.ref(pm, nw, :convdc, i)
-    bus = _PM.ref(pm, nw, :busdc, conv["busdc_i"])
-    for cond in 1:conv["conductors"]
-        constraint_dc_droop_control(pm, nw, i, conv["busdc_i"][cond], conv["Vdcset"][cond], conv["Pdcset"][cond], conv["droop"][cond], cond)
-    end
-end

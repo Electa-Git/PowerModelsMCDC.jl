@@ -24,7 +24,7 @@ file = "./test/data/matacdc_scripts_opf_paper/balanced/case5_2grids_MC.m"
 # file="./test/data/matacdc_scripts_opf_paper/unbalanced/case3120sp_mcdc.m"
 
 
-s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
+s = Dict("conv_losses_mp" => false)
 result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.ACPPowerModel, ipopt_solver, setting=s)
 
 #--------------------------------------------------------------------------------------------------------

@@ -8,7 +8,7 @@ using Ipopt
 ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
 file = "./test/data/matacdc_scripts/case5_2grids_MC.m"
 
-s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
+s = Dict("conv_losses_mp" => false)
 result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.DCPPowerModel, ipopt_solver, setting=s)
 
 nlp_optimizer = _PMMCDC.optimizer_with_attributes(

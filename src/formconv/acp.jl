@@ -200,9 +200,4 @@ function constraint_conv_firing_angle(pm::_PM.AbstractACPModel, n::Int, i::Int, 
     JuMP.@NLconstraint(pm.model, q == sin(phi) * S)
 end
 
-function constraint_dc_droop_control(pm::_PM.AbstractACPModel, n::Int, i::Int, busdc_i, vref_dc, pref_dc, k_droop, cond)
-    pconv_dc = _PM.var(pm, n, :pconv_dc, i)[cond]
-    vdc = _PM.var(pm, n, :vdcm, busdc_i)[cond]
 
-    JuMP.@constraint(pm.model, pconv_dc == pref_dc - sign(pref_dc) * 1 / k_droop * (vdc - vref_dc))
-end

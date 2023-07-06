@@ -73,7 +73,3 @@ function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::I
     end
 
 end
-
-function constraint_dc_branch_current(pm::_PM.AbstractACPModel, n::Int, f_bus, f_idx, ccm_max, p)
-    # do nothing
-end

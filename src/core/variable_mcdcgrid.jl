@@ -1,6 +1,3 @@
-function variable_dcbranch_current(pm::_PM.AbstractPowerModel; kwargs...)
-end
-
 function comp_start_value(comp::Dict{String,<:Any}, key::String, conductor::Int, default)
     if haskey(comp, key)
         return comp[key][conductor]
@@ -64,7 +61,7 @@ function variable_mc_dcbranch_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw
         start = comp_start_value(_PM.ref(pm, nw, :branchdc, l), "i_start", c, 0.0),
     ) for (l, i, j) in _PM.ref(pm, nw, :arcs_dcgrid)
     )
-    "need to think about starting value and bounds"
+    "#TODO- more detailed analysis of starting value and bounds"
     if bounded
         for arc in _PM.ref(pm, nw, :arcs_dcgrid)
             l, i, j = arc
