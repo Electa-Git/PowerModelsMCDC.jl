@@ -24,7 +24,6 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int,
     end
 end
 
-
 "`pconv[i] == pconv`"
 function constraint_active_conv_setpoint(pm::_PM.AbstractPowerModel, n::Int, i, pconv_cond, cond)
     pconv_var = _PM.var(pm, n, :pconv_tf_fr, i)

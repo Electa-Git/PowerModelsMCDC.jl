@@ -16,7 +16,6 @@ function get_solution_acdc(pm::_PM.AbstractPowerModel, sol::Dict{String,Any})
     return sol
 end
 
-
 function add_dcconverter_setpoint(sol, pm::_PM.AbstractPowerModel)
     _PM.add_setpoint!(sol, pm, "convdc", "pgrid", :pconv_tf_fr)
     _PM.add_setpoint!(sol, pm, "convdc", "qgrid", :qconv_tf_fr)
@@ -54,7 +53,6 @@ function add_dcconverter_losses(sol, pm::_PM.AbstractPowerModel)
         sol["convdc"]["$i"]["ploss_conv"] = sol["convdc"]["$i"]["ploss_tot"] - sol["convdc"]["$i"]["ploss_tf"] # TODO update later with filter etc..
     end
 end
-
 
 function add_dc_bus_voltage_setpoint(sol, pm::_PM.AbstractPowerModel)
     _PM.add_setpoint!(sol, pm, "busdc", "vm", :vdcm, status_name="Vdc", inactive_status_value=4)

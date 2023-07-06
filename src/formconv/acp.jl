@@ -34,7 +34,6 @@ function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::In
     iconv_dcg = _PM.var(pm, n, :iconv_dcg)
     vdcm = _PM.var(pm, n, :vdcm)
 
-
     dc_bus = _PM.ref(pm, n, :convdc, i)["busdc_i"]
 
     conv_cond = _PM.ref(pm, n, :convdc, i)["conductors"]
@@ -44,15 +43,12 @@ function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::In
     for k in 1:total_cond
         for (c, d) in bus_convs_dc_cond[(dc_bus, k)]
             if c == i
-
-                # display("c,d,k == $c,$d,$k")
                 JuMP.@NLconstraint(pm.model, pconv_dc[c][d] == iconv_dc[c][d] * vdcm[dc_bus][k])
             end
         end
     end
 
     # neutral is always connected at bus conductor "3"
-    # display("conv_cond= $conv_cond")
     for g in 1:conv_cond
         JuMP.@NLconstraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm[dc_bus][3])
         JuMP.@constraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0)
@@ -83,7 +79,6 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::I
         end
     end
 end
-
 
 """
 Converter transformer constraints
@@ -199,5 +194,3 @@ function constraint_conv_firing_angle(pm::_PM.AbstractACPModel, n::Int, i::Int, 
     JuMP.@NLconstraint(pm.model, p == cos(phi) * S)
     JuMP.@NLconstraint(pm.model, q == sin(phi) * S)
 end
-
-

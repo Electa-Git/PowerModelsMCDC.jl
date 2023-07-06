@@ -23,7 +23,7 @@ const _conductorless = Set(["basekVdc", "source_id", "busdc_i", "grid", "index",
 # "P_g", "Q_g", removed due to conv set point. Should be tackled differently if multiconductor of AC is considered
 # "dVdcset", "Vdcset", removed for giving pf setpoints
 #"Pdcset", "droop",
-#TODO: "status" can be made multiconductor when incorporated in the model. 
+#TODO: "status" can be made multiconductor when incorporated in the model.
 
 "only dc side data"
 const _DCdata = ["busdc", "convdc", "branchdc"]
@@ -31,12 +31,7 @@ const _DCdata = ["busdc", "convdc", "branchdc"]
 "feild names that should become multiconductor matrix not arrays"
 const _conductor_matrix = Set(["br_r", "br_x", "rc", "xc", "rtf", "xtf", "bf"])
 
-
 function _make_multiconductor!(data::Dict{String,<:Any})
-    # if haskey(data, "conductors")
-    #     Memento.warn(_LOGGER, "skipping network that is already multiconductor")
-    #     return
-    # end
 
     data["conductors_dc"] = true
 
@@ -81,6 +76,5 @@ function conductorsDC_number(item_data::Dict{String,<:Any})
     else
         conductors = 3  # for buses
     end
-    # println("pass")
     return conductors
 end

@@ -95,13 +95,11 @@ function constraint_conv_reactor(pm::_PM.AbstractDCPModel, n::Int, i::Int, rc, x
     vaf = _PM.var(pm, n, :vaf, i)[cond]
     vac = _PM.var(pm, n, :vac, i)[cond]
     if reactor
-        # display("reactor is present")
         bc = imag(1 / (im * xc))
         v = 1 # pu, assumption DC approximation
         JuMP.@constraint(pm.model, ppr_fr == -bc * (v^2) * (vaf - vac))
         JuMP.@constraint(pm.model, ppr_to == -bc * (v^2) * (vac - vaf))
     else
-        # display("reactor is NOT there")
         JuMP.@constraint(pm.model, vac == vaf)
         JuMP.@constraint(pm.model, ppr_fr + ppr_to == 0)
     end
@@ -116,7 +114,6 @@ function constraint_conv_filter(pm::_PM.AbstractDCPModel, n::Int, i::Int, bv, fi
     ppr_fr = _PM.var(pm, n, :pconv_pr_fr, i)[cond]
     ptf_to = _PM.var(pm, n, :pconv_tf_to, i)[cond]
 
-    # _PM.con(pm, n, :conv_kcl_p)[i] = JuMP.@constraint(pm.model,   ppr_fr + ptf_to == 0 )
     JuMP.@constraint(pm.model, ppr_fr + ptf_to == 0)
 end
 """
