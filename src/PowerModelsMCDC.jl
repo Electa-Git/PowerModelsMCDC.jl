@@ -21,7 +21,6 @@ __init__() = Memento.register(_LOGGER)
 
 ## Includes
 
-include("core/solution.jl")
 include("core/data.jl")
 include("core/base.jl")
 include("core/constraint.jl")

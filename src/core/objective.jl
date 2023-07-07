@@ -1,3 +1,6 @@
+# This file is kept to include other objective funtions in future
+# In the current form, it includes some of the functions from PowerModelsACDC
+
 ""
 function objective_min_fuel_cost(pm::_PM.AbstractPowerModel)
     model = _PM.check_cost_models(pm)
