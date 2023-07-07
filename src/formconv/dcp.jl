@@ -17,8 +17,6 @@ function constraint_converter_losses(pm::_PM.AbstractDCPModel, n::Int, i::Int, a
     JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg <= plmax)
 end
 
-
-
 function constraint_converter_dc_current(pm::_PM.AbstractDCPModel, n::Int, i::Int)
     pconv_dc = _PM.var(pm, n, :pconv_dc)
     pconv_dcg = _PM.var(pm, n, :pconv_dcg)
@@ -42,7 +40,7 @@ function constraint_converter_dc_current(pm::_PM.AbstractDCPModel, n::Int, i::In
             end
 
             if c == i
-                (JuMP.@constraint(pm.model, pconv_dc[c][d] == iconv_dc[c][d] * vdcm))
+                JuMP.@constraint(pm.model, pconv_dc[c][d] == iconv_dc[c][d] * vdcm)
             end
         end
     end
@@ -50,10 +48,10 @@ function constraint_converter_dc_current(pm::_PM.AbstractDCPModel, n::Int, i::In
     # neutral is always connected at bus conductor "3"
     for g in 1:conv_cond
         vdcm = 0
-        (JuMP.@NLconstraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm))
-        (JuMP.@NLconstraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0))
+        JuMP.@constraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm)
+        JuMP.@constraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0)
     end
-    (JuMP.@NLconstraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0))
+    JuMP.@constraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0)
 
 end
 
@@ -75,7 +73,7 @@ function constraint_conv_transformer(pm::_PM.AbstractDCPModel, n::Int, i::Int, r
     if transformer
         btf = imag(1 / (im * xtf)) # classic DC approach to obtain susceptance form
         v = 1 # pu, assumption DC approximation
-        (JuMP.@constraint(pm.model, ptf_fr == -btf * (v^2) / tm * (va - vaf)))
+        JuMP.@constraint(pm.model, ptf_fr == -btf * (v^2) / tm * (va - vaf))
         JuMP.@constraint(pm.model, ptf_to == -btf * (v^2) / tm * (vaf - va))
     else
         JuMP.@constraint(pm.model, va == vaf)
@@ -97,13 +95,11 @@ function constraint_conv_reactor(pm::_PM.AbstractDCPModel, n::Int, i::Int, rc, x
     vaf = _PM.var(pm, n, :vaf, i)[cond]
     vac = _PM.var(pm, n, :vac, i)[cond]
     if reactor
-        # display("reactor is present")
         bc = imag(1 / (im * xc))
         v = 1 # pu, assumption DC approximation
-        (JuMP.@constraint(pm.model, ppr_fr == -bc * (v^2) * (vaf - vac)))
+        JuMP.@constraint(pm.model, ppr_fr == -bc * (v^2) * (vaf - vac))
         JuMP.@constraint(pm.model, ppr_to == -bc * (v^2) * (vac - vaf))
     else
-        # display("reactor is NOT there")
         JuMP.@constraint(pm.model, vac == vaf)
         JuMP.@constraint(pm.model, ppr_fr + ppr_to == 0)
     end
@@ -118,7 +114,6 @@ function constraint_conv_filter(pm::_PM.AbstractDCPModel, n::Int, i::Int, bv, fi
     ppr_fr = _PM.var(pm, n, :pconv_pr_fr, i)[cond]
     ptf_to = _PM.var(pm, n, :pconv_tf_to, i)[cond]
 
-    # _PM.con(pm, n, :conv_kcl_p)[i] = JuMP.@constraint(pm.model,   ppr_fr + ptf_to == 0 )
     JuMP.@constraint(pm.model, ppr_fr + ptf_to == 0)
 end
 """
@@ -145,7 +140,7 @@ Converter firing angle constraint (not applicable)
 function constraint_conv_firing_angle(pm::_PM.AbstractDCPModel, n::Int, i::Int, S, P1, Q1, P2, Q2)
 end
 """
-Converter grounding constraint 
+Converter grounding constraint
 ```
 ```
 """
@@ -153,6 +148,6 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractDCPModel, n::I
 
     for i in _PM.ids(pm, n, :busdc)
         vdc = _PM.var(pm, n, :vdcm, i)
-        JuMP.@NLconstraint(pm.model, vdc[3] == 0)
+        JuMP.@constraint(pm.model, vdc[3] == 0)
     end
 end

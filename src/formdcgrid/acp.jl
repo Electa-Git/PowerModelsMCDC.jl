@@ -12,11 +12,10 @@ function constraint_kcl_shunt(pm::_PM.AbstractACPModel, n::Int, i::Int, bus_arcs
     qg = _PM.var(pm, n, :qg)
     pconv_grid_ac = _PM.var(pm, n, :pconv_tf_fr)
     qconv_grid_ac = _PM.var(pm, n, :qconv_tf_fr)
-    #  display("constraint_kcl_shunt for ac bus $i")
-    (JuMP.@NLconstraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n, :pconv_tf_fr, c))) for c in bus_convs_ac) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2))
-    (JuMP.@NLconstraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(qconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n, :qconv_tf_fr, c))) for c in bus_convs_ac) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts) * vm^2))
-end
 
+    JuMP.@NLconstraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n, :pconv_tf_fr, c))) for c in bus_convs_ac) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
+    JuMP.@NLconstraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(qconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n, :qconv_tf_fr, c))) for c in bus_convs_ac) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts) * vm^2)
+end
 
 """
 Creates Ohms constraints for DC branches
@@ -25,8 +24,6 @@ Creates Ohms constraints for DC branches
 p[f_idx] == p * g[l] * vmdc[f_bus] * (vmdc[f_bus] - vmdc[t_bus])
 ```
 """
-
-
 function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, r, p, total_cond)
     i_dc_fr = _PM.var(pm, n, :i_dcgrid, f_idx)
     i_dc_to = _PM.var(pm, n, :i_dcgrid, t_idx)
@@ -36,7 +33,6 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int, f_bus, t_bu
     bus_arcs_dcgrid_cond = _PM.ref(pm, n, :bus_arcs_dcgrid_cond)
 
     for k = 1:3
-        # display("$k")
         for (line, d) in bus_arcs_dcgrid_cond[(f_bus, k)]
             if line == f_idx
                 if r[d] == 0
@@ -44,17 +40,13 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int, f_bus, t_bu
                     JuMP.@constraint(pm.model, vmdc_fr[k] - vmdc_to[k] == 0)
                 else
                     g = 1 / r[d]
-                    # display("$line, $d")
-                    (JuMP.@NLconstraint(pm.model, i_dc_fr[d] == g * (vmdc_fr[k] - vmdc_to[k])))
-                    (JuMP.@NLconstraint(pm.model, i_dc_to[d] == g * (vmdc_to[k] - vmdc_fr[k])))
+                    JuMP.@constraint(pm.model, i_dc_fr[d] == g * (vmdc_fr[k] - vmdc_to[k]))
+                    JuMP.@constraint(pm.model, i_dc_to[d] == g * (vmdc_to[k] - vmdc_fr[k]))
                 end
             end
         end
     end
 end
-
-
-
 
 "`vdc[i] == vdcm`"
 function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::Int, i)
@@ -67,7 +59,7 @@ function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::I
     for k in 1:2
         for (c, d) in bus_convs_dc_cond[(dc_bus, k)]
             if c == i
-                (JuMP.@constraint(pm.model, v[k] == conv["Vdcset"][d]))
+                JuMP.@constraint(pm.model, v[k] == conv["Vdcset"][d])
             end
         end
     end

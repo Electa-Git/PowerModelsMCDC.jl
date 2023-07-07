@@ -10,31 +10,21 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             nw_ref[:arcs_dcgrid_to] = [(i, branch["tbusdc"], branch["fbusdc"]) for (i, branch) in nw_ref[:branchdc]]
             nw_ref[:arcs_dcgrid] = [nw_ref[:arcs_dcgrid_from]; nw_ref[:arcs_dcgrid_to]]
             nw_ref[:arcs_conv_acdc] = [(i, conv["busac_i"], conv["busdc_i"]) for (i, conv) in nw_ref[:convdc]]
-            #bus arcs of the DC grid
+            # Bus arcs of the DC grid
             bus_arcs_dcgrid = Dict([(bus["busdc_i"], []) for (i, bus) in nw_ref[:busdc]])
             for (l, i, j) in nw_ref[:arcs_dcgrid]
                 push!(bus_arcs_dcgrid[i], (l, i, j))
             end
             nw_ref[:bus_arcs_dcgrid] = bus_arcs_dcgrid
 
-            # bus_line_conn = Dict([(bus["busdc_i"], []) for (i,bus) in nw_ref[:busdc]])
-            # for (l,i,j) in nw_ref[:arcs_dcgrid]
-            #     push!(bus_line_conn[i], l)
-            # end
-            # nw_ref[:bus_line_conn] = bus_line_conn
-            # display("bus_line_conn")
-            # display(bus_line_conn)
-
-            #bus arcs of the DC grid - conductor connections
-            # display("nw_ref_busdc")
+            # Bus arcs of the DC grid - conductor connections
             bus_arcs_dcgrid_cond = Dict([((bus["busdc_i"], c), Dict()) for c in 1:3 for (i, bus) in nw_ref[:busdc]])
-            # display(bus_arcs_dcgrid_cond)
 
             for (l, i, j) in nw_ref[:arcs_dcgrid]
                 if nw_ref[:branchdc][l]["line_confi"] == 1
                     if nw_ref[:branchdc][l]["connect_at"] == 0
                         push!(bus_arcs_dcgrid_cond[(i, 1)], (l, i, j) => 1) # (i, 1) for connection and  (l,i,j) =>1 for selecting line variable
-                        push!(bus_arcs_dcgrid_cond[(i, 2)], (l, i, j) => 2)  # 1, 2 and 3 are the positive, negative and neutral terminals of a DC bus, respectively 
+                        push!(bus_arcs_dcgrid_cond[(i, 2)], (l, i, j) => 2)  # 1, 2 and 3 are the positive, negative and neutral terminals of a DC bus, respectively
                     elseif nw_ref[:branchdc][l]["connect_at"] == 1
                         push!(bus_arcs_dcgrid_cond[(i, 1)], (l, i, j) => 1)
                         push!(bus_arcs_dcgrid_cond[(i, 3)], (l, i, j) => 2)
@@ -47,7 +37,6 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                     push!(bus_arcs_dcgrid_cond[(i, 2)], (l, i, j) => 2)
                     push!(bus_arcs_dcgrid_cond[(i, 3)], (l, i, j) => 3)
                 end
-                # end
             end
             nw_ref[:bus_arcs_dcgrid_cond] = bus_arcs_dcgrid_cond
 
@@ -85,7 +74,6 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                     push!(bus_convs_dc_cond[(bus, 2)], i => 2)
                     push!(bus_convs_dc_cond[(bus, 3)], i => 3)
                 end
-                # end
             end
 
             nw_ref[:bus_convs_dc_cond] = bus_convs_dc_cond
@@ -124,14 +112,6 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                 elseif conv["type_ac"] == 1 && conv["type_dc"] == 1
                     Memento.warn(_PM._LOGGER, "For converter $conv_id is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
                 end
-                convbus_ac = conv["busac_i"]
-                # display(conv["Vmmax"])
-                # if conv["Vmmax"] < nw_ref[:bus][convbus_ac]["vmin"]
-                #     Memento.warn(_PM._LOGGER, "The maximum AC side voltage of converter $conv_id is smaller than the minimum AC bus voltage")
-                # end
-                # if conv["Vmmin"] > nw_ref[:bus][convbus_ac]["vmax"]
-                #     Memento.warn(_PM._LOGGER, "The miximum AC side voltage of converter $conv_id is larger than the maximum AC bus voltage")
-                # end
             end
 
             if length(ref_buses_dc) > 1
@@ -142,21 +122,6 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                 Memento.warn(_PM._LOGGER, "multiple reference buses found, i.e. " * ref_buses_warn * "this can cause infeasibility if they are in the same connected component")
             end
 
-
-            # if haskey(pm.setting, "find_all_ac_grids") && pm.tetting["find_all_ac_grids"] == true
-            #     ACgrids = find_all_ac_grids(nw_ref[:branch], nw_ref[:bus])
-            #     for (i, grid) in ACgrids
-            #         a = 0
-            #         for (j, bus) in nw_ref[:ref_buses]
-            #             if (bus["bus_i"] in grid["Buses"])
-            #                 a = 1
-            #             end
-            #         end
-            #         if a == 0
-            #             Memento.warn(_PM._LOGGER, "Grid $i does not have any voltage reference bus, this might cause infeasibility")
-            #         end
-            #     end
-            # end
             nw_ref[:ref_buses_dc] = ref_buses_dc
             nw_ref[:buspairsdc] = buspair_parameters_dc(nw_ref[:arcs_dcgrid_from], nw_ref[:branchdc], nw_ref[:busdc])
         else
@@ -180,7 +145,6 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
         end
     end
 end
-
 
 "compute bus pair level structures"
 function buspair_parameters_dc(arcs_dcgrid_from, branches, buses)

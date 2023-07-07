@@ -6,11 +6,9 @@ function comp_start_value(comp::Dict{String,<:Any}, key::String, conductor::Int,
     end
 end
 
-
 function comp_start_value(comp::Dict{String,<:Any}, key::String, default)
     return _PM.comp_start_value(comp, key, default)
 end
-
 
 "variable: `vdcm[i]` for `i` in `dcbus`es"
 function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
@@ -30,8 +28,6 @@ function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int
 
     report && _PM.sol_component_value(pm, nw, :busdc, :vm, _PM.ids(pm, nw, :busdc), vdcm)
 end
-
-
 
 "variable: `p_dcgrid[l,i,j]` for `(l,i,j)` in `arcs_dcgrid`"
 function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
@@ -61,7 +57,7 @@ function variable_mc_dcbranch_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw
         start = comp_start_value(_PM.ref(pm, nw, :branchdc, l), "i_start", c, 0.0),
     ) for (l, i, j) in _PM.ref(pm, nw, :arcs_dcgrid)
     )
-    "#TODO- more detailed analysis of starting value and bounds"
+    # TODO: more detailed analysis of starting value and bounds
     if bounded
         for arc in _PM.ref(pm, nw, :arcs_dcgrid)
             l, i, j = arc
@@ -70,10 +66,8 @@ function variable_mc_dcbranch_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw
         end
     end
 
-
     report && _PM.sol_component_value_edge(pm, nw, :branchdc, :i_from, :i_to, _PM.ref(pm, nw, :arcs_dcgrid_from), _PM.ref(pm, nw, :arcs_dcgrid_to), ibr)
 end
-
 
 """
 Returns a total (shunt+series) power magnitude bound for the from and to side
@@ -83,4 +77,3 @@ upper bound on the voltage magnitude of the connected buses.
 function _calc_branch_power_max_frto(branch::Dict, bus_fr::Dict, bus_to::Dict)
     return _calc_branch_power_max(branch, bus_fr), _calc_branch_power_max(branch, bus_to)
 end
-

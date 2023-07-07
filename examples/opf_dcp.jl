@@ -1,35 +1,34 @@
-#example of dcp formulation of the opf problem
+# OPF problem, linear formulation
+
 import PowerModels as _PM
 import PowerModelsMCDC as _PMMCDC
-import PowerModelsACDC as _PMACDC
-using JuMP
-using Ipopt
+import HiGHS
 
-ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
+lp_solver = _PMMCDC.optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => false)
 file = "./test/data/matacdc_scripts/case5_2grids_MC.m"
 
 s = Dict("conv_losses_mp" => false)
-result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.DCPPowerModel, ipopt_solver, setting=s)
+result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.DCPPowerModel, lp_solver, setting=s)
 
-nlp_optimizer = _PMMCDC.optimizer_with_attributes(
-    Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0, "sb" => "yes"
-)
-result_dcp = _PMMCDC.solve_mcdcopf(file, _PM.DCPPowerModel, nlp_optimizer)
 
-#--------------------------------------------------------------------------------------------------------
-result_acdc = _PMACDC.run_acdcopf(file, _PM.DCPPowerModel, ipopt_solver, setting=s)
+## Comparison with PowerModelsACDC (single conductor model)
 
-#############
+import PowerModelsACDC as _PMACDC
 
-println("termination status of the acdc_opf is:", result_acdc["termination_status"])
-println(" Objective acdc_opf is:", result_acdc["objective"])
-println(" solve time acdc_opf is:", result_acdc["solve_time"])
+result_acdc = _PMACDC.run_acdcopf(file, _PM.DCPPowerModel, lp_solver, setting=s)
 
-println("termination status of the mcdc_opf is:", result_mcdc["termination_status"])
-println(" Objective mcdc_opf is:", result_mcdc["objective"])
-println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
+printstyled("Multiconductor OPF\n"; bold=true)
+println(" termination status: ", result_mcdc["termination_status"])
+println("          objective: ", result_mcdc["objective"])
+println("         solve time: ", result_mcdc["solve_time"])
 
-############## "Keepin the following commented lines as it usefel for the user to analyse the results" ##############
+printstyled("\nSingle-conductor OPF\n"; bold=true)
+println(" termination status: ", result_acdc["termination_status"])
+println("          objective: ", result_acdc["objective"])
+println("         solve time: ", result_acdc["solve_time"])
+
+
+## Further analysis of results
 
 # println("#######ACgrid side#######")
 # println("generation")
@@ -66,7 +65,6 @@ println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 #     b=dcbus["vm"]
 #     display("$i, $b")
 # end
-
 
 # println(".....conv....")
 # println(".....pgrid....")
@@ -124,7 +122,7 @@ println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 #     display("$i,$r")
 # end
 
-println(".....DC branch losses....")
+# println(".....DC branch losses....")
 # for (i,branch) in result_mcdc["solution"]["branchdc"]
 #     flow_from=branch["pf"]
 #     flow_to=branch["pt"]

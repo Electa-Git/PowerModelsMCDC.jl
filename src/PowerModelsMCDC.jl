@@ -38,6 +38,9 @@ include("formconv/acp.jl")
 
 include("prob/mcdcopf.jl")
 
+include("io/parse.jl")
+
+
 ## Exports
 
 # The following items are exported for user-friendlyness when calling
