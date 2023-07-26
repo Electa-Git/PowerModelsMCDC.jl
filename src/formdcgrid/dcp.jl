@@ -4,17 +4,13 @@ sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[
 sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) + sum(qconvac[c] for c in bus_convs) - qd + bs*1^2
 ```
 """
-function constraint_kcl_shunt(pm::_PM.AbstractDCPModel, n::Int,  i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_convs_ac, bus_loads, bus_shunts, pd, qd, gs, bs)
+function constraint_kcl_shunt(pm::_PM.AbstractDCPModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_convs_ac, bus_loads, bus_shunts, pd, qd, gs, bs)
+    vm = 1
     p = _PM.var(pm, n, :p)
     pg = _PM.var(pm, n, :pg)
-    pconv_ac = _PM.var(pm, n, :pconv_ac)
+    vm = 1
     pconv_grid_ac = _PM.var(pm, n, :pconv_tf_fr)
-    v = 1
-    # display("constraint_kcl_shunt")
-    # display(p[a] for a in bus_arcs)
-    # total_cond=length(bus_convs_ac)
-       JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c]) for c in bus_convs_ac)  == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*v^2)
-      # JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs)   == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*v^2)
+    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n, :pconv_tf_fr, c))) for c in bus_convs_ac) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
 end
 
 """
@@ -24,68 +20,25 @@ Creates Ohms constraints for DC branches
 p[f_idx] + p[t_idx] == 0)
 ```
 """
-function constraint_ohms_dc_branch(pm::_PM.AbstractDCPModel, n::Int,  f_bus, t_bus, f_idx, t_idx, r, p, total_cond)
-    p_dc_fr = _PM.var(pm, n, :p_dcgrid, f_idx)
-    p_dc_to = _PM.var(pm, n, :p_dcgrid, t_idx)
 
-    for c = 1: total_cond
-        display(JuMP.@constraint(pm.model, p_dc_fr[c] + p_dc_to[c] == 0))
+function constraint_ohms_dc_branch(pm::_PM.AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, r, p, total_cond)
+    i_dc_fr = _PM.var(pm, n, :i_dcgrid, f_idx)
+    i_dc_to = _PM.var(pm, n, :i_dcgrid, t_idx)
+    vmdc_fr = _PM.var(pm, n, :vdcm, f_bus)
+    vmdc_to = _PM.var(pm, n, :vdcm, t_bus)
+    bus_arcs_dcgrid_cond = _PM.ref(pm, n, :bus_arcs_dcgrid_cond)
+
+    for k = 1:3
+        for (line, d) in bus_arcs_dcgrid_cond[(f_bus, k)]
+            if line == f_idx
+                JuMP.@constraint(pm.model, i_dc_fr[d] + i_dc_to[d] == 0)
+                JuMP.@constraint(pm.model, vmdc_fr[k] - vmdc_to[k] == 0)
+            end
+        end
     end
 end
 
 "`vdc[i] == vdcm`"
-function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractDCPModel, n::Int,  i)
+function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractDCPModel, n::Int, i)
     # not used
-end
-
-function variable_dcgrid_voltage_magnitude(pm::_PM.AbstractDCPModel; kwrags...)
-    # not used nw::Int=pm.cnw
-end
-
-function constraint_dc_branch_current(pm::_PM.AbstractDCPModel, n::Int,  f_bus, f_idx, ccm_max, p)
-# do nothing
-end
-
-
-#################### TNEP constraints #################
-"""
-```
-sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) + sum(pconvac[c] for c in bus_convs) - pd - gs*1^2
-sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) + sum(qconvac[c] for c in bus_convs) - qd + bs*1^2
-```
-"""
-function constraint_kcl_shunt_ne(pm::_PM.AbstractDCPModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_convs_ac, bus_convs_ac_ne, bus_loads, bus_shunts, pd, qd, gs, bs)
-    p = _PM.var(pm, n, :p)
-    pg = _PM.var(pm, n, :pg)
-    pconv_grid_ac_ne = _PM.var(pm, n, :pconv_tf_fr_ne)
-    pconv_grid_ac = _PM.var(pm, n, :pconv_tf_fr)
-    pconv_ac = _PM.var(pm, n, :pconv_ac)
-    pconv_ac_ne = _PM.var(pm, n, :pconv_ac_ne)
-    v = 1
-    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(pconv_grid_ac[c] for c in bus_convs_ac) + sum(pconv_grid_ac_ne[c] for c in bus_convs_ac_ne)  == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*v^2)
-end
-
-"""
-Creates Ohms constraints for candidate DC branches
-
-```
-p[f_idx] + p[t_idx] == 0)
-```
-"""
-function constraint_ohms_dc_branch_ne(pm::_PM.AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, r, p)
-    p_dc_fr_ne = _PM.var(pm, n, :p_dcgrid_ne, f_idx)
-    p_dc_to_ne = _PM.var(pm, n, :p_dcgrid_ne, t_idx)
-    JuMP.@constraint(pm.model, p_dc_fr_ne + p_dc_to_ne == 0)
-end
-
-function variable_dcgrid_voltage_magnitude_ne(pm::_PM.AbstractDCPModel; nw::Int=pm.cnw, bounded::Bool = true, report::Bool=true)
-    # not used
-end
-
-
-function add_dc_bus_voltage_setpoint_ne(sol, pm::_PM.AbstractDCPModel)
-    _PM.add_setpoint!(sol, pm, "busdc_ne", "vm", :vdcm_ne, status_name="Vdc", inactive_status_value = 4)
-    for (i, bus) in sol["busdc_ne"]
-        sol["busdc_ne"]["$i"]["vm"] = 1.0
-    end
 end
