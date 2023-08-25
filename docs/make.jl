@@ -1,15 +1,21 @@
 using Documenter, PowerModelsMCDC
 
 makedocs(
-    modules     = [PowerModelsMCDC],
-    format      = Documenter.HTML(mathengine = Documenter.MathJax()),
-    sitename    = "PowerModelsMCDC.jl",
-    authors     = "Chandra Kant Jat, Hakan Ergun, Jay Dave",
-    pages       = [
-              "Home"    => "index.md",
-                 ]
+    modules = [PowerModelsMCDC],
+    sitename = "PowerModelsMCDC",
+    pages = [
+        "Home" => "index.md"
+        "Manual" => [
+            "Network data format" => "man/network-data.md"
+            "Network formulations" => "man/formulations.md"
+            "Problem specifications" => "man/specifications.md"
+        ]
+        "API" => [
+            "Functions" => "api/functions.md"
+        ]
+    ]
 )
 
 deploydocs(
-     repo = "github.com/Electa-Git/PowerModelsMCDC.jl.git"
+    repo = "github.com/Electa-Git/PowerModelsMCDC.jl.git"
 )
