@@ -1,17 +1,33 @@
 export solve_mcdcopf
 
-""
-function solve_mcdcopf(file::String, model_type::Type, solver; kwargs...)
+"""
+    solve_mcdcopf(file, model_type, optimizer; <keyword arguments>)
+    solve_mcdcopf(data, model_type, optimizer; <keyword arguments>)
+
+Build and solve the OPF problem over a hybrid AC/DC network, using a multi-conductor model for the DC part.
+
+Input can be a Matpower `file` or a `data` dictionary.
+The OPF problem being built is the one defined in `build_mcdcopf`.
+Keyword arguments, if any, are forwarded to `PowerModels.solve_model`.
+"""
+function solve_mcdcopf end
+
+function solve_mcdcopf(file::String, model_type::Type, optimizer; kwargs...)
     data = parse_file(file)
-    return solve_mcdcopf(data, model_type, solver; ref_extensions=[add_ref_dcgrid!], kwargs...)
+    return solve_mcdcopf(data, model_type, optimizer; ref_extensions=[add_ref_dcgrid!], kwargs...)
 end
 
-""
-function solve_mcdcopf(data::Dict{String,Any}, model_type::Type, solver; kwargs...)
-    return _PM.solve_model(data, model_type, solver, build_mcdcopf; ref_extensions=[add_ref_dcgrid!], kwargs...)
+function solve_mcdcopf(data::Dict{String,Any}, model_type::Type, optimizer; kwargs...)
+    return _PM.solve_model(data, model_type, optimizer, build_mcdcopf; ref_extensions=[add_ref_dcgrid!], kwargs...)
 end
 
-""
+"""
+    build_mcdcopf(pm::PowerModels.AbstractPowerModel)
+
+Build the OPF problem over a hybrid AC/DC network, using a multi-conductor model for the DC part.
+
+The objective is the minimization of generation cost.
+"""
 function build_mcdcopf(pm::_PM.AbstractPowerModel)
     _PM.variable_bus_voltage(pm, bounded=true)
     _PM.variable_gen_power(pm, bounded=true)

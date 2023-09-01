@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Electa-Git/PowerModelsMCDC.jl/workflows/CI/badge.svg)](https://github.com/Electa-Git/PowerModelsMCDC.jl/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Electa-Git/PowerModelsMCDC.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/Electa-Git/PowerModelsMCDC.jl)
+[![Documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://electa-git.github.io/PowerModelsMCDC.jl/dev/)
 
 PowerModelsMCDC.jl is a Julia/JuMP/PowerModels package for hybrid AC/DC systems with multiconductor model of the DC grid in order to represent unbalanced HVDC grids. The positive and negative poles of bipolar converter stations are modeled separately, and DC buses are modeled using three terminals: the positive, the negative, and the neutral terminal. Each conductor of a DC branch is modeled separately, including the metallic return conductor and converter grounding.
 
