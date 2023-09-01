@@ -56,6 +56,35 @@ function constraint_converter_dc_current(pm::_PM.AbstractDCPModel, n::Int, i::In
 end
 
 """
+Converter grounding constraint
+```
+```
+"""
+function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractDCPModel, n::Int)
+
+    pconv_dcg_shunt = _PM.var(pm, n, :pconv_dcg_shunt)
+    iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
+
+    bus_convs_grounding_shunt = _PM.ref(pm, n, :bus_convs_grounding_shunt)
+    r_earth = 0
+    vdcm = -0
+
+    for i in _PM.ids(pm, n, :busdc)
+        vdc = _PM.var(pm, n, :vdcm, i)
+        for c in bus_convs_grounding_shunt[(i, 3)]
+            conv = _PM.ref(pm, n, :convdc, c)
+            r = conv["ground_z"] + r_earth #The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
+            if r == 0 #solid grounding
+                JuMP.@constraint(pm.model, vdc[3] == 0)
+            else
+                JuMP.@constraint(pm.model, pconv_dcg_shunt[c] == (1 / r) * vdc[3] * vdcm)
+                JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * vdc[3])
+            end
+        end
+    end
+end
+
+"""
 Converter transformer constraints
 
 ```
@@ -138,16 +167,4 @@ Converter firing angle constraint (not applicable)
 ```
 """
 function constraint_conv_firing_angle(pm::_PM.AbstractDCPModel, n::Int, i::Int, S, P1, Q1, P2, Q2)
-end
-"""
-Converter grounding constraint
-```
-```
-"""
-function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractDCPModel, n::Int)
-
-    for i in _PM.ids(pm, n, :busdc)
-        vdc = _PM.var(pm, n, :vdcm, i)
-        JuMP.@constraint(pm.model, vdc[3] == 0)
-    end
 end
