@@ -15,11 +15,13 @@ using JuMP
 using Ipopt
 using Memento
 # using Gurobi
-using Cbc
-using Juniper
+# using Cbc
+# using Juniper
 
 # print_level=1
-ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=1)
+# ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 1)
+nlp_solver = _PMMCDC.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
+
 # gurobi_solver = JuMP.with_optimizer(Gurobi.Optimizer)
 # couenne_solver=JuMP.with_optimizer(“C:/Users/mayar.madboly/Downloads/couenne-win64.exe”, print_level =0)
 
@@ -27,99 +29,19 @@ ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=1)
 # cbc_solver = JuMP.with_optimizer(Cbc.Optimizer)
 # juniper = JuMP.with_optimizer(Juniper.Optimizer, mip_solver=cbc_solver, nl_solver = ipopt_solver)
 
-ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 1)
+ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
 
-function build_mc_data!(base_data)
-    mp_data = PowerModels.parse_file(base_data)
-    #changing the connection point
-    # for (c, bn) in mp_data["branchdc"]
-    #     if bn["line_confi"] == 1
-    #         bn["connect_at"] = 2
-    #         # bn["line_confi"]=2
-    #     end
-    # end
-    # for (c, conv) in mp_data["convdc"]
-    #     # display("configuration of $c is")
-    #     # display(conv["conv_confi"])
-    #     if conv["conv_confi"] == 1
-    #         conv["connect_at"] = 2
-    #         # conv["conv_confi"]=2
-    #         # conv["ground_type"]=0
-    #     end
-    #     # conv["ground_type"]=1
-    #     if conv["ground_type"] == 1 #or 0
-    #         conv["ground_z"] = 0.5
-    #     end
 
-    # end
-
-    #making lossless conv paramteres
-    for (c, conv) in mp_data["convdc"]
-        # conv["transformer"]=0
-        # conv["filter"]=0
-        # conv["reactor"]=0
-        # conv["LossA"]=0
-        # conv["LossB"]=0
-        # conv["LossCrec"]=0
-        # conv["LossCinv"]=0
-        if conv["conv_confi"] == 2
-            conv["rtf"] = 2 * conv["rtf"]
-            conv["xtf"] = 2 * conv["xtf"]
-            conv["bf"] = 0.5 * conv["bf"]
-            conv["rc"] = 2 * conv["rc"]
-            conv["xc"] = 2 * conv["xc"]
-            conv["LossB"] = conv["LossB"]
-            conv["LossA"] = 0.5 * conv["LossA"]
-            conv["LossCrec"] = 2 * conv["LossCrec"]
-            conv["LossCinv"] = 2 * conv["LossCinv"]
-        end
-    end
-
-    PowerModelsMCDC.process_additional_data!(mp_data)
-    PowerModelsMCDC._make_multiconductor_new!(mp_data)
-    # Adjusting line limits
-    for (c, bn) in mp_data["branchdc"]
-        if bn["line_confi"] == 2
-            bn["rateA"] = bn["rateA"] / 2
-            bn["rateB"] = bn["rateB"] / 2
-            bn["rateC"] = bn["rateC"] / 2
-            # bn["r"]=bn["r"]/2
-        end
-        metalic_cond_number = bn["conductors"]
-        # bn["rateA"][metalic_cond_number]=bn["rateA"][metalic_cond_number]*0.1
-        # bn["rateB"][metalic_cond_number]=bn["rateB"][metalic_cond_number]*0.1
-        # bn["rateC"][metalic_cond_number]=bn["rateC"][metalic_cond_number]*0.1
-
-        bn["return_z"] = 0.052 # adjust metallic resistance
-        bn["r"][metalic_cond_number] = bn["return_z"]
-
-    end
-
-    # Adjusting conveter limits
-    for (c, conv) in mp_data["convdc"]
-        if conv["conv_confi"] == 2
-            conv["Pacmax"] = conv["Pacmax"] / 2
-            conv["Pacmin"] = conv["Pacmin"] / 2
-            conv["Pacrated"] = conv["Pacrated"] / 2
-        end
-    end
-    # Adjusting metallic return bus voltage limits
-    for (i, busdc) in mp_data["busdc"]
-        busdc["Vdcmax"][3] = 0.1
-        busdc["Vdcmin"][3] = -0.1
-        busdc["Vdcmax"][2] = -0.9
-        busdc["Vdcmin"][2] = -1.1
-    end
-    return mp_data
-end
 
 # file="./test/data/matacdc_scripts/case39_mcdc.m"
 # file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
 # file="./test/data/matacdc_scripts/case5_2grids_MC.m"
-file = "./test/data/matacdc_scripts/case5_2grids_MC_pf.m"
+# file = "./test/data/matacdc_scripts_pf/case5_2grids_MC_pf.m"
+file = "./test/data/matacdc_scripts_pf/case5_2grids_MC_pf_1BP.m"
 
-datadc_new = build_mc_data!(file)
-# datadc_new = build_mc_data!("./test/data/matacdc_scripts/3grids_MC.m")
+
+# datadc_new = build_mc_data!(file)
+# datadc_new = build_mc_data!("./test/data/matacdc_scripts_pf/3grids_MC.m")
 s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
 resultAC = _PMACDC.run_acdcopf(file, _PM.ACPPowerModel, ipopt_solver, setting=s)
 
@@ -139,6 +61,11 @@ for (cv, convdc) in data["convdc"]
     convdc["P_g"] = -resultAC["solution"]["convdc"]["$busdc"]["pgrid"]
     display(convdc["busdc_i"])
     display(resultAC["solution"]["convdc"]["$busdc"]["qconv"])
+    if cv=="3"
+        # "to introduce change in conv", "$cv")
+        display(convdc["P_g"])
+        convdc["P_g"]=1.1*convdc["P_g"]
+    end
 
 end
 for (bd, busdc) in data["busdc"]
@@ -152,10 +79,10 @@ end
 resultAC_pf = _PMACDC.run_acdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting=s)
 
 s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true)
-result_mcdc_opf = PowerModelsMCDC.run_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting=s)
-result_mcdc_pf = PowerModelsMCDC.run_mcdcpf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting=s)
+result_mcdc_opf = PowerModelsMCDC.solve_mcdcopf(file, _PM.ACPPowerModel, ipopt_solver, setting=s)
+result_mcdc_pf = PowerModelsMCDC.solve_mcdcpf(file, _PM.ACPPowerModel, ipopt_solver, setting=s)
 
-data = build_mc_data!(file)
+data = PowerModelsMCDC.parse_file(file)
 
 for (g, gen) in data["gen"]
     bus = gen["gen_bus"]
@@ -172,18 +99,19 @@ for (cv, convdc) in data["convdc"]
         convdc["Vdcset"] = result_mcdc_opf["solution"]["busdc"]["$busdc"]["vm"]                # display(convdc["Vdcset"])
     end
 
+
     convdc["Q_g"] = -result_mcdc_opf["solution"]["convdc"]["$cv"]["qgrid"]
     convdc["P_g"] = -result_mcdc_opf["solution"]["convdc"]["$cv"]["pgrid"]
     
-    " to introduce change"
-    if cv=="2"
-        # display("to introduce change in conv", "$cv")
-        # display(convdc["P_g"])
-        convdc["P_g"]=1.1*convdc["P_g"]
+    # "to introduce change"
+    if cv=="5"
+        # "to introduce change in conv", "$cv")
+        display(convdc["P_g"])
+        convdc["P_g"]=1*convdc["P_g"]
     end
-    display("p and v setting")
-    display(convdc["P_g"])
-    display(convdc["Vdcset"])
+    # display("p and v setting")
+    # display(convdc["P_g"])
+    # display(convdc["Vdcset"])
 end
 
 for (bd, busdc) in data["busdc"]
@@ -197,8 +125,8 @@ for (b, bus) in data["bus"]
 
 end
 
-result_mcdc_opf1 = PowerModelsMCDC.run_mcdcopf(data, _PM.ACPPowerModel, ipopt_solver, setting=s)
-result_mcdc_pf1 = PowerModelsMCDC.run_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting=s)
+result_mcdc_opf1 = PowerModelsMCDC.solve_mcdcopf(data, _PM.ACPPowerModel, ipopt_solver, setting=s)
+result_mcdc_pf1 = PowerModelsMCDC.solve_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting=s)
 
 # for (cv, convdc) in data["convdc"]
 #     a=convdc["P_g"]
@@ -223,7 +151,7 @@ result_mcdc_pf1 = PowerModelsMCDC.run_mcdcpf(data, _PM.ACPPowerModel, ipopt_solv
 # end
 #
 # result_mcdc_opf2 = PowerModelsMCDC.run_mcdcopf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
-# result_mcdc_pf2 = PowerModelsMCDC.run_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
+# result_mcdc_pf2 = PowerModelsMCDC.solve_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
 #
 # for (cv, convdc) in data["convdc"]
 #             busdc = convdc["busdc_i"]
@@ -239,8 +167,7 @@ result_mcdc_pf1 = PowerModelsMCDC.run_mcdcpf(data, _PM.ACPPowerModel, ipopt_solv
 # end
 #
 # result_mcdc_opf3 = PowerModelsMCDC.run_mcdcopf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
-# result_mcdc_pf3 = PowerModelsMCDC.run_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
-
+# result_mcdc_pf3 = PowerModelsMCDC.solve_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting = s)
 
 
 #
@@ -448,19 +375,41 @@ println("termination status of the pf is:", result_mcdc_pf1["termination_status"
 println("Objective value of the opf is:", result_mcdc_opf1["objective"])
 println("Objective value of the pf is:", result_mcdc_pf1["objective"])
 
-# println(".....conv....")
-# println(".....pgrid....")
-# for (i,conv) in result_mcdc_pf1["solution"]["convdc"]
-#      # display("power from grid to dc at converter $i")
-#      a= conv["pgrid"]
-#     display("$i, $a")
-# end
+println(".....conv....")
+println(".....pgrid....")
+for (i,conv) in result_mcdc_opf1["solution"]["convdc"]
+     # display("power from grid to dc at converter $i")
+     a= conv["pgrid"]
+    display("$i, $a")
+end
 
-# println("DC bus Vm")
-# for (i,dcbus) in result_mcdc_pf1["solution"]["busdc"]
-#     b=dcbus["vm"]
-#     display("$i, $b")
-# end
+println("DC bus Vm OPF")
+for (i,dcbus) in result_mcdc_opf1["solution"]["bus"]
+    b=dcbus["vm"]
+    display("$i, $b")
+end
+
+println("DC bus Vm pf")
+for (i,dcbus) in result_mcdc_pf1["solution"]["bus"]
+    b=dcbus["vm"]
+    display("$i, $b")
+end
+
+
+
+
+_PM.component_table(result_mcdc_opf1["solution"], "bus", ["va"])
+_PM.component_table(result_mcdc_pf1["solution"], "bus", ["va"])
+[_PM.component_table(result_mcdc_opf1["solution"], "busdc", ["vm"]) _PM.component_table(result_mcdc_pf1["solution"], "busdc", ["vm"])]
+[_PM.component_table(result_mcdc_opf1["solution"], "branchdc", ["i_from"]) _PM.component_table(result_mcdc_pf1["solution"], "branchdc", ["i_from"])]
+[_PM.component_table(result_mcdc_opf1["solution"], "convdc", ["pgrid"]) _PM.component_table(result_mcdc_pf1["solution"], "convdc", ["pgrid"])]
+[_PM.component_table(result_mcdc_opf1["solution"], "gen", ["pg"]) _PM.component_table(result_mcdc_pf1["solution"], "gen", ["pg"])]
+
+# _PM.component_table(result_mcdc_pf1["solution"], "gen", ["pg"])
+
+[_PM.component_table(resultAC["solution"], "bus", ["va"]) _PM.component_table(resultAC_pf["solution"], "bus", ["va"])]
+[_PM.component_table(resultAC["solution"], "gen", ["pg"]) _PM.component_table(resultAC_pf["solution"], "gen", ["pg"])]
+[_PM.component_table(resultAC["solution"], "convdc", ["pgrid"]) _PM.component_table(resultAC_pf["solution"], "convdc", ["pgrid"])]
 
 # println("termination status of the opf is:", result_mcdc_opf2["termination_status"])
 # println("termination status of the pf is:", result_mcdc_pf2["termination_status"])
