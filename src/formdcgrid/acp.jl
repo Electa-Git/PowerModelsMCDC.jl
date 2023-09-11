@@ -59,8 +59,8 @@ function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::I
     for k in 1:2
         for (c, d) in bus_convs_dc_cond[(dc_bus, k)]
             if c == i
-                display("dc voltage constraint for conv $i")
-                display(JuMP.@constraint(pm.model, v[k] == conv["Vdcset"][d]))
+                # display("dc voltage constraint for conv $i")
+                (JuMP.@constraint(pm.model, v[k] == conv["Vdcset"][d]))
             end
         end
     end

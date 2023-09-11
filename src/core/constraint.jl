@@ -20,19 +20,19 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int,
     "load (-pd[k] excluded), to be thought later"
 
     for k = 1:total_cond
-        display(JuMP.@constraint(pm.model, sum(i_dcgrid[c][d] for (c, d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(iconv_dc[c][d] for (c, d) in bus_convs_dc_cond[(i, k)]) + sum(iconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, k)]) == 0))
+        (JuMP.@constraint(pm.model, sum(i_dcgrid[c][d] for (c, d) in bus_arcs_dcgrid_cond[(i, k)]) + sum(iconv_dc[c][d] for (c, d) in bus_convs_dc_cond[(i, k)]) + sum(iconv_dcg_shunt[c] for c in bus_convs_grounding_shunt[(i, k)]) == 0))
     end
 end
 
 "`pconv[i] == pconv`"
 function constraint_active_conv_setpoint(pm::_PM.AbstractPowerModel, n::Int, i, pconv_cond, cond)
     pconv_var = _PM.var(pm, n, :pconv_tf_fr, i)
-    display(JuMP.@constraint(pm.model, pconv_var[cond] == -pconv_cond))
+    (JuMP.@constraint(pm.model, pconv_var[cond] == -pconv_cond))
 end
 
 "`qconv[i] == qconv`"
 function constraint_reactive_conv_setpoint(pm::_PM.AbstractPowerModel, n::Int, i, qconv_cond, cond)
     qconv_var = _PM.var(pm, n, :qconv_tf_fr, i)
 
-    display(JuMP.@constraint(pm.model, qconv_var[cond] == -qconv_cond))
+    (JuMP.@constraint(pm.model, qconv_var[cond] == -qconv_cond))
 end
