@@ -1,4 +1,11 @@
 
+# Lookup table for monopolar branchdc/convdc "connect_at" parameter to busdc terminals (1, 2 and 3 are positive, negative and neutral respectively)
+const _component_busdc_terminal_lookup = Dict{Int, Vector{Int}}(
+    0 => [1, 2],
+    1 => [1, 3],
+    2 => [2, 3]
+)
+
 function get_pu_bases(MVAbase, kVbase)
     eurobase = 1 #
     hourbase = 1 #
