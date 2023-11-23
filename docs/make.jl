@@ -3,6 +3,7 @@ using Documenter, PowerModelsMCDC
 makedocs(
     modules = [PowerModelsMCDC],
     sitename = "PowerModelsMCDC",
+    warnonly = :missing_docs,
     pages = [
         "Home" => "index.md"
         "Manual" => [
