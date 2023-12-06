@@ -277,9 +277,21 @@ function fix_data_multinetwork!(data)
 end
 
 function check_branchdc_parameters(branchdc)
+    branchdc_id = branchdc["index"]
     @assert(branchdc["rateA"] >= 0)
     @assert(branchdc["rateB"] >= 0)
     @assert(branchdc["rateC"] >= 0)
+    # Check if multi-conductor status parameters are defined
+    status = ["status_p", "status_n", "status_r"]
+    check = haskey.(Ref(branchdc), status)
+    if sum(check) == 0
+        Memento.warn(_PM._LOGGER, "Parameters `status_p`, `status_n` and `status_r` are not defined for DC branch $branchdc_id. It is assumed that all conductors are active.")
+        for key in status
+            branchdc[key] = 1
+        end
+    elseif 1 <= sum(check) < 3
+        Memento.error(_PM._LOGGER, "Some parameters among `status_p`, `status_n` and `status_r` are not defined for DC branch $branchdc_id.")
+    end
 end
 
 function set_branchdc_pu(branchdc, MVAbase)
@@ -351,6 +363,17 @@ function check_conv_parameters(conv)
     @assert(conv["Qacmax"] >= conv["Qacmin"])
     @assert(conv["Pacrated"] >= 0)
     @assert(conv["Qacrated"] >= 0)
+    # Check if multi-conductor status parameters are defined
+    status = ["status_p", "status_n"]
+    check = haskey.(Ref(conv), status)
+    if sum(check) == 0
+        Memento.warn(_PM._LOGGER, "Parameters `status_p` and `status_n` are not defined for converter $conv_id. It is assumed that all poles are active.")
+        for key in status
+            conv[key] = 1
+        end
+    elseif sum(check) == 1
+        Memento.error(_PM._LOGGER, "Parameter `$(first(status[.!check]))` is not defined for converter $conv_id.")
+    end
 end
 
 function get_branchdc(matpowerdcline, branch_i, fbusdc, tbusdc)
