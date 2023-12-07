@@ -5,7 +5,12 @@ import PowerModelsMCDC as _PMMCDC
 import Ipopt
 
 nlp_solver = _PMMCDC.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
-file = "./test/data/matacdc_scripts/case5_2grids_MC.m"
+
+test_case = "case5_2grids_MC.m"
+
+#file = "$(dirname(@__DIR__))/test/data/matacdc_scripts_opf_paper/balanced/$(test_case)"
+file = "$(dirname(@__DIR__))/test/data/matacdc_scripts_opf_paper/unbalanced/$(test_case)"
+
 
 s = Dict("conv_losses_mp" => false)
 result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.ACPPowerModel, nlp_solver, setting=s)

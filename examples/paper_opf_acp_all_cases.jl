@@ -8,27 +8,16 @@ using Ipopt
 ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
 
 
-# file="./test/data/matacdc_scripts/case5_2grids_MC.m"
-# file="./test/data/matacdc_scripts/case39_mcdc.m"
-# file="./test/data/matacdc_scripts/case67mcdc_scopf4.m"
-# file="./test/data/matacdc_scripts/case3120sp_mcdc.m"
+test_case = "case5_2grids_MC.m"
 
-file = "./test/data/matacdc_scripts_opf_paper/balanced/case5_2grids_MC.m"
-# file="./test/data/matacdc_scripts_opf_paper/balanced/case39_mcdc.m"
-# file="./test/data/matacdc_scripts_opf_paper/balanced/case67mcdc_scopf4.m"
-# file="./test/data/matacdc_scripts_opf_paper/balanced/case3120sp_mcdc.m"
-
-# file="./test/data/matacdc_scripts_opf_paper/unbalanced/case5_2grids_MC.m"
-# file="./test/data/matacdc_scripts_opf_paper/unbalanced/case39_mcdc.m"
-# file="./test/data/matacdc_scripts_opf_paper/unbalanced/case67mcdc_scopf4.m"
-# file="./test/data/matacdc_scripts_opf_paper/unbalanced/case3120sp_mcdc.m"
+file = "$(dirname(@__DIR__))/test/data/matacdc_scripts_opf_paper/unbalanced/$(test_case)"
 
 
 s = Dict("conv_losses_mp" => false)
 result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.ACPPowerModel, ipopt_solver, setting=s)
 
 #--------------------------------------------------------------------------------------------------------
-dc_data = PowerModels.parse_file(file)
+dc_data = _PM.parse_file(file)
 _PMACDC.process_additional_data!(dc_data)
 
 result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting=s)
@@ -46,27 +35,22 @@ println(" solve time mcdc_opf is:", result_mcdc["solve_time"])
 
 #########
 
-# N=100
-# solve_time_dc=Dict([(l, Dict([("$i", 0.0000) for i in 1:4])) for l in 1:N])
+for (conv_id, conv) in dc_data["convdc"]
+    print("Converter $(conv_id) has: \n")
+    print("      Conv_confi $(conv["conv_confi"])","\n")
+    print("      Connect_at $(conv["connect_at"])","\n")
+    print("      ground_type $(conv["ground_type"])","\n")
+    print("      ground_z  $(conv["ground_z"])","\n")
+    print("\n")
+    print("\n")
+end
 
-# for k=1:N
-
-#   result_mcdc = _PMMCDC.solve_mcdcopf(datadc_new, _PM.ACPPowerModel, ipopt_solver, setting = s)
-#   result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting = s)
-
-
-#     #  solve_time_dc[k]["1"] = result_mcdc["termination_status"]
-#      solve_time_dc[k]["2"] = result_mcdc["solve_time"]
-#     #  solve_time_dc[k]["3"] = result_acdc["termination_status"]
-#      solve_time_dc[k]["4"] = result_acdc["solve_time"]
-
-# end
-
-# avg_solvetime_mcdc= sum(solve_time_dc[k]["2"] for k in 1:N)/N
-# avg_solvetime_acdc= sum(solve_time_dc[k]["4"] for k in 1:N)/N
-
-# println(" Objective mcdc_opf is:", result_mcdc["objective"])
-# println(" Objective acdc_opf is:", result_acdc["objective"])
-
-# println(" avg_solvetime_mcdcf is:",avg_solvetime_mcdc)
-# println(" avg_solvetime_acdcf is:",avg_solvetime_acdc)
+for (br_id, br) in dc_data["branchdc"]
+    print("DC branch $(br_id) has: \n")
+    print("      line_confi $(br["line_confi"])","\n")
+    print("      Connect_at $(br["connect_at"])","\n")
+    print("      return_type $(br["return_type"])","\n")
+    print("      return_z  $(br["return_z"])","\n")
+    print("\n")
+    print("\n")
+end
