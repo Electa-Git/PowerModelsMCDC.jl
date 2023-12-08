@@ -23,7 +23,6 @@ const _conductorless = Set(["basekVdc", "source_id", "busdc_i", "grid", "index",
 # "P_g", "Q_g", removed due to conv set point. Should be tackled differently if multiconductor of AC is considered
 # "dVdcset", "Vdcset", removed for giving pf setpoints
 #"Pdcset", "droop",
-#TODO: "status" can be made multiconductor when incorporated in the model.
 
 "only dc side data"
 const _DCdata = ["busdc", "convdc", "branchdc"]
@@ -49,8 +48,14 @@ function _make_multiconductor!(data::Dict{String,<:Any})
                                 item_ref_data[param] = value
                             elseif param == "status"
                                 item_ref_data[param] = conductorsDC_status(item_data) .* item_data[param]
+                            elseif key == "busdc" && in(param, ["Vdcmin", "Vdcmax"])
+                                item_ref_data[param] = terminalDC_voltage(item_data, param)
                             else
                                 item_ref_data[param] = fill(value, conductors)
+                                # Adjust resistance of branchdc metallic return
+                                if key == "branchdc" && param == "r"
+                                    item_ref_data[param][conductors] = item_data["return_z"]
+                                end
                             end
                         end
                         item[item_id] = item_ref_data
@@ -82,6 +87,7 @@ function conductorsDC_number(item_data::Dict{String,<:Any})
     return conductors
 end
 
+"Generate vector of multi-conductor status states for `convdc` and `branchdc` components"
 function conductorsDC_status(item_data::Dict{String,<:Any})
     poles = Vector{Int}()
     if haskey(item_data, "conv_confi")
@@ -98,4 +104,10 @@ function conductorsDC_status(item_data::Dict{String,<:Any})
         end
     end
     return [item_data[key] for key in _DCstatus[poles]]
+end
+
+"Adjust voltage bounds for multi-conductor `busdc` terminals"
+function terminalDC_voltage(item_data::Dict{String,<:Any}, param::String)
+    atol = item_data[param] - 1
+    return atol .+ [1, -1, 0]
 end
