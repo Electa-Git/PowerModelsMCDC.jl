@@ -66,3 +66,38 @@ function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::I
     end
 
 end
+
+function constraint_ac_voltage_setpoint(pm::_PM.AbstractACPModel, nw ::Int, i ::Int )
+    ac_bus = _PM.ref(pm, nw, :convdc, i)["busac_i"]
+    # @assert bus["bus_type"] == 2
+    _PM.constraint_voltage_magnitude_setpoint(pm, ac_bus)
+end
+
+function constraint_dc_droop_control(pm::_PM.AbstractACPModel, n::Int, i::Int, busdc_i, vref_dc, pref_dc, k_droop, cond)
+    pconv_dc = _PM.var(pm, n, :pconv_dc, i)
+    # vdc = _PM.var(pm, n, :vdcm, busdc_i)
+
+    conv = _PM.ref(pm, n, :convdc, i)
+    dc_bus = _PM.ref(pm, n, :convdc, i)["busdc_i"]
+    v = _PM.var(pm, n, :vdcm, dc_bus)
+
+    bus_convs_dc_cond = _PM.ref(pm, n, :bus_convs_dc_cond)
+    for k in 1:2
+        for (c, d) in bus_convs_dc_cond[(dc_bus, k)]
+            if c == i
+                # (JuMP.@constraint(pm.model, v[k] == conv["Vdcset"][d]))
+                display("dc droop constraint for conv $i")
+                # @show pconv_dc pref_dc[1] k_droop[1] vref_dc[1]
+                display(JuMP.@constraint(pm.model, -pconv_dc[cond] == pref_dc[cond] - sign(pref_dc[cond])*sign(vref_dc[cond])* 1 / k_droop[cond] * (v[k] - vref_dc[cond])) )       
+             end
+        end
+    end
+end
+
+function constraint_ac_droop_control(pm::_PM.AbstractACPModel, n::Int, i::Int, busac_i, vref_ac, qref, k_droop_ac, cond)
+    qconv = _PM.var(pm, n, :qconv_tf_fr, i)[cond]
+    vac = _PM.var(pm, n, :vm, busac_i)
+    @show qconv, qref[cond], k_droop_ac[cond], vac, vref_ac
+    display("ac droop constraint for conv $i")
+    display(JuMP.@constraint(pm.model, -qconv == qref[cond] - sign(qref[cond]) * 1 / k_droop_ac[cond] * (vac - vref_ac[cond])))
+end

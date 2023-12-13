@@ -17,7 +17,6 @@ function build_mcdcopf(pm::_PM.AbstractPowerModel)
     _PM.variable_gen_power(pm, bounded=true)
     _PM.variable_branch_power(pm, bounded=true)
 
-    variable_mc_active_dcbranch_flow(pm, bounded=true)
     variable_mcdcgrid_voltage_magnitude(pm, bounded=true)
     variable_mcdc_converter(pm, bounded=true)
 

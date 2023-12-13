@@ -84,6 +84,11 @@ function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractPowerModel, i:
     constraint_dc_voltage_magnitude_setpoint(pm, nw, i)
 end
 
+function constraint_ac_voltage_setpoint(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    constraint_ac_voltage_setpoint(pm, nw, i)
+end
+
+
 function constraint_conv_reactor(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
 
@@ -118,4 +123,24 @@ function constraint_conv_firing_angle(pm::_PM.AbstractPowerModel, i::Int; nw::In
         constraint_conv_firing_angle(pm, nw, i, S, P1, Q1, P2, Q2, cond)
     end
 
+end
+
+
+function constraint_dc_droop_control(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    conv = _PM.ref(pm, nw, :convdc, i)
+    bus = _PM.ref(pm, nw, :busdc, conv["busdc_i"])
+    
+    for cond in 1:conv["conductors"]
+        constraint_dc_droop_control(pm, nw, i, conv["busdc_i"], conv["Vdcset"], conv["Pdcset"], conv["droop"], cond)
+    end
+end
+
+function constraint_ac_droop_control(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    conv = _PM.ref(pm, nw, :convdc, i)
+    # bus = _PM.ref(pm, nw, :busdc, conv["busac_i"]) #verify
+    
+    for cond in 1:conv["conductors"]
+        #modify the function inputs for ac-droop
+        constraint_ac_droop_control(pm, nw, i, conv["busac_i"], conv["Vacset"], conv["Qacset"], conv["droop_ac"], cond)
+    end
 end

@@ -42,3 +42,11 @@ end
 function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractDCPModel, n::Int, i)
     # not used
 end
+
+function constraint_dc_droop_control(pm::_PM.AbstractDCPModel, n::Int,  i::Int, busdc_i, vref_dc, pref_dc, k_droop, cond)
+     # not used
+end
+
+function constraint_ac_droop_control(pm::_PM.AbstractDCPModel, n::Int, i::Int, busac_i, vref_ac, qref, k_droop_ac, cond)
+     # not used
+end

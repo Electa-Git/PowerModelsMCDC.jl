@@ -1,5 +1,7 @@
 function mpc = case5_2gr_PM.ids()
-%case 5 nodes    Power flow data for 5 bus, 2 generator case.
+%case 5 nodes    Power flow data for 5 bus, 2 generator case
+% a monopolar tapping over bipolar link is considered 
+
 %   Please see 'help caseformat' for details on the case file format.
 %
 %   case file can be used together with dc case files "case5_stagg_....m"
@@ -36,12 +38,12 @@ mpc.bus = [
 %% generator data
 %	bus	Pg      Qg	Qmax	Qmin	Vg	mBase       status	Pmax	Pmin	pc1 pc2 qlcmin qlcmax qc2min qc2max ramp_agc ramp_10 ramp_30 ramp_q apf
 mpc.gen = [
-	1	0       0	500      -500    1.06	100       1       250     10 0 0 0 0 0 0 0 0 0 0 0;
-  2	40      0	300      -300    1      100       1       300     10 0 0 0 0 0 0 0 0 0 0 0;
-  6	0       0	500      -500    1.06	100       1       250     10 0 0 0 0 0 0 0 0 0 0 0;
-  7	40      0	300      -300    1      100       1       300     10 0 0 0 0 0 0 0 0 0 0 0;
-  11	40      0	300      -300    1      100       1       300     10 0 0 0 0 0 0 0 0 0 0 0;
-  12	40      0	300      -300    1      100       1       300     10 0 0 0 0 0 0 0 0 0 0 0;
+	1	  0       0	 500  -500    1.06	  100       1       250     10 0 0 0 0 0 0 0 0 0 0 0;
+  2	  40      0	 300  -300    1       100       1       300     10 0 0 0 0 0 0 0 0 0 0 0;
+  6	  0       0	 500  -500    1.06	  100       1       250     10 0 0 0 0 0 0 0 0 0 0 0;
+  7	  40      0	 300  -300    1       100       1       300     10 0 0 0 0 0 0 0 0 0 0 0;
+  11	40      0	 300  -300    1       100       1       300     10 0 0 0 0 0 0 0 0 0 0 0;
+  12	40      0	 300  -300    1       100       1       300     10 0 0 0 0 0 0 0 0 0 0 0;
 ];
 
 %% branch data
@@ -72,20 +74,20 @@ mpc.dcpol=2;
 %% bus data
 %column_names%   busdc_i grid    Pdc     Vdc     basekVdc    Vdcmax  Vdcmin  Cdc
 mpc.busdc = [
-  1              1       0       1       345         1.1     0.9     0;
-  2              1       0       1       345         1.1     0.9     0;
-	3              1       0       1       345         1.1     0.9     0;
-	4              1       0       1       345         1.1     0.9     0;
+                   1       1       0       1       345         1.1     0.9     0;
+                   2       1       0       1       345         1.1     0.9     0;
+              	   3       1       0       1       345         1.1     0.9     0;
+              	   4       1       0       1       345         1.1     0.9     0;
 ];
 
 %% converters
-%column_names%   busdc_i busac_i type_dc type_ac P_g   Q_g   islcc Vtar    rtf xtf  transformer tm   bf filter    rc      xc  reactor   basekVac    Vmmax   Vmmin   Imax    status   LossA LossB  LossCrec LossCinv  droop      Pdcset    Vdcset  dVdcset Pacmax Pacmin Qacmax Qacmin conv_confi connect_at ground_type ground_z
+%column_names%   busdc_i busac_i type_dc type_ac  P_g   Q_g   islcc Vtar    rtf xtf  transformer tm   bf  filter  rc    xc  reactor   basekVac    Vmmax   Vmmin    Imax   status   LossA LossB  LossCrec LossCinv   droop      Pdcset    Vdcset  dVdcset   droop_ac    Qacset    Vacset    Pacmax Pacmin Qacmax Qacmin conv_confi connect_at ground_type ground_z
 mpc.convdc = [
-    1       2   2       1       -60    -40    0 1     0.01  0.01 1 1 0.01 1 0.01   0.01 1  345         1.1     0.9     1.1     1       1.103 0.887  2.885    1.885      0.0050    -58.6274   1.0079   0 100 -100 50 -50 1 1 1 0.5 ;
-    2       7   1       1       0       0     0 1     0.01  0.01 1 1 0.01 1 0.01   0.01 1  345         1.1     0.9     1.1     1       1.103 0.887  2.885    2.885      0.0070     21.9013   1.0000   0 100 -100 50 -50 1 1 0 0.5 ;
-		3      11   2       2       0       0     0 1     0.01  0.01 1 1 0.01 1 0.01   0.01 1  345         1.1     0.9     1.1     1       1.103 0.887  2.885    2.885      0.0070     21.9013   1.0000   0 100 -100 50 -50 1 2 0 0.5 ;
-    1      12   1       1       0        0    0 1     0.01  0.01 1 1 0.01 1 0.01   0.01 1  345         1.1     0.9     1.1     1       1.103 0.887  2.885    1.885      0.0050    -58.6274   1.0079   0 100 -100 50 -50 1 2 0 0.5 ;
-    2       7   1       1       0       0     0 1     0.01  0.01 1 1 0.01 1 0.01   0.01 1  345         1.1     0.9     1.1     1       1.103 0.887  2.885    2.885      0.0070     21.9013   1.0000   0 100 -100 50 -50 1 2 0 0.5 ;
+                    1       2     2       1       -60    -40    0 1        0.01  0.01   1   1         0.01 1      0.01   0.01 1         345         1.1     0.9     1.1     1       1.103 0.887  2.885    1.885      0.0050    -58.6274   1.0079   0       0.0050    -58.6274   1.0079    100 -100     50 -50              1         1          1        0.5 ;
+                    2       7     1       1       0       0     0 1        0.01  0.01   1   1         0.01 1      0.01   0.01 1         345         1.1     0.9     1.1     1       1.103 0.887  2.885    2.885      0.0070     21.9013   1.0000   0       0.0070     21.9013   1.0000    100 -100     50 -50              1         1          0        0.5 ;
+                		3      11     2       1       0       0     0 1        0.01  0.01   1   1         0.01 1      0.01   0.01 1         345         1.1     0.9     1.1     1       1.103 0.887  2.885    2.885      0.0070     21.9013   1.0000   0       0.0070     21.9013   1.0000    100 -100     50 -50              1         2          0        0.5 ;
+                    1      12     1       1       0        0    0 1        0.01  0.01   1   1         0.01 1      0.01   0.01 1         345         1.1     0.9     1.1     1       1.103 0.887  2.885    1.885      0.0050    -58.6274   1.0079   0       0.0050    -58.6274   1.0079    100 -100     50 -50              1         2          0        0.5 ;
+                    2       7     3       3       0       0     0 1        0.01  0.01   1   1         0.01 1      0.01   0.01 1         345         1.1     0.9     1.1     1       1.103 0.887  2.885    2.885      0.0070     21.9013   1.0000   0       0.0070     21.9013   1.0000    100 -100     50 -50              1         2          0        0.5 ;
 ];
 
 %% branches

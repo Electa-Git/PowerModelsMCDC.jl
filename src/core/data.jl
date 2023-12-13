@@ -526,6 +526,9 @@ function build_mc_data!(base_data)
             conv["Pacmax"] = conv["Pacmax"] / 2
             conv["Pacmin"] = conv["Pacmin"] / 2
             conv["Pacrated"] = conv["Pacrated"] / 2
+            conv["Qacmax"] = conv["Qacmax"] / 2
+            conv["Qacmin"] = conv["Qacmin"] / 2
+            conv["Qacrated"] = conv["Qacrated"] / 2
         end
     end
 
