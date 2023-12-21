@@ -7,6 +7,7 @@ import Memento
 import JuMP
 import InfrastructureModels as _IM
 import PowerModels as _PM
+import PowerModelsTopologicalActionsII as _PMTP
 
 
 ## Memento settings
@@ -37,6 +38,7 @@ include("formdcgrid/acp.jl")
 include("formconv/acp.jl")
 
 include("prob/mcdcopf.jl")
+include("prob/mcdcopf_bs.jl")
 
 include("io/parse.jl")
 
