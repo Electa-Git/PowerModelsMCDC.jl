@@ -1,4 +1,11 @@
 
+# Lookup table for monopolar branchdc/convdc "connect_at" parameter to busdc terminals (1, 2 and 3 are positive, negative and neutral respectively)
+const _component_busdc_terminal_lookup = Dict{Int, Vector{Int}}(
+    0 => [1, 2],
+    1 => [1, 3],
+    2 => [2, 3]
+)
+
 function get_pu_bases(MVAbase, kVbase)
     eurobase = 1 #
     hourbase = 1 #
@@ -270,9 +277,23 @@ function fix_data_multinetwork!(data)
 end
 
 function check_branchdc_parameters(branchdc)
+    branchdc_id = branchdc["index"]
     @assert(branchdc["rateA"] >= 0)
     @assert(branchdc["rateB"] >= 0)
     @assert(branchdc["rateC"] >= 0)
+    # Convert data from equivalent parallel representation to single pole (in case of bipolar converter)
+    from_equivalent_parallel_data!(branchdc)
+    # Check if multi-conductor status parameters are defined
+    status = ["status_p", "status_n", "status_r"]
+    check = haskey.(Ref(branchdc), status)
+    if sum(check) == 0
+        Memento.warn(_PM._LOGGER, "Parameters `status_p`, `status_n` and `status_r` are not defined for DC branch $branchdc_id. It is assumed that all conductors are active.")
+        for key in status
+            branchdc[key] = 1
+        end
+    elseif 1 <= sum(check) < 3
+        Memento.error(_PM._LOGGER, "Some parameters among `status_p`, `status_n` and `status_r` are not defined for DC branch $branchdc_id.")
+    end
 end
 
 function set_branchdc_pu(branchdc, MVAbase)
@@ -344,6 +365,50 @@ function check_conv_parameters(conv)
     @assert(conv["Qacmax"] >= conv["Qacmin"])
     @assert(conv["Pacrated"] >= 0)
     @assert(conv["Qacrated"] >= 0)
+    # Convert data from equivalent parallel representation to single pole (in case of bipolar converter)
+    from_equivalent_parallel_data!(conv)
+    # Check if multi-conductor status parameters are defined
+    status = ["status_p", "status_n"]
+    check = haskey.(Ref(conv), status)
+    if sum(check) == 0
+        Memento.warn(_PM._LOGGER, "Parameters `status_p` and `status_n` are not defined for converter $conv_id. It is assumed that all poles are active.")
+        for key in status
+            conv[key] = 1
+        end
+    elseif sum(check) == 1
+        Memento.error(_PM._LOGGER, "Parameter `$(first(status[.!check]))` is not defined for converter $conv_id.")
+    end
+end
+
+"Convert equivalent parallel data of bipolar `convdc` and `branchdc` to data for single pole/conductor"
+function from_equivalent_parallel_data!(data)
+
+    if haskey(data, "conv_confi") && data["conv_confi"] == 2
+        data["rtf"] = data["rtf"] * 2
+        data["xtf"] = data["xtf"] * 2
+        data["bf"] = data["bf"] / 2
+        data["rc"] = data["rc"] * 2
+        data["xc"] = data["xc"] * 2
+        data["LossB"] = data["LossB"]
+        data["LossA"] = data["LossA"] / 2
+        data["LossCrec"] = data["LossCrec"] * 2
+        data["LossCinv"] = data["LossCinv"] * 2
+
+        data["Imax"] = data["Imax"] / 2
+        data["Pacmax"] = data["Pacmax"] / 2
+        data["Pacmin"] = data["Pacmin"] / 2
+        data["Pacrated"] = data["Pacrated"] / 2
+
+        data["Qacmax"] = data["Qacmax"] / 2
+        data["Qacmin"] = data["Qacmin"] / 2
+        data["Qacrated"] = data["Qacrated"] / 2
+    
+    elseif haskey(data, "line_confi") && data["line_confi"] == 2
+        data["rateA"] = data["rateA"]  / 2
+        data["rateB"] = data["rateB"] / 2
+        data["rateC"] = data["rateC"] / 2
+    end
+    return nothing
 end
 
 function get_branchdc(matpowerdcline, branch_i, fbusdc, tbusdc)
@@ -489,53 +554,8 @@ end
 
 function build_mc_data!(base_data)
 
-    # Make lossless conv parameters and impedances
-    for (c, conv) in base_data["convdc"]
-        if conv["conv_confi"] == 2
-            conv["rtf"] = 2 * conv["rtf"]
-            conv["xtf"] = 2 * conv["xtf"]
-            conv["bf"] = 0.5 * conv["bf"]
-            conv["rc"] = 2 * conv["rc"]
-            conv["xc"] = 2 * conv["xc"]
-            conv["LossB"] = conv["LossB"]
-            conv["LossA"] = 0.5 * conv["LossA"]
-            conv["LossCrec"] = 2 * conv["LossCrec"]
-            conv["LossCinv"] = 2 * conv["LossCinv"]
-        end
-    end
-
     process_additional_data!(base_data)
-    _make_multiconductor!(base_data)
-
-    # Adjust line limits
-    for (c, bn) in base_data["branchdc"]
-        if bn["line_confi"] == 2
-            bn["rateA"] = bn["rateA"] / 2
-            bn["rateB"] = bn["rateB"] / 2
-            bn["rateC"] = bn["rateC"] / 2
-        end
-        metallic_cond_number = bn["conductors"]
-
-        bn["r"][metallic_cond_number] = bn["return_z"]
-
-    end
-
-    # Adjust converter limits
-    for (c, conv) in base_data["convdc"]
-        if conv["conv_confi"] == 2
-            conv["Pacmax"] = conv["Pacmax"] / 2
-            conv["Pacmin"] = conv["Pacmin"] / 2
-            conv["Pacrated"] = conv["Pacrated"] / 2
-        end
-    end
-
-    # Adjust metallic return bus voltage limits
-    for (i, busdc) in base_data["busdc"]
-        busdc["Vdcmax"][3] = busdc["Vdcmax"][1] - 1.0
-        busdc["Vdcmin"][3] = -(1 - busdc["Vdcmin"][1])
-        busdc["Vdcmax"][2] = -busdc["Vdcmin"][1]
-        busdc["Vdcmin"][2] = -busdc["Vdcmax"][1]
-    end
+    make_multiconductor!(base_data)
 
     return base_data
 end

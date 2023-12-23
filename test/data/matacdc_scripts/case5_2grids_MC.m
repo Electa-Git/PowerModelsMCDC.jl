@@ -98,17 +98,17 @@ mpc.busdc = [
 ];
 
 %% converter
-%column_names% busdc_i busac_i type_dc type_ac P_g Q_g islcc Vtar  rtf xtf transformer tm   bf filter   rc   xc reactor basekVac Vmmax Vmmin Imax status LossA LossB LossCrec LossCinv  droop   Pdcset Vdcset dVdcset Pacmax Pacmin Qacmax Qacmin conv_confi connect_at ground_type ground_z
+%column_names% busdc_i busac_i type_dc type_ac P_g Q_g islcc Vtar  rtf xtf transformer tm   bf filter   rc   xc reactor basekVac Vmmax Vmmin Imax status LossA LossB LossCrec LossCinv  droop   Pdcset Vdcset dVdcset Pacmax Pacmin Qacmax Qacmin conv_confi connect_at ground_type ground_z status_p status_n
 mpc.convdc = [
-                     1       2       2       1 -60 -40     0    1 0.01 0.01          1  1 0.01      1 0.01 0.01       1      345   1.1   0.9  1.1      1 1.103 0.887    2.885    1.885 0.0050 -58.6274 1.0079       0    100   -100     50    -50          2          0           1      0.5;
-                     2       7       1       1   0   0     0    1 0.01 0.01          1  1 0.01      1 0.01 0.01       1      345   1.1   0.9  1.1      1 1.103 0.887    2.885    2.885 0.0070  21.9013 1.0000       0    100   -100     50    -50          2          0           0      0.5;
-                     3      11       1       1   0   0     0    1 0.01 0.01          1  1 0.01      1 0.01 0.01       1      345   1.1   0.9  1.1      1 1.103 0.887    2.885    2.885 0.0070  21.9013 1.0000       0    100   -100     50    -50          1          2           0      0.5;
+                     1       2       2       1 -60 -40     0    1 0.01 0.01          1  1 0.01      1 0.01 0.01       1      345   1.1   0.9  1.1      1 1.103 0.887    2.885    1.885 0.0050 -58.6274 1.0079       0    100   -100     50    -50          2          0           1      0.5        1        1;
+                     2       7       1       1   0   0     0    1 0.01 0.01          1  1 0.01      1 0.01 0.01       1      345   1.1   0.9  1.1      1 1.103 0.887    2.885    2.885 0.0070  21.9013 1.0000       0    100   -100     50    -50          2          0           0      0.5        1        1;
+                     3      11       1       1   0   0     0    1 0.01 0.01          1  1 0.01      1 0.01 0.01       1      345   1.1   0.9  1.1      1 1.103 0.887    2.885    2.885 0.0070  21.9013 1.0000       0    100   -100     50    -50          1          2           0      0.5        0        1;
 ];
 
 %% DC branch
-%column_names% fbusdc tbusdc     r l c rateA rateB rateC status line_confi return_type return_z connect_at
+%column_names% fbusdc tbusdc     r l c rateA rateB rateC status line_confi return_type return_z connect_at status_p status_n status_r
 mpc.branchdc = [
-                    1      4 0.052 0 0   100   100   100      1          2           2    0.052          0; % bipolar
-                    2      4 0.052 0 0   100   100   100      1          2           2    0.052          0; % bipolar
-                    3      4 0.052 0 0    50    50    50      1          1           2    0.052          2; % monopolar
+                    1      4 0.052 0 0   100   100   100      1          2           2    0.052          0        1        1        1; % bipolar
+                    2      4 0.052 0 0   100   100   100      1          2           2    0.052          0        1        1        1; % bipolar
+                    3      4 0.052 0 0    50    50    50      1          1           2    0.052          2        0        1        1; % monopolar
 ];

@@ -12,6 +12,7 @@ function constraint_converter_losses(pm::_PM.AbstractACPModel, n::Int, i::Int, a
 
     JuMP.@NLconstraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == a + b * iconv + c * iconv^2)
 end
+
 """
 Links converter power & current
 ```
@@ -27,54 +28,40 @@ function constraint_converter_current(pm::_PM.AbstractACPModel, n::Int, i::Int, 
     JuMP.@NLconstraint(pm.model, pconv_ac^2 + qconv_ac^2 == vmc^2 * iconv^2)
 end
 
-function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::Int)
-    pconv_dc = _PM.var(pm, n, :pconv_dc)
-    pconv_dcg = _PM.var(pm, n, :pconv_dcg)
-    iconv_dc = _PM.var(pm, n, :iconv_dc)
-    iconv_dcg = _PM.var(pm, n, :iconv_dcg)
-    vdcm = _PM.var(pm, n, :vdcm)
+function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::Int, busdc::Int, vdcm, bus_cond_convs_dc_cond)
+    pconv_dc = _PM.var(pm, n, :pconv_dc, i)
+    pconv_dcg = _PM.var(pm, n, :pconv_dcg, i)
+    iconv_dc = _PM.var(pm, n, :iconv_dc, i)
+    iconv_dcg = _PM.var(pm, n, :iconv_dcg, i)
+    vdcm = _PM.var(pm, n, :vdcm, busdc)
 
-    dc_bus = _PM.ref(pm, n, :convdc, i)["busdc_i"]
-
-    conv_cond = _PM.ref(pm, n, :convdc, i)["conductors"]
-    bus_convs_dc_cond = _PM.ref(pm, n, :bus_convs_dc_cond)
-
-    total_cond = _PM.ref(pm, n, :busdc, dc_bus)["conductors"]
-    for k in 1:total_cond
-        for (c, d) in bus_convs_dc_cond[(dc_bus, k)]
-            if c == i
-                JuMP.@NLconstraint(pm.model, pconv_dc[c][d] == iconv_dc[c][d] * vdcm[dc_bus][k])
+    for (bus_cond, convs) in bus_cond_convs_dc_cond
+        for (conv, conv_cond) in convs
+            if conv == i
+                JuMP.@NLconstraint(pm.model, pconv_dc[conv_cond] == iconv_dc[conv_cond] * vdcm[bus_cond])
             end
         end
     end
-
-    # neutral is always connected at bus conductor "3"
-    for g in 1:conv_cond
-        JuMP.@NLconstraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm[dc_bus][3])
-        JuMP.@constraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0)
+    for c in first(axes(iconv_dcg))
+        JuMP.@NLconstraint(pm.model, pconv_dcg[c] == iconv_dcg[c] * vdcm[3]) # neutral is always connected at bus conductor "3"
+        JuMP.@constraint(pm.model, iconv_dc[c] + iconv_dcg[c] == 0)
     end
-
-    JuMP.@constraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0)
-
+    JuMP.@constraint(pm.model, sum(iconv_dc) == 0)
 end
 
-function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::Int)
+function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::Int, bus_convs_grounding_shunt, r_earth)
     pconv_dcg_shunt = _PM.var(pm, n, :pconv_dcg_shunt)
     iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
 
-    bus_convs_grounding_shunt = _PM.ref(pm, n, :bus_convs_grounding_shunt)
-    r_earth = 0
-
     for i in _PM.ids(pm, n, :busdc)
-        vdc = _PM.var(pm, n, :vdcm, i)
+        vdcm = _PM.var(pm, n, :vdcm, i)
         for c in bus_convs_grounding_shunt[(i, 3)]
-            conv = _PM.ref(pm, n, :convdc, c)
-            r = conv["ground_z"] + r_earth #The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
+            r = _PM.ref(pm, n, :convdc, c)["ground_z"] + r_earth # The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
             if r == 0 #solid grounding
-                JuMP.@constraint(pm.model, vdc[3] == 0)
+                JuMP.@constraint(pm.model, vdcm[3] == 0)
             else
-                JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c] == (1 / r) * vdc[3]^2)
-                JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * vdc[3])
+                JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c] == (1 / r) * vdcm[3]^2)
+                JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * vdcm[3])
             end
         end
     end

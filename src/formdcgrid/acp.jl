@@ -13,8 +13,8 @@ function constraint_kcl_shunt(pm::_PM.AbstractACPModel, n::Int, i::Int, bus_arcs
     pconv_grid_ac = _PM.var(pm, n, :pconv_tf_fr)
     qconv_grid_ac = _PM.var(pm, n, :qconv_tf_fr)
 
-    JuMP.@NLconstraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n, :pconv_tf_fr, c))) for c in bus_convs_ac) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
-    JuMP.@NLconstraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(qconv_grid_ac[c][d] for d in 1:length(_PM.var(pm, n, :qconv_tf_fr, c))) for c in bus_convs_ac) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts) * vm^2)
+    JuMP.@NLconstraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in first(axes(_PM.var(pm, n, :pconv_tf_fr, c)))) for c in bus_convs_ac) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
+    JuMP.@NLconstraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(qconv_grid_ac[c][d] for d in first(axes(_PM.var(pm, n, :qconv_tf_fr, c)))) for c in bus_convs_ac) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts) * vm^2)
 end
 
 """
@@ -49,19 +49,14 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int, f_bus, t_bu
 end
 
 "`vdc[i] == vdcm`"
-function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::Int, i)
-
-    conv = _PM.ref(pm, n, :convdc, i)
-    dc_bus = _PM.ref(pm, n, :convdc, i)["busdc_i"]
-    v = _PM.var(pm, n, :vdcm, dc_bus)
-
-    bus_convs_dc_cond = _PM.ref(pm, n, :bus_convs_dc_cond)
-    for k in 1:2
-        for (c, d) in bus_convs_dc_cond[(dc_bus, k)]
-            if c == i
-                JuMP.@constraint(pm.model, v[k] == conv["Vdcset"][d])
+function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::Int, i, busdc, Vdcset, bus_convs_dc_cond)
+    vdcm = _PM.var(pm, n, :vdcm, busdc)
+    
+    for bus_cond in 1:2
+        for (conv, conv_cond) in bus_convs_dc_cond[(busdc, bus_cond)]
+            if conv == i
+                JuMP.@constraint(pm.model, vdcm[bus_cond] == Vdcset[conv_cond])
             end
         end
     end
-
 end

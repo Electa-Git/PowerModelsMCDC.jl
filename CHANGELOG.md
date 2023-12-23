@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - This changelog
+- Fixed DCP formulation
+- Multi-conductor status parameters for `convdc` and `branchdc` components
 
 ## [0.1.0] - 2023-07-15
 

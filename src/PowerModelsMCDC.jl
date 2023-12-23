@@ -29,6 +29,7 @@ include("core/multiconductor.jl")
 include("core/constraint_template.jl")
 include("core/variable_mcdcgrid.jl")
 include("core/variableconv_mc.jl")
+include("core/solution.jl")
 
 include("formdcgrid/dcp.jl")
 include("formconv/dcp.jl")

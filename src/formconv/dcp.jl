@@ -6,53 +6,36 @@ pconv_ac[i] + pconv_dc[i] == a + b*pconv_ac
 ```
 """
 function constraint_converter_losses(pm::_PM.AbstractDCPModel, n::Int, i::Int, a, b, c, plmax, cond)
-    pconv_ac = _PM.var(pm, n, :pconv_ac, i)[cond] #cond defined over conveter
+    pconv_ac = _PM.var(pm, n, :pconv_ac, i)[cond]
     pconv_dc = _PM.var(pm, n, :pconv_dc, i)[cond]
     pconv_dcg = _PM.var(pm, n, :pconv_dcg, i)[cond]
 
-    v = 1 #pu, assumption to approximate current
+    v = 1.0 #pu, assumption to approximate current
     cm_conv_ac = pconv_ac / v # can actually be negative, not a very nice model...
     JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg >= a + b * cm_conv_ac)
     JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg >= a - b * cm_conv_ac)
     JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg <= plmax)
 end
 
-function constraint_converter_dc_current(pm::_PM.AbstractDCPModel, n::Int, i::Int)
-    pconv_dc = _PM.var(pm, n, :pconv_dc)
-    pconv_dcg = _PM.var(pm, n, :pconv_dcg)
-    iconv_dc = _PM.var(pm, n, :iconv_dc)
-    iconv_dcg = _PM.var(pm, n, :iconv_dcg)
-    vdcm = 1.0
+function constraint_converter_dc_current(pm::_PM.AbstractDCPModel, n::Int, i::Int, busdc::Int, vdcm, bus_cond_convs_dc_cond)
+    pconv_dc = _PM.var(pm, n, :pconv_dc, i)
+    pconv_dcg = _PM.var(pm, n, :pconv_dcg, i)
+    iconv_dc = _PM.var(pm, n, :iconv_dc, i)
+    iconv_dcg = _PM.var(pm, n, :iconv_dcg, i)
 
-    dc_bus = _PM.ref(pm, n, :convdc, i)["busdc_i"]
-    conv_cond = _PM.ref(pm, n, :convdc, i)["conductors"]
-    bus_convs_dc_cond = _PM.ref(pm, n, :bus_convs_dc_cond)
-
-    total_cond = _PM.ref(pm, n, :busdc, i)["conductors"]
-    for k in 1:total_cond
-        for (c, d) in bus_convs_dc_cond[(dc_bus, k)]
-            if k == 1
-                vdcm = 1 #metallic return volatage is taken 0
-            elseif k == 2
-                vdcm = -1
-            elseif k == 3
-                vdcm = -0
-            end
-
-            if c == i
-                JuMP.@constraint(pm.model, pconv_dc[c][d] == iconv_dc[c][d] * vdcm)
+    for (bus_cond, convs) in bus_cond_convs_dc_cond
+        for (conv, conv_cond) in convs
+            if conv == i
+                JuMP.@constraint(pm.model, pconv_dc[conv_cond] == iconv_dc[conv_cond] * vdcm[bus_cond])
             end
         end
     end
-
-    # neutral is always connected at bus conductor "3"
-    for g in 1:conv_cond
-        vdcm = 0
-        JuMP.@constraint(pm.model, pconv_dcg[i][g] == iconv_dcg[i][g] * vdcm)
-        JuMP.@constraint(pm.model, iconv_dc[i][g] + iconv_dcg[i][g] == 0)
+    for c in first(axes(iconv_dcg))
+        vdcm = -0.0
+        JuMP.@constraint(pm.model, pconv_dcg[c] == iconv_dcg[c] * vdcm)
+        JuMP.@constraint(pm.model, iconv_dc[c] + iconv_dcg[c] == 0)
     end
-    JuMP.@constraint(pm.model, sum(iconv_dc[i][c] for c in 1:conv_cond+1) == 0)
-
+    JuMP.@constraint(pm.model, sum(iconv_dc) == 0)
 end
 
 """
@@ -60,25 +43,20 @@ Converter grounding constraint
 ```
 ```
 """
-function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractDCPModel, n::Int)
-
+function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractDCPModel, n::Int, bus_convs_grounding_shunt, r_earth)
     pconv_dcg_shunt = _PM.var(pm, n, :pconv_dcg_shunt)
     iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
-
-    bus_convs_grounding_shunt = _PM.ref(pm, n, :bus_convs_grounding_shunt)
-    r_earth = 0
-    vdcm = -0
+    vref = -0.0
 
     for i in _PM.ids(pm, n, :busdc)
-        vdc = _PM.var(pm, n, :vdcm, i)
+        vdcm = _PM.var(pm, n, :vdcm, i)
         for c in bus_convs_grounding_shunt[(i, 3)]
-            conv = _PM.ref(pm, n, :convdc, c)
-            r = conv["ground_z"] + r_earth #The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
+            r = _PM.ref(pm, n, :convdc, c)["ground_z"] + r_earth # The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
             if r == 0 #solid grounding
-                JuMP.@constraint(pm.model, vdc[3] == 0)
+                JuMP.@constraint(pm.model, vdcm[3] == 0)
             else
-                JuMP.@constraint(pm.model, pconv_dcg_shunt[c] == (1 / r) * vdc[3] * vdcm)
-                JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * vdc[3])
+                JuMP.@constraint(pm.model, pconv_dcg_shunt[c] == (1 / r) * vdcm[3] * vref)
+                JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * vdcm[3])
             end
         end
     end
