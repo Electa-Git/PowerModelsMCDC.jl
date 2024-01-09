@@ -49,7 +49,9 @@ function _make_multiconductor!(data::Dict{String,<:Any})
                             elseif param == "status"
                                 item_ref_data[param] = conductorsDC_status(item_data) .* item_data[param]
                             elseif key == "busdc" && in(param, ["Vdcmin", "Vdcmax"])
-                                item_ref_data[param] = terminalDC_voltage(item_data, param)
+                                item_ref_data[param] = terminalDC_voltage_bound(item_data, param)
+                            elseif key == "busdc" && param == "Vdc"
+                                item_ref_data[param] = terminalDC_voltage_start(item_data, param)
                             else
                                 item_ref_data[param] = fill(value, conductors)
                                 # Adjust resistance of branchdc metallic return
@@ -106,8 +108,14 @@ function conductorsDC_status(item_data::Dict{String,<:Any})
     return [item_data[key] for key in _DCstatus[poles]]
 end
 
-"Adjust voltage bounds for multi-conductor `busdc` terminals"
-function terminalDC_voltage(item_data::Dict{String,<:Any}, param::String)
+"Adjust voltage bound for multi-conductor `busdc` terminals"
+function terminalDC_voltage_bound(item_data::Dict{String,<:Any}, param::String)
     atol = item_data[param] - 1
     return atol .+ [1, -1, 0]
+end
+
+"Adjust voltage start value for multi-conductor `busdc` terminals"
+function terminalDC_voltage_start(item_data::Dict{String,<:Any}, param::String)
+    v = item_data[param]
+    return [v, -v, 0]
 end
