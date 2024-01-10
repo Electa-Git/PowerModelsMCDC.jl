@@ -13,7 +13,7 @@ end
 
 ""
 function build_mcdcpf(pm::_PM.AbstractPowerModel)
-    _PM.variable_bus_voltage(pm, bounded = false)
+    _PM.variable_bus_voltage(pm, bounded = true)
     _PM.variable_gen_power(pm, bounded = false)
     _PM.variable_branch_power(pm, bounded = false)
 

@@ -17,6 +17,7 @@ using Memento
 ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0, "bound_push"=>1e-4, "bound_frac"=>1e-4, "print_user_options"=>"yes")
 
 file = "./test/data/matacdc_scripts_pf/case5_2grids_MC_pf.m"
+# file = "./test/data/matacdc_scripts_pf/case5_2grids_MC_pf_ngn.m"
 # file = "./test/data/matacdc_scripts_pf/case5_2grids_MC_pf_1BP.m"
 
 # datadc_new = build_mc_data!(file)
@@ -90,7 +91,7 @@ for (cv, convdc) in data["convdc"]
     if cv=="4"
         # "to introduce change in conv", "$cv")
         # display(convdc["P_g"])
-        convdc["P_g"]=1.5*convdc["P_g"]
+        # convdc["P_g"]=1.5*convdc["P_g"]
         # @show cv, convdc["Pdcset"]
         # convdc["Pdcset"]=1.05*convdc["Pdcset"]
         # @show convdc["Pdcset"]
@@ -111,23 +112,36 @@ end
 
 for (bd, busdc) in data["busdc"]
     busdc["vm"] = result_mcdc_opf["solution"]["busdc"][bd]["vm"]
-
 end
 
 for (b, bus) in data["bus"]
     bus["vm"] = result_mcdc_opf["solution"]["bus"][b]["vm"]
     bus["va"] = result_mcdc_opf["solution"]["bus"][b]["va"] * 180 / pi
-  # "to introduce change"
-    # if b=="7" 
-    #     bus["vm"]= 0.95*bus["vm"]
-    # end 
+#   "to introduce change"
+#     if b=="7" 
+#         bus["vm"]= 0.95*bus["vm"]
+#     end 
 end
 
 result_mcdc_opf1 = PowerModelsMCDC.solve_mcdcopf(data, _PM.ACPPowerModel, ipopt_solver, setting=s)
 
 s = Dict("output" => Dict("branch_flows" => true), "conv_losses_mp" => true, "print_level"=>0)
 
+data["convdc"]["4"]["status"]=0
+
 result_mcdc_pf1 = PowerModelsMCDC.solve_mcdcpf(data, _PM.ACPPowerModel, ipopt_solver, setting=s)
+
+
+printstyled("ACDC OPF\n"; bold=true)
+println(" termination status: ", resultAC["termination_status"])
+println("          objective: ", resultAC["objective"])
+println("         solve time: ", resultAC["solve_time"])
+
+printstyled("\nACDC PF\n"; bold=true)
+println(" termination status: ", resultAC_pf["termination_status"])
+println("          objective: ", resultAC_pf["objective"])
+println("         solve time: ", resultAC_pf["solve_time"])
+
 
 println("termination status of the opf is:", result_mcdc_opf1["termination_status"])
 println("termination status of the pf is:", result_mcdc_pf1["termination_status"])
@@ -136,20 +150,30 @@ println("Objective value of the pf is:", result_mcdc_pf1["objective"])
 
 
 
-[_PM.component_table(result_mcdc_opf1["solution"], "bus", ["va"]) _PM.component_table(result_mcdc_pf1["solution"], "bus", ["va"])]
-[_PM.component_table(result_mcdc_opf1["solution"], "bus", ["vm"]) _PM.component_table(result_mcdc_pf1["solution"], "bus", ["vm"])]
-[_PM.component_table(result_mcdc_opf1["solution"], "busdc", ["vm"]) _PM.component_table(result_mcdc_pf1["solution"], "busdc", ["vm"])]
-[_PM.component_table(result_mcdc_opf1["solution"], "branchdc", ["i_from"]) _PM.component_table(result_mcdc_pf1["solution"], "branchdc", ["i_from"])]
-[_PM.component_table(result_mcdc_opf1["solution"], "branch", ["pf"]) _PM.component_table(result_mcdc_pf1["solution"], "branch", ["pf"])]
-[_PM.component_table(result_mcdc_opf1["solution"], "branch", ["pt"]) _PM.component_table(result_mcdc_pf1["solution"], "branch", ["pt"])]
-[_PM.component_table(result_mcdc_opf1["solution"], "convdc", ["pgrid"]) _PM.component_table(result_mcdc_pf1["solution"], "convdc", ["pgrid"])]
-[_PM.component_table(result_mcdc_opf1["solution"], "convdc", ["qgrid"]) _PM.component_table(result_mcdc_pf1["solution"], "convdc", ["qgrid"])]
+@show [_PM.component_table(result_mcdc_opf1["solution"], "bus", ["va"]) _PM.component_table(result_mcdc_pf1["solution"], "bus", ["va"])]
+@show [_PM.component_table(result_mcdc_opf1["solution"], "bus", ["vm"]) _PM.component_table(result_mcdc_pf1["solution"], "bus", ["vm"])]
+@show [_PM.component_table(result_mcdc_opf1["solution"], "busdc", ["vm"]) _PM.component_table(result_mcdc_pf1["solution"], "busdc", ["vm"])]
+@show [_PM.component_table(result_mcdc_opf1["solution"], "branchdc", ["i_from"]) _PM.component_table(result_mcdc_pf1["solution"], "branchdc", ["i_from"])]
+@show [_PM.component_table(result_mcdc_opf1["solution"], "branch", ["pf"]) _PM.component_table(result_mcdc_pf1["solution"], "branch", ["pf"])]
+@show [_PM.component_table(result_mcdc_opf1["solution"], "branch", ["pt"]) _PM.component_table(result_mcdc_pf1["solution"], "branch", ["pt"])]
+@show [_PM.component_table(result_mcdc_opf1["solution"], "convdc", ["pgrid"]) _PM.component_table(result_mcdc_pf1["solution"], "convdc", ["pgrid"])]
+@show [_PM.component_table(result_mcdc_opf1["solution"], "convdc", ["qgrid"]) _PM.component_table(result_mcdc_pf1["solution"], "convdc", ["qgrid"])]
 [_PM.component_table(result_mcdc_opf1["solution"], "gen", ["pg"]) _PM.component_table(result_mcdc_pf1["solution"], "gen", ["pg"])]
 [_PM.component_table(result_mcdc_opf1["solution"], "gen", ["qg"]) _PM.component_table(result_mcdc_pf1["solution"], "gen", ["qg"])]
 [_PM.component_table(result_mcdc_opf1["solution"], "convdc", ["iconv_dc"]) _PM.component_table(result_mcdc_pf1["solution"], "convdc", ["iconv_dc"])]
 [_PM.component_table(result_mcdc_opf1["solution"], "convdc", ["pdc"]) _PM.component_table(result_mcdc_pf1["solution"], "convdc", ["pdc"])]
 
-# # _PM.component_table(result_mcdc_pf1["solution"], "gen", ["pg"])
+_PM.component_table(result_mcdc_opf1["solution"], "convdc", ["pdc"])
+ _PM.component_table(result_mcdc_pf1["solution"], "convdc", ["pdc"])
+
+ _PM.component_table(result_mcdc_opf1["solution"], "convdc", ["pgrid"])
+ _PM.component_table(result_mcdc_pf1["solution"], "convdc", ["pgrid"])
+
+ _PM.component_table(result_mcdc_opf1["solution"], "convdc", ["qgrid"])
+ _PM.component_table(result_mcdc_pf1["solution"], "convdc", ["qgrid"])
+
+
+# _PM.component_table(result_mcdc_opf["solution"], "gen", ["pg"])
 # [_PM.component_table(resultAC["solution"], "bus", ["va"]) _PM.component_table(resultAC_pf["solution"], "bus", ["va"])]
 # [_PM.component_table(resultAC["solution"], "gen", ["pg"]) _PM.component_table(resultAC_pf["solution"], "gen", ["pg"])]
 # [_PM.component_table(resultAC["solution"], "convdc", ["pgrid"]) _PM.component_table(resultAC_pf["solution"], "convdc", ["pgrid"])]

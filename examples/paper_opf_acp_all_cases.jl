@@ -2,10 +2,9 @@
 import PowerModels as _PM
 import PowerModelsMCDC as _PMMCDC
 import PowerModelsACDC as _PMACDC    #to be used while comparing acdc and mcdc results
-using JuMP
 using Ipopt
 
-ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
+ipopt_solver = _PMMCDC.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
 
 
 # file="./test/data/matacdc_scripts/case5_2grids_MC.m"
@@ -28,7 +27,7 @@ s = Dict("conv_losses_mp" => false)
 result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.ACPPowerModel, ipopt_solver, setting=s)
 
 #--------------------------------------------------------------------------------------------------------
-dc_data = PowerModels.parse_file(file)
+dc_data = _PM.parse_file(file)
 _PMACDC.process_additional_data!(dc_data)
 
 result_acdc = _PMACDC.run_acdcopf(dc_data, _PM.ACPPowerModel, ipopt_solver, setting=s)
