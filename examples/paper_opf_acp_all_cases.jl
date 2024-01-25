@@ -2,10 +2,9 @@
 import PowerModels as _PM
 import PowerModelsMCDC as _PMMCDC
 import PowerModelsACDC as _PMACDC    #to be used while comparing acdc and mcdc results
-using JuMP
 using Ipopt
 
-ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
+ipopt_solver = _PMMCDC.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
 
 
 test_case = "case5_2grids_MC.m"

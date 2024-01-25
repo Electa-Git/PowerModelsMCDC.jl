@@ -2,8 +2,8 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
     for (n, nw_ref) in ref[:it][_PM.pm_it_sym][:nw]
         if haskey(nw_ref, :convdc)
             #Filter converters & DC branches with status 0 as well as wrong bus numbers
-            nw_ref[:convdc] = Dict([x for x in nw_ref[:convdc] if (x.second["status"] == 1 && x.second["busdc_i"] in keys(nw_ref[:busdc]) && x.second["busac_i"] in keys(nw_ref[:bus]))])
-            nw_ref[:branchdc] = Dict([x for x in nw_ref[:branchdc] if (x.second["status"] == 1 && x.second["fbusdc"] in keys(nw_ref[:busdc]) && x.second["tbusdc"] in keys(nw_ref[:busdc]))])
+            nw_ref[:convdc] = Dict([x for x in nw_ref[:convdc] if (any(x.second["status"] .== 1) && x.second["busdc_i"] in keys(nw_ref[:busdc]) && x.second["busac_i"] in keys(nw_ref[:bus]))])
+            nw_ref[:branchdc] = Dict([x for x in nw_ref[:branchdc] if (any(x.second["status"] .== 1) && x.second["fbusdc"] in keys(nw_ref[:busdc]) && x.second["tbusdc"] in keys(nw_ref[:busdc]))])
 
             # DC grid arcs for DC grid branches
             nw_ref[:arcs_dcgrid_from] = [(i, branch["fbusdc"], branch["tbusdc"]) for (i, branch) in nw_ref[:branchdc]]
@@ -17,27 +17,23 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             end
             nw_ref[:bus_arcs_dcgrid] = bus_arcs_dcgrid
 
-            # Bus arcs of the DC grid - conductor connections
+            # Bus arcs of the DC grid - active conductor connections
+            arcs_dcgrid_cond = Dict((l, i, j) => (Vector{Int}(), nw_ref[:branchdc][l]["conductors"]) for (l, i, j) in nw_ref[:arcs_dcgrid])
             bus_arcs_dcgrid_cond = Dict([((bus["busdc_i"], c), Dict()) for c in 1:3 for (i, bus) in nw_ref[:busdc]])
-
             for (l, i, j) in nw_ref[:arcs_dcgrid]
                 if nw_ref[:branchdc][l]["line_confi"] == 1
-                    if nw_ref[:branchdc][l]["connect_at"] == 0
-                        push!(bus_arcs_dcgrid_cond[(i, 1)], (l, i, j) => 1) # (i, 1) for connection and  (l,i,j) =>1 for selecting line variable
-                        push!(bus_arcs_dcgrid_cond[(i, 2)], (l, i, j) => 2)  # 1, 2 and 3 are the positive, negative and neutral terminals of a DC bus, respectively
-                    elseif nw_ref[:branchdc][l]["connect_at"] == 1
-                        push!(bus_arcs_dcgrid_cond[(i, 1)], (l, i, j) => 1)
-                        push!(bus_arcs_dcgrid_cond[(i, 3)], (l, i, j) => 2)
-                    elseif nw_ref[:branchdc][l]["connect_at"] == 2
-                        push!(bus_arcs_dcgrid_cond[(i, 2)], (l, i, j) => 1)
-                        push!(bus_arcs_dcgrid_cond[(i, 3)], (l, i, j) => 2)
-                    end
-                elseif nw_ref[:branchdc][l]["line_confi"] == 2
-                    push!(bus_arcs_dcgrid_cond[(i, 1)], (l, i, j) => 1)
-                    push!(bus_arcs_dcgrid_cond[(i, 2)], (l, i, j) => 2)
-                    push!(bus_arcs_dcgrid_cond[(i, 3)], (l, i, j) => 3)
+                    terminals = _component_busdc_terminal_lookup[nw_ref[:branchdc][l]["connect_at"]]
+                else
+                    terminals = 1:3
                 end
-            end
+                for (c, terminal) in enumerate(terminals)
+                    if !iszero(nw_ref[:branchdc][l]["status"][c])
+                        push!(first(arcs_dcgrid_cond[(l, i, j)]), c)
+                        push!(bus_arcs_dcgrid_cond[(i, terminal)], (l, i, j) => c)
+                    end
+                end
+            end 
+            nw_ref[:arcs_dcgrid_cond] = arcs_dcgrid_cond
             nw_ref[:bus_arcs_dcgrid_cond] = bus_arcs_dcgrid_cond
 
             # bus_convs for AC side power injection of DC converters
@@ -54,28 +50,27 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             end
             nw_ref[:bus_convs_dc] = bus_convs_dc
 
-            # bus_convs for AC side power injection of DC converters - conductor references
+            # bus_convs for AC and DC side power injection of DC converters - active conductor connections
+            convs_ac_cond = Dict(i => (findall(x -> !iszero(x), conv["status"]), conv["conductors"]) for (i, conv) in nw_ref[:convdc])
+            convs_dc_cond = Dict(i => (Vector{Int}(), conv["conductors"]+1) for (i, conv) in nw_ref[:convdc])
             bus_convs_dc_cond = Dict([((bus["busdc_i"], c), Dict()) for c in 1:3 for (i, bus) in nw_ref[:busdc]])
             for (i, conv) in nw_ref[:convdc]
                 bus = conv["busdc_i"]
+                status_cond = findall(x->iszero(x), conv["status"])
                 if conv["conv_confi"] == 1
-                    if conv["connect_at"] == 0
-                        push!(bus_convs_dc_cond[(bus, 1)], i => 1)
-                        push!(bus_convs_dc_cond[(bus, 2)], i => 2)
-                    elseif conv["connect_at"] == 1
-                        push!(bus_convs_dc_cond[(bus, 1)], i => 1)
-                        push!(bus_convs_dc_cond[(bus, 3)], i => 2)
-                    elseif conv["connect_at"] == 2
-                        push!(bus_convs_dc_cond[(bus, 2)], i => 1)
-                        push!(bus_convs_dc_cond[(bus, 3)], i => 2) #'i' is for variable where as (bus,3) for connection
+                    terminals = _component_busdc_terminal_lookup[conv["connect_at"]]
+                else
+                    terminals = 1:3
+                end
+                for (c, terminal) in enumerate(terminals)
+                    if !(c in status_cond)
+                        push!(first(convs_dc_cond[i]), c)
+                        push!(bus_convs_dc_cond[(bus, terminal)], i => c)
                     end
-                elseif conv["conv_confi"] == 2
-                    push!(bus_convs_dc_cond[(bus, 1)], i => 1)
-                    push!(bus_convs_dc_cond[(bus, 2)], i => 2)
-                    push!(bus_convs_dc_cond[(bus, 3)], i => 3)
                 end
             end
-
+            nw_ref[:convs_ac_cond] = convs_ac_cond
+            nw_ref[:convs_dc_cond] = convs_dc_cond
             nw_ref[:bus_convs_dc_cond] = bus_convs_dc_cond
 
             # add dc ground as shunt
