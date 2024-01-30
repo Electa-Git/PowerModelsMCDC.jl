@@ -1,4 +1,4 @@
-#this file is to replicae the results presented in the paper (uploaded on arxiv.org)
+#this file is to replicate the results presented in the paper (uploaded on arxiv.org)
 import PowerModels as _PM
 import PowerModelsMCDC as _PMMCDC
 import PowerModelsACDC as _PMACDC    #to be used while comparing acdc and mcdc results

@@ -12,8 +12,7 @@ Keyword arguments, if any, are forwarded to `PowerModels.solve_model`.
 """
 function solve_mcdcopf end
 
-function solve_mcdcopf(file::String, model_type::Type, optimizer; kwargs...)
-    data = parse_file(file)
+function solve_mcdcopf(data::Dict{String,Any}, model_type::Type, optimizer; kwargs...)
     return solve_mcdcopf(data, model_type, optimizer; ref_extensions=[add_ref_dcgrid!], kwargs...)
 end
 
