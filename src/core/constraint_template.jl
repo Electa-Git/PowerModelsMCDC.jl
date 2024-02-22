@@ -25,7 +25,7 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     bus_convs_dc_cond = _PM.ref(pm, nw, :bus_convs_dc_cond)
     bus_convs_grounding_shunt = _PM.ref(pm, nw, :bus_convs_grounding_shunt)
 
-    constraint_kcl_shunt_dcgrid(pm, nw, i, busdc["Pdc"], busdc["conductors"], bus_arcs_dcgrid_cond, bus_convs_dc_cond, bus_convs_grounding_shunt)
+    constraint_kcl_shunt_dcgrid(pm, nw, i, busdc["Pdc"], busdc["terminals"], bus_arcs_dcgrid_cond, bus_convs_dc_cond, bus_convs_grounding_shunt)
 end
 
 function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
@@ -34,7 +34,7 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_
     t_bus = branch["tbusdc"]
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
-    total_cond = _PM.ref(pm, nw, :branchdc, i)["conductors"]
+    total_cond = _PM.ref(pm, nw, :branchdc, i, "conductors")
     p = _PM.ref(pm, nw, :dcpol)
     constraint_ohms_dc_branch(pm, nw, f_bus, t_bus, f_idx, t_idx, branch["r"], p, total_cond)
 end
@@ -80,8 +80,8 @@ function constraint_converter_dc_current(pm::_PM.AbstractPowerModel, i::Int; nw:
     busdc = _PM.ref(pm, nw, :busdc, conv["busdc_i"])
     bus_convs_dc_cond = _PM.ref(pm, nw, :bus_convs_dc_cond)
 
-    bus_cond_convs_dc_cond = Dict(c => bus_convs_dc_cond[(conv["busdc_i"], c)] for c in 1:busdc["conductors"])
-    vdcm = [c == 3 ? -0.0 : sign(busdc["Vdcmin"][c]) for c in 1:busdc["conductors"]]
+    bus_cond_convs_dc_cond = Dict(c => bus_convs_dc_cond[(conv["busdc_i"], c)] for c in 1:busdc["terminals"])
+    vdcm = [c == 3 ? -0.0 : sign(busdc["Vdcmin"][c]) for c in 1:busdc["terminals"]]
 
     constraint_converter_dc_current(pm, nw, i, conv["busdc_i"], vdcm, bus_cond_convs_dc_cond)
 end

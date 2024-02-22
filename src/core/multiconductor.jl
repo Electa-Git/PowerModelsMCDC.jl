@@ -2,7 +2,7 @@
 const _conductorless = Set([
         # Multiple components
         "busdc_i", "connect_at", "status_p", "status_r", "status_n", "index", "source_id",
-        "conductors",
+        "conductors", "poles", "terminals",
         # DC bus
         "grid", "basekVdc",
         # DC branch
@@ -41,8 +41,8 @@ end
 function _make_multiconductor_busdc!(busdc_dict::Dict{String,<:Any})
     for (b, busdc) in busdc_dict
         mc_busdc = Dict{String,Any}()
-        conductors = 3
-        busdc["conductors"] = conductors
+        terminals = 3
+        mc_busdc["terminals"] = terminals
         for (param, value) in busdc
             if param in _conductorless
                 mc_busdc[param] = value
@@ -53,7 +53,7 @@ function _make_multiconductor_busdc!(busdc_dict::Dict{String,<:Any})
             elseif param == "Vdc"
                 mc_busdc[param] = terminalDC_voltage_start(busdc, param)
             else
-                mc_busdc[param] = fill(value, conductors)
+                mc_busdc[param] = fill(value, terminals)
             end
         end
         busdc_dict[b] = mc_busdc
@@ -68,7 +68,7 @@ function _make_multiconductor_branchdc!(branchdc_dict::Dict{String,<:Any})
         else # bipolar
             conductors = 3
         end
-        branchdc["conductors"] = conductors
+        mc_branchdc["conductors"] = conductors
         for (param, value) in branchdc
             if param in _conductorless
                 mc_branchdc[param] = value
@@ -90,18 +90,18 @@ function _make_multiconductor_convdc!(convdc_dict::Dict{String,<:Any})
     for (c, convdc) in convdc_dict
         mc_convdc = Dict{String,Any}()
         if convdc["conv_confi"] == 1 # monopolar (symmetric or asymmetric)
-            conductors = 1
+            poles = 1
         else # bipolar
-            conductors = 2
+            poles = 2
         end
-        convdc["conductors"] = conductors
+        mc_convdc["poles"] = poles
         for (param, value) in convdc
             if param in _conductorless
                 mc_convdc[param] = value
             elseif param == "status"
                 mc_convdc[param] = conductorsDC_status(convdc) .* convdc[param]
             else
-                mc_convdc[param] = fill(value, conductors)
+                mc_convdc[param] = fill(value, poles)
             end
         end
         convdc_dict[c] = mc_convdc

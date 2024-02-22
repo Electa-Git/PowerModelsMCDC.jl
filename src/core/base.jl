@@ -51,8 +51,8 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             nw_ref[:bus_convs_dc] = bus_convs_dc
 
             # bus_convs for AC and DC side power injection of DC converters - active conductor connections
-            convs_ac_cond = Dict(i => (findall(x -> !iszero(x), conv["status"]), conv["conductors"]) for (i, conv) in nw_ref[:convdc])
-            convs_dc_cond = Dict(i => (Vector{Int}(), conv["conductors"]+1) for (i, conv) in nw_ref[:convdc])
+            convs_ac_cond = Dict(i => (findall(x -> !iszero(x), conv["status"]), conv["poles"]) for (i, conv) in nw_ref[:convdc])
+            convs_dc_cond = Dict(i => (Vector{Int}(), conv["poles"]+1) for (i, conv) in nw_ref[:convdc])
             bus_convs_dc_cond = Dict([((bus["busdc_i"], c), Dict()) for c in 1:3 for (i, bus) in nw_ref[:busdc]])
             for (i, conv) in nw_ref[:convdc]
                 bus = conv["busdc_i"]
@@ -78,7 +78,7 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             for (i, conv) in nw_ref[:convdc]
                 bus = conv["busdc_i"]
                 if conv["ground_type"] == 1
-                    push!(bus_convs_grounding_shunt[(bus, 3)], i) # (bus, 3) for selecting 3rd conductor of the relevant dc bus whereas i is for selecting the variable
+                    push!(bus_convs_grounding_shunt[(bus, 3)], i) # (bus, 3) for selecting 3rd terminal of the relevant dc bus whereas i is for selecting the variable
                 end
             end
             nw_ref[:bus_convs_grounding_shunt] = bus_convs_grounding_shunt

@@ -43,7 +43,7 @@ function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::In
         end
     end
     for c in first(axes(iconv_dcg))
-        JuMP.@NLconstraint(pm.model, pconv_dcg[c] == iconv_dcg[c] * vdcm[3]) # neutral is always connected at bus conductor "3"
+        JuMP.@NLconstraint(pm.model, pconv_dcg[c] == iconv_dcg[c] * vdcm[3]) # neutral is always connected at bus terminal "3"
         JuMP.@constraint(pm.model, iconv_dc[c] + iconv_dcg[c] == 0)
     end
     JuMP.@constraint(pm.model, sum(iconv_dc) == 0)

@@ -18,7 +18,7 @@ end
 "variable: `vdcm[i]` for `i` in `dcbus`es"
 function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     vars = _PM.var(pm, nw)[:vdcm] = Dict(i => JuMP.@variable(pm.model,
-        [c in 1:_PM.ref(pm, nw, :busdc)[i]["conductors"]], base_name = "$(nw)_vdcm_$(i)",
+        [c in 1:_PM.ref(pm, nw, :busdc)[i]["terminals"]], base_name = "$(nw)_vdcm_$(i)",
         start = comp_start_value(_PM.ref(pm, nw, :busdc, i), "Vdc", c, 1.0)
     ) for i in _PM.ids(pm, nw, :busdc)
     )
