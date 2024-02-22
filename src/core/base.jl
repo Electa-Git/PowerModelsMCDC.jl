@@ -137,6 +137,10 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             nw_ref[:bus_convs_dc] = Dict{String,Any}()
             nw_ref[:ref_buses_dc] = Dict{String,Any}()
             nw_ref[:buspairsdc] = Dict{String,Any}()
+            # Component-conductors lookup tables
+            nw_ref[:arcs_dcgrid_cond] = Dict{String,Any}()
+            nw_ref[:convs_ac_cond] = Dict{String,Any}()
+            nw_ref[:convs_dc_cond] = Dict{String,Any}()
         end
     end
 end
