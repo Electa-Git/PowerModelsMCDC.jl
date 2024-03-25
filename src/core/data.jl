@@ -281,8 +281,14 @@ function check_branchdc_parameters(branchdc)
     @assert(branchdc["rateA"] >= 0)
     @assert(branchdc["rateB"] >= 0)
     @assert(branchdc["rateC"] >= 0)
-    # Convert data from equivalent parallel representation to single pole (in case of bipolar converter)
-    from_equivalent_parallel_data!(branchdc)
+
+    # Convert data to multiconductor model
+    if branchdc["conductors"] == 3 # Bipolar branch with metallic return
+        branchdc["rateA"] /= 2
+        branchdc["rateB"] /= 2
+        branchdc["rateC"] /= 2
+    end
+
     # Check if multi-conductor status parameters are defined
     status = ["status_p", "status_n", "status_r"]
     check = haskey.(Ref(branchdc), status)
@@ -365,8 +371,27 @@ function check_conv_parameters(conv)
     @assert(conv["Qacmax"] >= conv["Qacmin"])
     @assert(conv["Pacrated"] >= 0)
     @assert(conv["Qacrated"] >= 0)
-    # Convert data from equivalent parallel representation to single pole (in case of bipolar converter)
-    from_equivalent_parallel_data!(conv)
+
+    # Convert data to multiconductor model
+    if conv["poles"] == 2 # Bipolar converter
+        conv["rtf"]      *= 2
+        conv["xtf"]      *= 2
+        conv["bf"]       /= 2
+        conv["rc"]       *= 2
+        conv["xc"]       *= 2
+        conv["LossA"]    /= 2
+        conv["LossB"]    *= 1
+        conv["LossCrec"] *= 2
+        conv["LossCinv"] *= 2
+        conv["Imax"]     /= 2
+        conv["Pacmax"]   /= 2
+        conv["Pacmin"]   /= 2
+        conv["Pacrated"] /= 2
+        conv["Qacmax"]   /= 2
+        conv["Qacmin"]   /= 2
+        conv["Qacrated"] /= 2
+    end
+
     # Check if multi-conductor status parameters are defined
     status = ["status_p", "status_n"]
     check = haskey.(Ref(conv), status)
@@ -378,37 +403,6 @@ function check_conv_parameters(conv)
     elseif sum(check) == 1
         Memento.error(_PM._LOGGER, "Parameter `$(first(status[.!check]))` is not defined for converter $conv_id.")
     end
-end
-
-"Convert equivalent parallel data of bipolar `convdc` and `branchdc` to data for single pole/conductor"
-function from_equivalent_parallel_data!(data)
-
-    if haskey(data, "poles") && data["poles"] == 2
-        data["rtf"] = data["rtf"] * 2
-        data["xtf"] = data["xtf"] * 2
-        data["bf"] = data["bf"] / 2
-        data["rc"] = data["rc"] * 2
-        data["xc"] = data["xc"] * 2
-        data["LossB"] = data["LossB"]
-        data["LossA"] = data["LossA"] / 2
-        data["LossCrec"] = data["LossCrec"] * 2
-        data["LossCinv"] = data["LossCinv"] * 2
-
-        data["Imax"] = data["Imax"] / 2
-        data["Pacmax"] = data["Pacmax"] / 2
-        data["Pacmin"] = data["Pacmin"] / 2
-        data["Pacrated"] = data["Pacrated"] / 2
-
-        data["Qacmax"] = data["Qacmax"] / 2
-        data["Qacmin"] = data["Qacmin"] / 2
-        data["Qacrated"] = data["Qacrated"] / 2
-    
-    elseif haskey(data, "conductors") && data["conductors"] == 3
-        data["rateA"] = data["rateA"]  / 2
-        data["rateB"] = data["rateB"] / 2
-        data["rateC"] = data["rateC"] / 2
-    end
-    return nothing
 end
 
 function get_branchdc(matpowerdcline, branch_i, fbusdc, tbusdc)
