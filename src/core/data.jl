@@ -383,7 +383,7 @@ end
 "Convert equivalent parallel data of bipolar `convdc` and `branchdc` to data for single pole/conductor"
 function from_equivalent_parallel_data!(data)
 
-    if haskey(data, "conv_confi") && data["conv_confi"] == 2
+    if haskey(data, "poles") && data["poles"] == 2
         data["rtf"] = data["rtf"] * 2
         data["xtf"] = data["xtf"] * 2
         data["bf"] = data["bf"] / 2

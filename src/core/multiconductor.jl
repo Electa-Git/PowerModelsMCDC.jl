@@ -72,15 +72,10 @@ end
 
 function _make_multiconductor_convdc!(convdc_dict::Dict{String,<:Any})
     for (c, convdc) in convdc_dict
-        if convdc["conv_confi"] == 1 # monopolar (symmetric or asymmetric)
-            poles = 1
-        elseif convdc["conv_confi"] == 2 # bipolar
-            poles = 2
-        else
-            _Memento.error(_LOGGER, "Unexpected \"conv_confi\" value for DC converter $c: found $(convdc["conv_confi"]), expected 1 or 2.")
+        poles = convdc["poles"]
+        if poles ∉ (1,2)
+            _Memento.error(_LOGGER, "Unexpected \"poles\" value for DC converter $c: found $poles, expected 1 or 2.")
         end
-        delete!(convdc, "conv_confi")
-        convdc["poles"] = poles
         convdc["status"] = conductorsDC_status(convdc) .* convdc["status"]
         for param in _convdc_uniform_parameters
             convdc[param] = fill(convdc[param], poles)
