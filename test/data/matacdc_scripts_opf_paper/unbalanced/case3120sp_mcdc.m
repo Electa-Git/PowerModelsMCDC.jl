@@ -7889,13 +7889,13 @@ mpc.convdc = [
     ];
 
 %% branches
-%column_names%   fbusdc  tbusdc  r      l        c   rateA   rateB   rateC   status line_confi connect_at return_type return_z
+%column_names%   fbusdc  tbusdc  r      l        c   rateA   rateB   rateC   status conductors connect_at return_type return_z
 mpc.branchdc = [
-    1       2       0.01   0   0    100     100     100     1   2 0 0 0.052;
-    2       3       0.01   0   0    100     100     100     1   2 0 0 0.052;
-    1       3       0.01   0   0    100     100     100     1   2 0 0 0.052;
-    3       4       0.01   0   0    100     100     100     1   2 0 0 0.052;
-    4       5       0.01   0   0    100     100     100     1   2 0 0 0.052;
+    1       2       0.01   0   0    100     100     100     1   3 0 0 0.052;
+    2       3       0.01   0   0    100     100     100     1   3 0 0 0.052;
+    1       3       0.01   0   0    100     100     100     1   3 0 0 0.052;
+    3       4       0.01   0   0    100     100     100     1   3 0 0 0.052;
+    4       5       0.01   0   0    100     100     100     1   3 0 0 0.052;
  ];
 
 

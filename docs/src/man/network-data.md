@@ -49,7 +49,7 @@ depending on its specific configuration:
 
 | Field         | Values  | Data U.M. | Description                                        |
 | :------------ | :-----: | :-------: | :------------------------------------------------- |
-| `line_confi`  | {1,2}   |           | Configuration:``\\``1: monopolar (symmetric or asymmetric)``\\``2: bipolar |
+| `conductors`  | {2,3}   |           | Number of conductors, including metallic return    |
 | `connect_at`  | {0,1,2} |           | Bus terminals where the branch is connected (only used if the DC branch is monopolar):``\\``0: positive and negative``\\``1: positive and neutral``\\``2: negative and neutral |
 | `return_type` |         |           | **Not used in package code, but present in input files.**``\\``Originally meant for modeling ground return (1) instead of metallic return (2). |
 | `return_z`    | (0,+∞)  | p.u.      | Metallic return impedance                          |

@@ -403,7 +403,7 @@ function from_equivalent_parallel_data!(data)
         data["Qacmin"] = data["Qacmin"] / 2
         data["Qacrated"] = data["Qacrated"] / 2
     
-    elseif haskey(data, "line_confi") && data["line_confi"] == 2
+    elseif haskey(data, "conductors") && data["conductors"] == 3
         data["rateA"] = data["rateA"]  / 2
         data["rateB"] = data["rateB"] / 2
         data["rateC"] = data["rateC"] / 2

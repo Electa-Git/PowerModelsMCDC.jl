@@ -57,15 +57,10 @@ end
 
 function _make_multiconductor_branchdc!(branchdc_dict::Dict{String,<:Any})
     for (b, branchdc) in branchdc_dict
-        if branchdc["line_confi"] == 1 # monopolar (symmetric or asymmetric)
-            conductors = 2
-        elseif branchdc["line_confi"] == 2 # bipolar
-            conductors = 3
-        else
-            _Memento.error(_LOGGER, "Unexpected \"line_confi\" value for DC branch $b: found $(branchdc["line_confi"]), expected 1 or 2.")
+        conductors = branchdc["conductors"]
+        if conductors ∉ (2, 3)
+            _Memento.error(_LOGGER, "Unexpected \"conductors\" value for DC branch $b: found $conductors, expected 2 or 3.")
         end
-        delete!(branchdc, "line_confi")
-        branchdc["conductors"] = conductors
         branchdc["status"] = conductorsDC_status(branchdc) .* branchdc["status"]
         branchdc["r"] = [fill(branchdc["r"], conductors-1)..., branchdc["return_z"]]
         delete!(branchdc, "return_z")
