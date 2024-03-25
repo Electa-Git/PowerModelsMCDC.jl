@@ -21,7 +21,7 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             arcs_dcgrid_cond = Dict((l, i, j) => (Vector{Int}(), nw_ref[:branchdc][l]["conductors"]) for (l, i, j) in nw_ref[:arcs_dcgrid])
             bus_arcs_dcgrid_cond = Dict([((bus["busdc_i"], c), Dict()) for c in 1:3 for (i, bus) in nw_ref[:busdc]])
             for (l, i, j) in nw_ref[:arcs_dcgrid]
-                if nw_ref[:branchdc][l]["line_confi"] == 1
+                if nw_ref[:branchdc][l]["conductors"] == 2
                     terminals = _component_busdc_terminal_lookup[nw_ref[:branchdc][l]["connect_at"]]
                 else
                     terminals = 1:3
@@ -57,7 +57,7 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             for (i, conv) in nw_ref[:convdc]
                 bus = conv["busdc_i"]
                 status_cond = findall(x->iszero(x), conv["status"])
-                if conv["conv_confi"] == 1
+                if conv["poles"] == 1
                     terminals = _component_busdc_terminal_lookup[conv["connect_at"]]
                 else
                     terminals = 1:3

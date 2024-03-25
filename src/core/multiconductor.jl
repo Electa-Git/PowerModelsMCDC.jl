@@ -1,15 +1,16 @@
-"Field names that do not have multiconductor values"
-const _conductorless = Set([
-        # Multiple components
-        "busdc_i", "connect_at", "status_p", "status_r", "status_n", "index", "source_id",
-        "conductors", "poles", "terminals",
-        # DC bus
-        "grid", "basekVdc",
-        # DC branch
-        "fbusdc", "tbusdc", "line_confi", "return_type", "return_z",
-        # Converter
-        "busac_i", "type_dc", "type_ac", "islcc", "Vtar", "transformer", "filter",
-        "reactor", "basekVac", "conv_confi", "ground_type", "ground_z"
+"Scalar DC bus parameters in Matpower format, to be replicated for each terminal"
+const _busdc_uniform_parameters = Set(["Pdc", "Cdc"])
+
+"Scalar DC branch parameters in Matpower format, to be replicated for each conductor"
+const _branchdc_uniform_parameters = Set(["l", "c", "rateA", "rateB", "rateC"])
+
+"Scalar DC converter parameters in Matpower format, to be replicated for each pole"
+const _convdc_uniform_parameters = Set([
+        "P_g", "Q_g", "rtf", "xtf", "tm", "bf", "rc", "xc", "Vmmax", "Vmmin", "Imax",
+        "LossA", "LossB", "LossCrec", "LossCinv", "droop", "Pdcset", "Vdcset", "dVdcset",
+        "Pacmax", "Pacmin", "Qacmax", "Qacmin",
+        # Parameters not present in input files, but created by `check_conv_parameters`
+        "Pacrated", "Qacrated"
     ])
 
 "Names of multiconductor status parameters"
@@ -40,101 +41,73 @@ end
 
 function _make_multiconductor_busdc!(busdc_dict::Dict{String,<:Any})
     for (b, busdc) in busdc_dict
-        mc_busdc = Dict{String,Any}()
         terminals = 3
-        mc_busdc["terminals"] = terminals
-        for (param, value) in busdc
-            if param in _conductorless
-                mc_busdc[param] = value
-            elseif param == "status"
-                mc_busdc[param] = conductorsDC_status(busdc) .* busdc[param]
-            elseif param in ["Vdcmin", "Vdcmax"]
-                mc_busdc[param] = terminalDC_voltage_bound(busdc, param)
-            elseif param == "Vdc"
-                mc_busdc[param] = terminalDC_voltage_start(busdc, param)
-            else
-                mc_busdc[param] = fill(value, terminals)
-            end
+        busdc["terminals"] = terminals
+        # Voltage bounds: apply the same offset to each terminal
+        for param in ["Vdcmin", "Vdcmax"]
+            busdc[param] = (busdc[param] - 1.0) .+ [1.0, -1.0, 0.0]
         end
-        busdc_dict[b] = mc_busdc
+        # Voltage start value: apply the same magnitude to positive and negative terminals
+        busdc["Vdc"] = busdc["Vdc"] .* [1.0, -1.0, 0.0]
+        for param in _busdc_uniform_parameters
+            busdc[param] = fill(busdc[param], terminals)
+        end
     end
 end
 
 function _make_multiconductor_branchdc!(branchdc_dict::Dict{String,<:Any})
     for (b, branchdc) in branchdc_dict
-        mc_branchdc = Dict{String,Any}()
         if branchdc["line_confi"] == 1 # monopolar (symmetric or asymmetric)
             conductors = 2
-        else # bipolar
+        elseif branchdc["line_confi"] == 2 # bipolar
             conductors = 3
+        else
+            _Memento.error(_LOGGER, "Unexpected \"line_confi\" value for DC branch $b: found $(branchdc["line_confi"]), expected 1 or 2.")
         end
-        mc_branchdc["conductors"] = conductors
-        for (param, value) in branchdc
-            if param in _conductorless
-                mc_branchdc[param] = value
-            elseif param == "status"
-                mc_branchdc[param] = conductorsDC_status(branchdc) .* branchdc[param]
-            else
-                mc_branchdc[param] = fill(value, conductors)
-                # Adjust resistance of branchdc metallic return
-                if param == "r"
-                    mc_branchdc[param][conductors] = branchdc["return_z"]
-                end
-            end
+        delete!(branchdc, "line_confi")
+        branchdc["conductors"] = conductors
+        branchdc["status"] = conductorsDC_status(branchdc) .* branchdc["status"]
+        branchdc["r"] = [fill(branchdc["r"], conductors-1)..., branchdc["return_z"]]
+        delete!(branchdc, "return_z")
+        for param in _branchdc_uniform_parameters
+            branchdc[param] = fill(branchdc[param], conductors)
         end
-        branchdc_dict[b] = mc_branchdc
     end
 end
 
 function _make_multiconductor_convdc!(convdc_dict::Dict{String,<:Any})
     for (c, convdc) in convdc_dict
-        mc_convdc = Dict{String,Any}()
         if convdc["conv_confi"] == 1 # monopolar (symmetric or asymmetric)
             poles = 1
-        else # bipolar
+        elseif convdc["conv_confi"] == 2 # bipolar
             poles = 2
+        else
+            _Memento.error(_LOGGER, "Unexpected \"conv_confi\" value for DC converter $c: found $(convdc["conv_confi"]), expected 1 or 2.")
         end
-        mc_convdc["poles"] = poles
-        for (param, value) in convdc
-            if param in _conductorless
-                mc_convdc[param] = value
-            elseif param == "status"
-                mc_convdc[param] = conductorsDC_status(convdc) .* convdc[param]
-            else
-                mc_convdc[param] = fill(value, poles)
-            end
+        delete!(convdc, "conv_confi")
+        convdc["poles"] = poles
+        convdc["status"] = conductorsDC_status(convdc) .* convdc["status"]
+        for param in _convdc_uniform_parameters
+            convdc[param] = fill(convdc[param], poles)
         end
-        convdc_dict[c] = mc_convdc
     end
 end
 
 "Generate vector of multi-conductor status states for `convdc` and `branchdc` components"
 function conductorsDC_status(item_data::Dict{String,<:Any})
     poles = Vector{Int}()
-    if haskey(item_data, "conv_confi")
-        if item_data["conv_confi"] == 1
+    if haskey(item_data, "poles")
+        if item_data["poles"] == 1
             append!(poles, first(_component_busdc_terminal_lookup[item_data["connect_at"]], 1))
         else
             append!(poles, 1:2)
         end
-    elseif haskey(item_data, "line_confi")
-        if item_data["line_confi"] == 1
+    elseif haskey(item_data, "conductors")
+        if item_data["conductors"] == 2
             append!(poles, _component_busdc_terminal_lookup[item_data["connect_at"]])
         else
             append!(poles, 1:3)
         end
     end
     return [item_data[key] for key in _mc_status[poles]]
-end
-
-"Adjust voltage bound for multi-conductor `busdc` terminals"
-function terminalDC_voltage_bound(item_data::Dict{String,<:Any}, param::String)
-    atol = item_data[param] - 1
-    return atol .+ [1, -1, 0]
-end
-
-"Adjust voltage start value for multi-conductor `busdc` terminals"
-function terminalDC_voltage_start(item_data::Dict{String,<:Any}, param::String)
-    v = item_data[param]
-    return [v, -v, 0]
 end
