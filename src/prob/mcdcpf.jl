@@ -3,11 +3,13 @@ export solve_mcdcpf
 ""
 function solve_mcdcpf(file::String, model_type::Type, solver; kwargs...)
     data = parse_file(file)
+    pf_update_limits(data)
     return solve_mcdcpf(data, model_type, solver; ref_extensions=[add_ref_dcgrid!], kwargs...)
 end
 
 ""
 function solve_mcdcpf(data::Dict{String,Any}, model_type::Type, solver; kwargs...)
+    pf_update_limits(data)
     return _PM.solve_model(data, model_type, solver, build_mcdcpf; ref_extensions = [add_ref_dcgrid!], kwargs...)
 end
 
@@ -18,7 +20,7 @@ function build_mcdcpf(pm::_PM.AbstractPowerModel)
     _PM.variable_branch_power(pm, bounded = false)
 
     variable_mcdc_converter(pm, bounded = false)
-    variable_mcdcgrid_voltage_magnitude(pm, bounded = false)
+    variable_mcdcgrid_voltage_magnitude(pm, bounded = true)
     variable_mc_dcbranch_current(pm, bounded = false)
 
     # _PM.objective_min_fuel_cost(pm)

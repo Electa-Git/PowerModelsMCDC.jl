@@ -27,6 +27,8 @@ end
 "`pconv[i] == pconv`"
 function constraint_active_conv_setpoint(pm::_PM.AbstractPowerModel, n::Int, i, pconv_cond, cond)
     pconv_var = _PM.var(pm, n, :pconv_tf_fr, i)
+    # display("constraint_active_conv_setpoint for conv  $i")
+    # @show pconv_var, pconv_cond
     (JuMP.@constraint(pm.model, pconv_var[cond] == -pconv_cond))
 end
 

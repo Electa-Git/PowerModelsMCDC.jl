@@ -1,5 +1,6 @@
 function comp_start_value(comp::Dict{String,<:Any}, key::String, conductor::Int, default)
     if haskey(comp, key)
+        # @show key, conductor, comp[key], comp[key][conductor]
         return comp[key][conductor]
     else
         return default

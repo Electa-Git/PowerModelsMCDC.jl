@@ -112,7 +112,7 @@ function variable_conv_reactor_active_power_from(pm::_PM.AbstractPowerModel; nw:
     bigM = 2
     pprfr = _PM.var(pm, nw)[:pconv_pr_fr] = Dict(i => JuMP.@variable(pm.model,
         [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]], base_name = "$(nw)_pconv_pr_fr_$(i)",
-        start = comp_start_value(_PM.ref(pm, nw, :convdc, i), "P_g", c, 1.0)
+        start = -comp_start_value(_PM.ref(pm, nw, :convdc, i), "P_g", c, 1.0)
     ) for i in _PM.ids(pm, nw, :convdc)
     )
 
@@ -131,7 +131,7 @@ function variable_conv_reactor_reactive_power_from(pm::_PM.AbstractPowerModel; n
     bigM = 2
     qprfr = _PM.var(pm, nw)[:qconv_pr_fr] = Dict(i => JuMP.@variable(pm.model,
         [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]], base_name = "$(nw)_qconv_pr_fr_$(i)",
-        start = comp_start_value(_PM.ref(pm, nw, :convdc, i), "Q_g", c, 1.0)
+        start = -comp_start_value(_PM.ref(pm, nw, :convdc, i), "Q_g", c, 1.0)
     ) for i in _PM.ids(pm, nw, :convdc)
     )
 
@@ -150,7 +150,7 @@ function variable_converter_to_grid_active_power(pm::_PM.AbstractPowerModel; nw:
     bigM = 2
     ptffr = _PM.var(pm, nw)[:pconv_tf_fr] = Dict(i => JuMP.@variable(pm.model,
         [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]], base_name = "$(nw)_pconv_tf_fr_$(i)",
-        start = comp_start_value(_PM.ref(pm, nw, :convdc, i), "P_g", c, 1.0)
+        start = -comp_start_value(_PM.ref(pm, nw, :convdc, i), "P_g", c, 1.0)
     ) for i in _PM.ids(pm, nw, :convdc)
     )
 
@@ -169,7 +169,7 @@ function variable_converter_to_grid_reactive_power(pm::_PM.AbstractPowerModel; n
     bigM = 2
     qtffr = _PM.var(pm, nw)[:qconv_tf_fr] = Dict(i => JuMP.@variable(pm.model,
         [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]], base_name = "$(nw)_qconv_tf_fr_$(i)",
-        start = comp_start_value(_PM.ref(pm, nw, :convdc, i), "Q_g", c, 1.0)
+        start = -comp_start_value(_PM.ref(pm, nw, :convdc, i), "Q_g", c, 1.0)
     ) for i in _PM.ids(pm, nw, :convdc)
     )
 
@@ -210,7 +210,7 @@ end
 function variable_dcside_current_ground(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     icdcg = _PM.var(pm, nw)[:iconv_dcg] = Dict(i => JuMP.@variable(pm.model,
         [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]], base_name = "$(nw)_iconv_dcg_$(i)",
-        start = 1.0
+        start = 0.0
     ) for i in _PM.ids(pm, nw, :convdc)
     )
 
@@ -231,7 +231,7 @@ function variable_dcside_current_grounding_shunt(pm::_PM.AbstractPowerModel; nw:
     bigM = 1.2 # to account for losses, maximum losses to be derived
     icdcg_shunt = _PM.var(pm, nw)[:iconv_dcg_shunt] = Dict(i => JuMP.@variable(pm.model,
         base_name = "$(nw)_iconv_dcg_shunt_$(i)",
-        start = 1.0
+        start = 0.0
     ) for i in _PM.ids(pm, nw, :convdc)
     )
 
@@ -271,7 +271,7 @@ function variable_dcside_ground_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw
     bigM = 1.2 # to account for losses, maximum losses to be derived
     pcdcg = _PM.var(pm, nw)[:pconv_dcg] = Dict(i => JuMP.@variable(pm.model,
         [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]], base_name = "$(nw)_pconv_dcg_$(i)",
-        start = 1.0
+        start = 0.0
     ) for i in _PM.ids(pm, nw, :convdc)
     )
     if bounded
@@ -290,7 +290,7 @@ function variable_dcside_grounding_shunt_power(pm::_PM.AbstractPowerModel; nw::I
     bigM = 1.2 # to account for losses, maximum losses to be derived
     pcdcg_shunt = _PM.var(pm, nw)[:pconv_dcg_shunt] = Dict(i => JuMP.@variable(pm.model,
         base_name = "$(nw)_pconv_dcg_shunt_$(i)",
-        start = 1.0 #comp_start_value(_PM.ref(pm, nw, :convdc, i), "Pdcset", c, 1.0)
+        start = 0.0 #comp_start_value(_PM.ref(pm, nw, :convdc, i), "Pdcset", c, 1.0)
     ) for i in _PM.ids(pm, nw, :convdc)
     )
 

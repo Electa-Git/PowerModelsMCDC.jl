@@ -542,3 +542,38 @@ function build_mc_data!(base_data)
 
     return base_data
 end
+
+function pf_update_limits(base_data)
+    
+    for (i, bus) in base_data["bus"]
+        bus["vmin"] = 0.2
+        bus["vmax"] = 10.0
+    end
+    for (i, busdc) in base_data["busdc"]
+
+        busdc["Vdcmax"][1] = 10.0
+        busdc["Vdcmin"][1] = -10
+
+        busdc["Vdcmax"][2] = 10
+        busdc["Vdcmin"][2] = -10.0
+
+        busdc["Vdcmax"][3] = 10
+        busdc["Vdcmin"][3] = -10
+        
+        
+    end
+    for (c, conv) in base_data["convdc"]
+
+        conv["Vmmin"] = 10*conv["Vmmin"]
+        conv["Vmmax"] = 10*conv["Vmmax"]
+        conv["Imax"] = 10*conv["Imax"]
+        conv["Pacrated"] = 10*conv["Pacrated"]
+        conv["Qacrated"] = 10*conv["Qacrated"]
+        conv["Qacmax"] = 10*conv["Qacmax"]
+        conv["Qacmin"] = 10*conv["Qacmin"]
+        conv["Pacmin"] = 10*conv["Pacmin"]
+        conv["Pacmax"] = 10*conv["Pacmax"]
+    end
+
+    return base_data
+end 

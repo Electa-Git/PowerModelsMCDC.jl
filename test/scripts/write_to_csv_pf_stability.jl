@@ -1,14 +1,7 @@
 using CSV
 using DataFrames
-# for saving generator and load data
 
-# mva_base = data["1"]["baseMVA"]
-
-# result=result_mcdc_pf1
-# result=result_mcdc
-result=result_mcdc_opf
-
-
+data = 
 conv_sp = DataFrame( c2 = [], c3 = [], c4 = [], c5 = [], c6 = [])
 push!(conv_sp, ["Conv no","Pc","Qc","Pdc","Pdcg"])
 # #for (n,nw) in result["solution"]

@@ -131,7 +131,7 @@ function constraint_dc_droop_control(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     bus = _PM.ref(pm, nw, :busdc, conv["busdc_i"])
     
     for cond in 1:conv["conductors"]
-        constraint_dc_droop_control(pm, nw, i, conv["busdc_i"], conv["Vdcset"], conv["Pdcset"], conv["droop"], cond)
+        constraint_dc_droop_control(pm, nw, i, conv["busdc_i"], conv["Vdcset"], conv["P_g"], conv["droop"], cond)
     end
 end
 
@@ -141,6 +141,6 @@ function constraint_ac_droop_control(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     
     for cond in 1:conv["conductors"]
         #modify the function inputs for ac-droop
-        constraint_ac_droop_control(pm, nw, i, conv["busac_i"], conv["Vacset"], conv["Qacset"], conv["droop_ac"], cond)
+        constraint_ac_droop_control(pm, nw, i, conv["busac_i"], conv["Vacset"], conv["Q_g"], conv["droop_ac"], cond)
     end
 end
