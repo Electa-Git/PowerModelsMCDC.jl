@@ -159,3 +159,18 @@ function buspair_parameters_dc(arcs_dcgrid_from, branches, buses)
 
     return buspairs
 end
+
+
+# Extend PowerModels' reference functions with methods for multiconductor quantities
+
+_PM.ref(pm::_PM.AbstractPowerModel, nw::Int, key::Symbol, idx, param::String, conductor::String) = _IM.ref(pm, _PM.pm_it_sym, nw, key, idx, param)[conductor]
+_PM.ref(pm::_PM.AbstractPowerModel, key::Symbol, idx, param::String, conductor::String; nw::Int=nw_id_default) = _IM.ref(pm, _PM.pm_it_sym, key, idx, param; nw = nw)[conductor]
+
+_PM.var(pm::_PM.AbstractPowerModel, nw::Int, key::Symbol, idx, conductor::String) = _IM.var(pm, _PM.pm_it_sym, nw, key, idx)[conductor]
+_PM.var(pm::_PM.AbstractPowerModel, key::Symbol, idx, conductor::String; nw::Int=nw_id_default) = _IM.var(pm, _PM.pm_it_sym, key, idx; nw = nw)[conductor]
+
+_PM.con(pm::_PM.AbstractPowerModel, nw::Int, key::Symbol, idx, conductor::String) = _IM.con(pm, _PM.pm_it_sym, nw, key, idx)[conductor]
+_PM.con(pm::_PM.AbstractPowerModel, key::Symbol, idx, conductor::String; nw::Int=nw_id_default) = _IM.con(pm, _PM.pm_it_sym, key, idx; nw = nw)[conductor]
+
+_PM.sol(pm::_PM.AbstractPowerModel, nw::Int, key::Symbol, idx, conductor::String) = _IM.sol(pm, _PM.pm_it_sym, nw, key, idx)[conductor]
+_PM.sol(pm::_PM.AbstractPowerModel, key::Symbol, idx, conductor::String; nw::Int=nw_id_default) = _IM.sol(pm, _PM.pm_it_sym, key, idx; nw = nw)[conductor]
