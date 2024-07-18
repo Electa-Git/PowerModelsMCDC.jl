@@ -190,7 +190,7 @@ function variable_converter_to_grid_reactive_power(pm::_PM.AbstractPowerModel; n
 end
 
 function variable_dcside_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    poles = _PM.ref(pm, nw, :convs_dc_cond)
+    poles = _PM.ref(pm, nw, :conv_dcpoles)
     vars = _PM.var(pm, nw)[:iconv_dc] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_iconv_dc_$(i)",
         start = 1.0
@@ -247,7 +247,7 @@ end
 "variable: `pconv_dc[j]` for `j` in `convdc`"
 function variable_dcside_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 1.2 # to account for losses, maximum losses to be derived
-    poles = _PM.ref(pm, nw, :convs_dc_cond)
+    poles = _PM.ref(pm, nw, :conv_dcpoles)
     vars = _PM.var(pm, nw)[:pconv_dc] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_pconv_dc_$(i)",
         start = 1.0 #comp_start_value(_PM.ref(pm, nw, :convdc, i), "Pdcset", c, 1.0)
