@@ -44,7 +44,7 @@ function constraint_converter_losses(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     a = conv["LossA"]
     b = conv["LossB"]
     c = conv["LossCinv"]
-    active_pole = first(_PM.ref(pm, nw, :convs_ac_cond, i))
+    active_pole = first(_PM.ref(pm, nw, :conv_acpoles, i))
     for cond in active_pole
         plmax = conv["LossA"][cond] + conv["LossB"][cond] * conv["Pacrated"][cond] + conv["LossCinv"][cond] * (conv["Pacrated"][cond])^2
         constraint_converter_losses(pm, nw, i, a[cond], b[cond], c[cond], plmax, cond)
@@ -60,7 +60,7 @@ end
 
 function constraint_converter_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
-    active_pole = first(_PM.ref(pm, nw, :convs_ac_cond, i))
+    active_pole = first(_PM.ref(pm, nw, :conv_acpoles, i))
     for cond in active_pole
         Vmax = conv["Vmmax"][cond]
         Imax = conv["Imax"][cond]
@@ -88,7 +88,7 @@ end
 
 function constraint_active_conv_setpoint(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
-    active_pole = first(_PM.ref(pm, nw, :convs_ac_cond, i))
+    active_pole = first(_PM.ref(pm, nw, :conv_acpoles, i))
     for cond in active_pole
         constraint_active_conv_setpoint(pm, nw, i, conv["P_g"][cond], cond)
     end
@@ -96,7 +96,7 @@ end
 
 function constraint_reactive_conv_setpoint(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
-    active_pole = first(_PM.ref(pm, nw, :convs_ac_cond, i))
+    active_pole = first(_PM.ref(pm, nw, :conv_acpoles, i))
     for cond in active_pole
         constraint_reactive_conv_setpoint(pm, nw, i, conv["Q_g"][cond], cond)
     end
@@ -104,7 +104,7 @@ end
 
 function constraint_conv_reactor(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
-    active_pole = first(_PM.ref(pm, nw, :convs_ac_cond, i))
+    active_pole = first(_PM.ref(pm, nw, :conv_acpoles, i))
     for cond in active_pole
         constraint_conv_reactor(pm, nw, i, conv["rc"][cond], conv["xc"][cond], Bool(conv["reactor"]), cond)
     end
@@ -112,7 +112,7 @@ end
 
 function constraint_conv_filter(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
-    active_pole = first(_PM.ref(pm, nw, :convs_ac_cond, i))
+    active_pole = first(_PM.ref(pm, nw, :conv_acpoles, i))
     for cond in active_pole
         constraint_conv_filter(pm, nw, i, conv["bf"][cond], Bool(conv["filter"]), cond)
     end
@@ -120,7 +120,7 @@ end
 
 function constraint_conv_transformer(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
-    active_pole = first(_PM.ref(pm, nw, :convs_ac_cond, i))
+    active_pole = first(_PM.ref(pm, nw, :conv_acpoles, i))
     for cond in active_pole
         constraint_conv_transformer(pm, nw, i, conv["rtf"][cond], conv["xtf"][cond], conv["busac_i"], conv["tm"][cond], Bool(conv["transformer"]), cond)
     end
@@ -128,7 +128,7 @@ end
 
 function constraint_conv_firing_angle(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
-    active_pole = first(_PM.ref(pm, nw, :convs_ac_cond, i))
+    active_pole = first(_PM.ref(pm, nw, :conv_acpoles, i))
     for cond in active_pole
         S = conv["Pacrated"][cond]
         P1 = cos(0) * S

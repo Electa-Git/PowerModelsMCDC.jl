@@ -33,7 +33,7 @@ end
 
 "variable: `pconv_ac[j]` for `j` in `convdc`"
 function variable_converter_active_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:pconv_ac] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_pconv_ac_$(i)"
     ) for i in _PM.ids(pm, nw, :convdc)
@@ -52,7 +52,7 @@ end
 
 "variable: `qconv_ac[j]` for `j` in `convdc`"
 function variable_converter_reactive_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:qconv_ac] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_qconv_ac_$(i)"
     ) for i in _PM.ids(pm, nw, :convdc)
@@ -72,7 +72,7 @@ end
 "variable: `pconv_grid_ac_to[j]` for `j` in `convdc`"
 function variable_conv_transformer_active_power_to(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:pconv_tf_to] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_pconv_tf_to_$(i)"
     ) for i in _PM.ids(pm, nw, :convdc)
@@ -92,7 +92,7 @@ end
 "variable: `qconv_grid_ac_to[j]` for `j` in `convdc`"
 function variable_conv_transformer_reactive_power_to(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:qconv_tf_to] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_qconv_tf_to__$(i)"
     ) for i in _PM.ids(pm, nw, :convdc)
@@ -112,7 +112,7 @@ end
 "variable: `pconv_pr_from[j]` for `j` in `convdc`"
 function variable_conv_reactor_active_power_from(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:pconv_pr_fr] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_pconv_pr_fr_$(i)"
     ) for i in _PM.ids(pm, nw, :convdc)
@@ -132,7 +132,7 @@ end
 "variable: `qconv_pr_from[j]` for `j` in `convdc`"
 function variable_conv_reactor_reactive_power_from(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:qconv_pr_fr] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_qconv_pr_fr_$(i)"
     ) for i in _PM.ids(pm, nw, :convdc)
@@ -152,7 +152,7 @@ end
 "variable: `pconv_grid_ac[j]` for `j` in `convdc`"
 function variable_converter_to_grid_active_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:pconv_tf_fr] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_pconv_tf_fr_$(i)"
     ) for i in _PM.ids(pm, nw, :convdc)
@@ -172,7 +172,7 @@ end
 "variable: `qconv_grid_ac[j]` for `j` in `convdc`"
 function variable_converter_to_grid_reactive_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:qconv_tf_fr] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_qconv_tf_fr_$(i)"
     ) for i in _PM.ids(pm, nw, :convdc)
@@ -209,7 +209,7 @@ function variable_dcside_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_d
 end
 
 function variable_dcside_current_ground(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:iconv_dcg] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_iconv_dcg_$(i)",
         start = 1.0
@@ -268,7 +268,7 @@ end
 "variable: `pconv_dcg[j]` for `j` in `convdc`"
 function variable_dcside_ground_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 1.2 # to account for losses, maximum losses to be derived
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:pconv_dcg] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_pconv_dcg_$(i)",
         start = 1.0
@@ -306,7 +306,7 @@ end
 
 "variable: `pconv_dc[j]` for `j` in `convdc`"
 function variable_converter_firing_angle(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:phiconv] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_phiconv_$(i)",
         start = 0
@@ -325,7 +325,7 @@ end
 
 "variable: `iconv_ac[j]` for `j` in `convdc`"
 function variable_acside_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:iconv_ac] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_iconv_ac_$(i)",
         start = 1.0
@@ -377,7 +377,7 @@ end
 "variable: `vmf[j]` for `j` in `convdc`"
 function variable_converter_filter_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 1.2 # only internal converter voltage is strictly regulated
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:vmf] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_vmf_$(i)",
         start = 0 # start = _PM.ref(pm, nw, :convdc, i, "Vtar")
@@ -397,7 +397,7 @@ end
 "variable: `vaf[j]` for `j` in `convdc`"
 function variable_converter_filter_voltage_angle(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2 * pi #
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:vaf] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_vaf_$(i)",
         start = 0
@@ -421,7 +421,7 @@ end
 
 "variable: `vmc[j]` for `j` in `convdc`"
 function variable_converter_internal_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:vmc] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_vmc_$(i)",
         start = _PM.ref(pm, nw, :convdc, i, "Vtar")
@@ -441,7 +441,7 @@ end
 "variable: `vac[j]` for `j` in `convdc`"
 function variable_converter_internal_voltage_angle(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2 * pi #
-    poles = _PM.ref(pm, nw, :convs_ac_cond)
+    poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:vac] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_vac_$(i)",
         start = 0
