@@ -1,6 +1,15 @@
 function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
     for (n, nw_ref) in ref[:it][_PM.pm_it_sym][:nw]
+
+        # Delete unused dicts created by PowerModels for `dcline` components.
+        # `dcline` components are converted to `branchdc` before calling this function.
+        # Keeping unused dicts with similar names to the ones we use could be confusing.
+        delete!(nw_ref, :arcs_from_dc)
+        delete!(nw_ref, :arcs_to_dc)
+        delete!(nw_ref, :arcs_dc)
+
         if haskey(nw_ref, :convdc)
+
             # Filter converters and DC branches that are inactive or connected to nonexistent buses
             nw_ref[:convdc] = Dict([x for x in nw_ref[:convdc] if (
                 any(values(x.second["status"]) .== 1) &&
@@ -17,13 +26,6 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             nw_ref[:arcs_dcgrid_from] = [(l, branch["fbusdc"], branch["tbusdc"]) for (l, branch) in nw_ref[:branchdc]]
             nw_ref[:arcs_dcgrid_to] = [(l, branch["tbusdc"], branch["fbusdc"]) for (l, branch) in nw_ref[:branchdc]]
             nw_ref[:arcs_dcgrid] = [nw_ref[:arcs_dcgrid_from]; nw_ref[:arcs_dcgrid_to]]
-            nw_ref[:arcs_conv_acdc] = [(i, conv["busac_i"], conv["busdc_i"]) for (i, conv) in nw_ref[:convdc]]
-            # Bus arcs of the DC grid
-            bus_arcs_dcgrid = Dict([(bus["busdc_i"], []) for (i, bus) in nw_ref[:busdc]])
-            for (l, i, j) in nw_ref[:arcs_dcgrid]
-                push!(bus_arcs_dcgrid[i], (l, i, j))
-            end
-            nw_ref[:bus_arcs_dcgrid] = bus_arcs_dcgrid
 
             # Bus arcs of the DC grid - active conductor connections
             arcs_dcgrid_cond = Dict((l, i, j) => (Vector{Int}(), nw_ref[:branchdc][l]["conductors"]) for (l, i, j) in nw_ref[:arcs_dcgrid])
@@ -50,13 +52,6 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                 push!(bus_convs_ac[conv["busac_i"]], i)
             end
             nw_ref[:bus_convs_ac] = bus_convs_ac
-
-            # bus_convs for AC side power injection of DC converters
-            bus_convs_dc = Dict([(bus["busdc_i"], []) for (i, bus) in nw_ref[:busdc]])
-            for (i, conv) in nw_ref[:convdc]
-                push!(bus_convs_dc[conv["busdc_i"]], i)
-            end
-            nw_ref[:bus_convs_dc] = bus_convs_dc
 
             # bus_convs for AC and DC side power injection of DC converters - active conductor connections
             convs_ac_cond = Dict(i => (findall(x -> !iszero(x), conv["status"]), conv["poles"]) for (i, conv) in nw_ref[:convdc])
@@ -126,27 +121,20 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             end
 
             nw_ref[:ref_buses_dc] = ref_buses_dc
-            nw_ref[:buspairsdc] = buspair_parameters_dc(nw_ref[:arcs_dcgrid_from], nw_ref[:branchdc], nw_ref[:busdc])
         else
-            nw_ref[:convdc] = Dict{String,Any}()
+            # Components
             nw_ref[:busdc] = Dict{String,Any}()
             nw_ref[:branchdc] = Dict{String,Any}()
-            # DC grid arcs for DC grid branches
+            nw_ref[:convdc] = Dict{String,Any}()
+            # DC arcs
             nw_ref[:arcs_dcgrid] = Dict{String,Any}()
             nw_ref[:arcs_dcgrid_from] = Dict{String,Any}()
             nw_ref[:arcs_dcgrid_to] = Dict{String,Any}()
-            nw_ref[:arcs_conv_acdc] = Dict{String,Any}()
-            nw_ref[:bus_arcs_dcgrid] = Dict{String,Any}()
-            bus_convs_ac = Dict([(i, []) for (i, bus) in nw_ref[:bus]])
-            for (i, conv) in nw_ref[:convdc]
-                push!(bus_convs_ac[conv["busac_i"]], i)
-            end
-            nw_ref[:bus_convs_ac] = bus_convs_ac
-            nw_ref[:bus_convs_dc] = Dict{String,Any}()
+            # Component lookup
+            nw_ref[:bus_convs_ac] = Dict([(i, []) for (i, bus) in nw_ref[:bus]])
             nw_ref[:bus_convs_grounding_shunt] = Dict{String,Any}()
             nw_ref[:ref_buses_dc] = Dict{String,Any}()
-            nw_ref[:buspairsdc] = Dict{String,Any}()
-            # Component-conductors lookup tables
+            # Multiconductor component lookup
             nw_ref[:bus_arcs_dcgrid_cond] = Dict{String,Any}()
             nw_ref[:arcs_dcgrid_cond] = Dict{String,Any}()
             nw_ref[:bus_convs_dc_cond] = Dict{String,Any}()

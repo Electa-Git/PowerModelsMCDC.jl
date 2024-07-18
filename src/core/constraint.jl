@@ -4,7 +4,7 @@ end
 
 """
 ```
-sum(p_dcgrid[a] for a in bus_arcs_dcgrid) + sum(pconv_dc[c] for c in bus_convs_dc) == pd
+sum(p_dcgrid[a] for a in bus_arcs_dcgrid_cond) + sum(pconv_dc[c] for c in bus_convs_dc_cond) == pd
 ```
 """
 
