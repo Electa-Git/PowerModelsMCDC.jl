@@ -29,7 +29,7 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
 
             # Bus arcs of the DC grid - active conductor connections
             arcdc_conductors = Dict((l, i, j) => (Vector{Int}(), nw_ref[:branchdc][l]["conductors"]) for (l, i, j) in nw_ref[:arcsdc])
-            bus_arcs_dcgrid_cond = Dict([((bus["busdc_i"], c), Dict()) for c in 1:3 for (i, bus) in nw_ref[:busdc]])
+            busdc_terminal_arcdc_conductors = Dict([((bus["busdc_i"], c), Dict()) for c in 1:3 for (i, bus) in nw_ref[:busdc]])
             for (l, i, j) in nw_ref[:arcsdc]
                 if nw_ref[:branchdc][l]["conductors"] == 2
                     terminals = _component_busdc_terminal_lookup[nw_ref[:branchdc][l]["connect_at"]]
@@ -39,12 +39,12 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                 for (c, terminal) in enumerate(terminals)
                     if !iszero(nw_ref[:branchdc][l]["status"][c])
                         push!(first(arcdc_conductors[(l, i, j)]), c)
-                        push!(bus_arcs_dcgrid_cond[(i, terminal)], (l, i, j) => c)
+                        push!(busdc_terminal_arcdc_conductors[(i, terminal)], (l, i, j) => c)
                     end
                 end
             end
             nw_ref[:arcdc_conductors] = arcdc_conductors
-            nw_ref[:bus_arcs_dcgrid_cond] = bus_arcs_dcgrid_cond
+            nw_ref[:busdc_terminal_arcdc_conductors] = busdc_terminal_arcdc_conductors
 
             # bus_convs for AC side power injection of DC converters
             bus_convs_ac = Dict([(i, []) for (i, bus) in nw_ref[:bus]])
@@ -135,7 +135,7 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             nw_ref[:bus_convs_grounding_shunt] = Dict{String,Any}()
             nw_ref[:ref_buses_dc] = Dict{String,Any}()
             # Multiconductor component lookup
-            nw_ref[:bus_arcs_dcgrid_cond] = Dict{String,Any}()
+            nw_ref[:busdc_terminal_arcdc_conductors] = Dict{String,Any}()
             nw_ref[:arcdc_conductors] = Dict{String,Any}()
             nw_ref[:bus_convs_dc_cond] = Dict{String,Any}()
             nw_ref[:convs_ac_cond] = Dict{String,Any}()

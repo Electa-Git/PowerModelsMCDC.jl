@@ -21,11 +21,11 @@ end
 
 function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     busdc = _PM.ref(pm, nw, :busdc, i)
-    bus_arcs_dcgrid_cond = _PM.ref(pm, nw, :bus_arcs_dcgrid_cond)
+    busdc_terminal_arcdc_conductors = _PM.ref(pm, nw, :busdc_terminal_arcdc_conductors)
     bus_convs_dc_cond = _PM.ref(pm, nw, :bus_convs_dc_cond)
     bus_convs_grounding_shunt = _PM.ref(pm, nw, :bus_convs_grounding_shunt)
 
-    constraint_kcl_shunt_dcgrid(pm, nw, i, busdc["Pdc"], busdc["terminals"], bus_arcs_dcgrid_cond, bus_convs_dc_cond, bus_convs_grounding_shunt)
+    constraint_kcl_shunt_dcgrid(pm, nw, i, busdc["Pdc"], busdc["terminals"], busdc_terminal_arcdc_conductors, bus_convs_dc_cond, bus_convs_grounding_shunt)
 end
 
 function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
@@ -44,7 +44,7 @@ function constraint_converter_losses(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     a = conv["LossA"]
     b = conv["LossB"]
     c = conv["LossCinv"]
-    active_pole = first(_PM.ref(pm, nw, :convs_ac_cond, i)) 
+    active_pole = first(_PM.ref(pm, nw, :convs_ac_cond, i))
     for cond in active_pole
         plmax = conv["LossA"][cond] + conv["LossB"][cond] * conv["Pacrated"][cond] + conv["LossCinv"][cond] * (conv["Pacrated"][cond])^2
         constraint_converter_losses(pm, nw, i, a[cond], b[cond], c[cond], plmax, cond)

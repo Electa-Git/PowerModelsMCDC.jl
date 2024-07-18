@@ -30,10 +30,10 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int, f_bus, t_bu
     vmdc_fr = _PM.var(pm, n, :vdcm, f_bus)
     vmdc_to = _PM.var(pm, n, :vdcm, t_bus)
 
-    bus_arcs_dcgrid_cond = _PM.ref(pm, n, :bus_arcs_dcgrid_cond)
+    busdc_terminal_arcdc_conductors = _PM.ref(pm, n, :busdc_terminal_arcdc_conductors)
 
     for k = 1:3
-        for (line, d) in bus_arcs_dcgrid_cond[(f_bus, k)]
+        for (line, d) in busdc_terminal_arcdc_conductors[(f_bus, k)]
             if line == f_idx
                 if r[d] == 0
                     JuMP.@constraint(pm.model, i_dc_fr[d] + i_dc_to[d] == 0)
@@ -51,7 +51,7 @@ end
 "`vdc[i] == vdcm`"
 function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::Int, i, busdc, Vdcset, bus_convs_dc_cond)
     vdcm = _PM.var(pm, n, :vdcm, busdc)
-    
+
     for bus_cond in 1:2
         for (conv, conv_cond) in bus_convs_dc_cond[(busdc, bus_cond)]
             if conv == i

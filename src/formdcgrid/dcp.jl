@@ -26,10 +26,10 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractDCPModel, n::Int, f_bus, t_bu
     i_dc_to = _PM.var(pm, n, :i_dcgrid, t_idx)
     vmdc_fr = _PM.var(pm, n, :vdcm, f_bus)
     vmdc_to = _PM.var(pm, n, :vdcm, t_bus)
-    bus_arcs_dcgrid_cond = _PM.ref(pm, n, :bus_arcs_dcgrid_cond)
+    busdc_terminal_arcdc_conductors = _PM.ref(pm, n, :busdc_terminal_arcdc_conductors)
 
     for k = 1:3
-        for (line, d) in bus_arcs_dcgrid_cond[(f_bus, k)]
+        for (line, d) in busdc_terminal_arcdc_conductors[(f_bus, k)]
             if line == f_idx
                 if r[d] == 0
                     JuMP.@constraint(pm.model, i_dc_fr[d] + i_dc_to[d] == 0)
