@@ -45,6 +45,6 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractDCPModel, n::Int, f_bus, t_bu
 end
 
 "`vdc[i] == vdcm`"
-function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractDCPModel, n::Int, i, busdc, Vdcset, bus_convs_dc_cond)
+function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractDCPModel, n::Int, i, busdc, Vdcset, busdc_terminal_conv_poles)
     # not used
 end

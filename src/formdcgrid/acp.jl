@@ -49,11 +49,11 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractACPModel, n::Int, f_bus, t_bu
 end
 
 "`vdc[i] == vdcm`"
-function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::Int, i, busdc, Vdcset, bus_convs_dc_cond)
+function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::Int, i, busdc, Vdcset, busdc_terminal_conv_poles)
     vdcm = _PM.var(pm, n, :vdcm, busdc)
 
     for bus_cond in 1:2
-        for (conv, conv_cond) in bus_convs_dc_cond[(busdc, bus_cond)]
+        for (conv, conv_cond) in busdc_terminal_conv_poles[(busdc, bus_cond)]
             if conv == i
                 JuMP.@constraint(pm.model, vdcm[bus_cond] == Vdcset[conv_cond])
             end

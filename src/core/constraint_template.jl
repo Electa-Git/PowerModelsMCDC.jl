@@ -22,10 +22,10 @@ end
 function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     busdc = _PM.ref(pm, nw, :busdc, i)
     busdc_terminal_arcdc_conductors = _PM.ref(pm, nw, :busdc_terminal_arcdc_conductors)
-    bus_convs_dc_cond = _PM.ref(pm, nw, :bus_convs_dc_cond)
+    busdc_terminal_conv_poles = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
     bus_convs_grounding_shunt = _PM.ref(pm, nw, :bus_convs_grounding_shunt)
 
-    constraint_kcl_shunt_dcgrid(pm, nw, i, busdc["Pdc"], busdc["terminals"], busdc_terminal_arcdc_conductors, bus_convs_dc_cond, bus_convs_grounding_shunt)
+    constraint_kcl_shunt_dcgrid(pm, nw, i, busdc["Pdc"], busdc["terminals"], busdc_terminal_arcdc_conductors, busdc_terminal_conv_poles, bus_convs_grounding_shunt)
 end
 
 function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
@@ -70,17 +70,17 @@ end
 
 function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
-    bus_convs_dc_cond = _PM.ref(pm, n, :bus_convs_dc_cond)
+    busdc_terminal_conv_poles = _PM.ref(pm, n, :busdc_terminal_conv_poles)
 
-    constraint_dc_voltage_magnitude_setpoint(pm, nw, i, conv["busdc_i"], conv["Vdcset"], bus_convs_dc_cond)
+    constraint_dc_voltage_magnitude_setpoint(pm, nw, i, conv["busdc_i"], conv["Vdcset"], busdc_terminal_conv_poles)
 end
 
 function constraint_converter_dc_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
     busdc = _PM.ref(pm, nw, :busdc, conv["busdc_i"])
-    bus_convs_dc_cond = _PM.ref(pm, nw, :bus_convs_dc_cond)
+    busdc_terminal_conv_poles = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
 
-    bus_cond_convs_dc_cond = Dict(c => bus_convs_dc_cond[(conv["busdc_i"], c)] for c in 1:busdc["terminals"])
+    bus_cond_convs_dc_cond = Dict(c => busdc_terminal_conv_poles[(conv["busdc_i"], c)] for c in 1:busdc["terminals"])
     vdcm = [c == 3 ? -0.0 : sign(busdc["Vdcmin"][c]) for c in 1:busdc["terminals"]]
 
     constraint_converter_dc_current(pm, nw, i, conv["busdc_i"], vdcm, bus_cond_convs_dc_cond)
