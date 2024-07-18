@@ -47,11 +47,11 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             nw_ref[:busdc_terminal_arcdc_conductors] = busdc_terminal_arcdc_conductors
 
             # bus_convs for AC side power injection of DC converters
-            bus_convs_ac = Dict([(i, []) for (i, bus) in nw_ref[:bus]])
+            bus_convs = Dict([(i, []) for (i, bus) in nw_ref[:bus]])
             for (i, conv) in nw_ref[:convdc]
-                push!(bus_convs_ac[conv["busac_i"]], i)
+                push!(bus_convs[conv["busac_i"]], i)
             end
-            nw_ref[:bus_convs_ac] = bus_convs_ac
+            nw_ref[:bus_convs] = bus_convs
 
             # bus_convs for AC and DC side power injection of DC converters - active conductor connections
             convs_ac_cond = Dict(i => (findall(x -> !iszero(x), conv["status"]), conv["poles"]) for (i, conv) in nw_ref[:convdc])
@@ -131,7 +131,7 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             nw_ref[:arcsdc_from] = Dict{String,Any}()
             nw_ref[:arcsdc_to] = Dict{String,Any}()
             # Component lookup
-            nw_ref[:bus_convs_ac] = Dict([(i, []) for (i, bus) in nw_ref[:bus]])
+            nw_ref[:bus_convs] = Dict([(i, []) for (i, bus) in nw_ref[:bus]])
             nw_ref[:bus_convs_grounding_shunt] = Dict{String,Any}()
             nw_ref[:ref_buses_dc] = Dict{String,Any}()
             # Multiconductor component lookup

@@ -6,7 +6,7 @@ function constraint_kcl_shunt(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw
     bus_arcs = _PM.ref(pm, nw, :bus_arcs, i)
     bus_arcs_dc = _PM.ref(pm, nw, :bus_arcs_dc, i)
     bus_gens = _PM.ref(pm, nw, :bus_gens, i)
-    bus_convs_ac = _PM.ref(pm, nw, :bus_convs_ac, i)
+    bus_convs = _PM.ref(pm, nw, :bus_convs, i)
     bus_loads = _PM.ref(pm, nw, :bus_loads, i)
     bus_shunts = _PM.ref(pm, nw, :bus_shunts, i)
 
@@ -16,7 +16,7 @@ function constraint_kcl_shunt(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw
     gs = Dict(k => _PM.ref(pm, nw, :shunt, k, "gs") for k in bus_shunts)
     bs = Dict(k => _PM.ref(pm, nw, :shunt, k, "bs") for k in bus_shunts)
 
-    constraint_kcl_shunt(pm, nw, i, bus_arcs, bus_arcs_dc, bus_gens, bus_convs_ac, bus_loads, bus_shunts, pd, qd, gs, bs)
+    constraint_kcl_shunt(pm, nw, i, bus_arcs, bus_arcs_dc, bus_gens, bus_convs, bus_loads, bus_shunts, pd, qd, gs, bs)
 end
 
 function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
