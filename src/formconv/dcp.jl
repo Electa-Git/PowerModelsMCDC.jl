@@ -43,14 +43,14 @@ Converter grounding constraint
 ```
 ```
 """
-function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractDCPModel, n::Int, bus_convs_grounding_shunt, r_earth)
+function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractDCPModel, n::Int, busdc_grounded_convs, r_earth)
     pconv_dcg_shunt = _PM.var(pm, n, :pconv_dcg_shunt)
     iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
     vref = -0.0
 
     for i in _PM.ids(pm, n, :busdc)
         vdcm = _PM.var(pm, n, :vdcm, i)
-        for c in bus_convs_grounding_shunt[(i, 3)]
+        for c in busdc_grounded_convs[(i, 3)]
             r = _PM.ref(pm, n, :convdc, c)["ground_z"] + r_earth # The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
             if r == 0 #solid grounding
                 JuMP.@constraint(pm.model, vdcm[3] == 0)

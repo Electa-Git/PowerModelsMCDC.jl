@@ -77,14 +77,14 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             nw_ref[:busdc_terminal_conv_poles] = busdc_terminal_conv_poles
 
             # add dc ground as shunt
-            bus_convs_grounding_shunt = Dict([((bus["busdc_i"], c), Int[]) for c in 1:3 for (i, bus) in nw_ref[:busdc]])
+            busdc_grounded_convs = Dict([((bus["busdc_i"], c), Int[]) for c in 1:3 for (i, bus) in nw_ref[:busdc]])
             for (i, conv) in nw_ref[:convdc]
                 bus = conv["busdc_i"]
                 if conv["ground_type"] == 1
-                    push!(bus_convs_grounding_shunt[(bus, 3)], i) # (bus, 3) for selecting 3rd terminal of the relevant dc bus whereas i is for selecting the variable
+                    push!(busdc_grounded_convs[(bus, 3)], i) # (bus, 3) for selecting 3rd terminal of the relevant dc bus whereas i is for selecting the variable
                 end
             end
-            nw_ref[:bus_convs_grounding_shunt] = bus_convs_grounding_shunt
+            nw_ref[:busdc_grounded_convs] = busdc_grounded_convs
 
             # Add DC reference buses
             ref_buses_dc = Dict{String,Any}()
@@ -132,7 +132,7 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             nw_ref[:arcsdc_to] = Dict{String,Any}()
             # Component lookup
             nw_ref[:bus_convs] = Dict([(i, []) for (i, bus) in nw_ref[:bus]])
-            nw_ref[:bus_convs_grounding_shunt] = Dict{String,Any}()
+            nw_ref[:busdc_grounded_convs] = Dict{String,Any}()
             nw_ref[:ref_buses_dc] = Dict{String,Any}()
             # Multiconductor component lookup
             nw_ref[:busdc_terminal_arcdc_conductors] = Dict{String,Any}()

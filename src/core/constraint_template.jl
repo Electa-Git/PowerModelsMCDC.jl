@@ -23,9 +23,9 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     busdc = _PM.ref(pm, nw, :busdc, i)
     busdc_terminal_arcdc_conductors = _PM.ref(pm, nw, :busdc_terminal_arcdc_conductors)
     busdc_terminal_conv_poles = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
-    bus_convs_grounding_shunt = _PM.ref(pm, nw, :bus_convs_grounding_shunt)
+    busdc_grounded_convs = _PM.ref(pm, nw, :busdc_grounded_convs)
 
-    constraint_kcl_shunt_dcgrid(pm, nw, i, busdc["Pdc"], busdc["terminals"], busdc_terminal_arcdc_conductors, busdc_terminal_conv_poles, bus_convs_grounding_shunt)
+    constraint_kcl_shunt_dcgrid(pm, nw, i, busdc["Pdc"], busdc["terminals"], busdc_terminal_arcdc_conductors, busdc_terminal_conv_poles, busdc_grounded_convs)
 end
 
 function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
@@ -52,10 +52,10 @@ function constraint_converter_losses(pm::_PM.AbstractPowerModel, i::Int; nw::Int
 end
 
 function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default)
-    bus_convs_grounding_shunt = _PM.ref(pm, nw, :bus_convs_grounding_shunt)
+    busdc_grounded_convs = _PM.ref(pm, nw, :busdc_grounded_convs)
     r_earth = 0.0
 
-    constraint_converter_dc_ground_shunt_ohm(pm, nw, bus_convs_grounding_shunt, r_earth)
+    constraint_converter_dc_ground_shunt_ohm(pm, nw, busdc_grounded_convs, r_earth)
 end
 
 function constraint_converter_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
