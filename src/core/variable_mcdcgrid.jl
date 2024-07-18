@@ -35,7 +35,7 @@ end
 
 "variable: `p_dcgrid[l,i,j]` for `(l,i,j)` in `arcsdc`"
 function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    conductors = _PM.ref(pm, nw, :arcs_dcgrid_cond)
+    conductors = _PM.ref(pm, nw, :arcdc_conductors)
     vars = _PM.var(pm, nw)[:p_dcgrid] = Dict((l, i, j) => JuMP.@variable(pm.model,
         [first(conductors[(l, i, j)])], base_name = "$(nw)_pdcgrid_$((l,i,j))",
     ) for (l, i, j) in _PM.ref(pm, nw, :arcsdc)
@@ -54,7 +54,7 @@ end
 
 "variable: `i_dcgrid[l,i,j]` for `(l,i,j)` in `arcsdc`"
 function variable_mc_dcbranch_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    conductors = _PM.ref(pm, nw, :arcs_dcgrid_cond)
+    conductors = _PM.ref(pm, nw, :arcdc_conductors)
     vars = _PM.var(pm, nw)[:i_dcgrid] = Dict((l, i, j) => JuMP.@variable(pm.model,
         [first(conductors[(l, i, j)])], base_name = "$(nw)_idcgrid_$((l,i,j))",
     ) for (l, i, j) in _PM.ref(pm, nw, :arcsdc)

@@ -28,7 +28,7 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             nw_ref[:arcsdc] = [nw_ref[:arcsdc_from]; nw_ref[:arcsdc_to]]
 
             # Bus arcs of the DC grid - active conductor connections
-            arcs_dcgrid_cond = Dict((l, i, j) => (Vector{Int}(), nw_ref[:branchdc][l]["conductors"]) for (l, i, j) in nw_ref[:arcsdc])
+            arcdc_conductors = Dict((l, i, j) => (Vector{Int}(), nw_ref[:branchdc][l]["conductors"]) for (l, i, j) in nw_ref[:arcsdc])
             bus_arcs_dcgrid_cond = Dict([((bus["busdc_i"], c), Dict()) for c in 1:3 for (i, bus) in nw_ref[:busdc]])
             for (l, i, j) in nw_ref[:arcsdc]
                 if nw_ref[:branchdc][l]["conductors"] == 2
@@ -38,12 +38,12 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                 end
                 for (c, terminal) in enumerate(terminals)
                     if !iszero(nw_ref[:branchdc][l]["status"][c])
-                        push!(first(arcs_dcgrid_cond[(l, i, j)]), c)
+                        push!(first(arcdc_conductors[(l, i, j)]), c)
                         push!(bus_arcs_dcgrid_cond[(i, terminal)], (l, i, j) => c)
                     end
                 end
             end
-            nw_ref[:arcs_dcgrid_cond] = arcs_dcgrid_cond
+            nw_ref[:arcdc_conductors] = arcdc_conductors
             nw_ref[:bus_arcs_dcgrid_cond] = bus_arcs_dcgrid_cond
 
             # bus_convs for AC side power injection of DC converters
@@ -136,7 +136,7 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
             nw_ref[:ref_buses_dc] = Dict{String,Any}()
             # Multiconductor component lookup
             nw_ref[:bus_arcs_dcgrid_cond] = Dict{String,Any}()
-            nw_ref[:arcs_dcgrid_cond] = Dict{String,Any}()
+            nw_ref[:arcdc_conductors] = Dict{String,Any}()
             nw_ref[:bus_convs_dc_cond] = Dict{String,Any}()
             nw_ref[:convs_ac_cond] = Dict{String,Any}()
             nw_ref[:convs_dc_cond] = Dict{String,Any}()
