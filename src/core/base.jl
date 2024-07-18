@@ -1,13 +1,21 @@
 function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
     for (n, nw_ref) in ref[:it][_PM.pm_it_sym][:nw]
         if haskey(nw_ref, :convdc)
-            #Filter converters & DC branches with status 0 as well as wrong bus numbers
-            nw_ref[:convdc] = Dict([x for x in nw_ref[:convdc] if (any(x.second["status"] .== 1) && x.second["busdc_i"] in keys(nw_ref[:busdc]) && x.second["busac_i"] in keys(nw_ref[:bus]))])
-            nw_ref[:branchdc] = Dict([x for x in nw_ref[:branchdc] if (any(x.second["status"] .== 1) && x.second["fbusdc"] in keys(nw_ref[:busdc]) && x.second["tbusdc"] in keys(nw_ref[:busdc]))])
+            # Filter converters and DC branches that are inactive or connected to nonexistent buses
+            nw_ref[:convdc] = Dict([x for x in nw_ref[:convdc] if (
+                any(values(x.second["status"]) .== 1) &&
+                x.second["busdc_i"] in keys(nw_ref[:busdc]) &&
+                x.second["busac_i"] in keys(nw_ref[:bus])
+            )])
+            nw_ref[:branchdc] = Dict([x for x in nw_ref[:branchdc] if (
+                any(values(x.second["status"]) .== 1) &&
+                x.second["fbusdc"] in keys(nw_ref[:busdc]) &&
+                x.second["tbusdc"] in keys(nw_ref[:busdc])
+            )])
 
             # DC grid arcs for DC grid branches
-            nw_ref[:arcs_dcgrid_from] = [(i, branch["fbusdc"], branch["tbusdc"]) for (i, branch) in nw_ref[:branchdc]]
-            nw_ref[:arcs_dcgrid_to] = [(i, branch["tbusdc"], branch["fbusdc"]) for (i, branch) in nw_ref[:branchdc]]
+            nw_ref[:arcs_dcgrid_from] = [(l, branch["fbusdc"], branch["tbusdc"]) for (l, branch) in nw_ref[:branchdc]]
+            nw_ref[:arcs_dcgrid_to] = [(l, branch["tbusdc"], branch["fbusdc"]) for (l, branch) in nw_ref[:branchdc]]
             nw_ref[:arcs_dcgrid] = [nw_ref[:arcs_dcgrid_from]; nw_ref[:arcs_dcgrid_to]]
             nw_ref[:arcs_conv_acdc] = [(i, conv["busac_i"], conv["busdc_i"]) for (i, conv) in nw_ref[:convdc]]
             # Bus arcs of the DC grid
@@ -32,7 +40,7 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                         push!(bus_arcs_dcgrid_cond[(i, terminal)], (l, i, j) => c)
                     end
                 end
-            end 
+            end
             nw_ref[:arcs_dcgrid_cond] = arcs_dcgrid_cond
             nw_ref[:bus_arcs_dcgrid_cond] = bus_arcs_dcgrid_cond
 
