@@ -22,6 +22,9 @@ lp_optimizer = _PMMCDC.optimizer_with_attributes(
 
 @testset "PowerModelsMCDC" begin
 
+    # Base functions
+    include("base.jl")
+
     # Problems
     include("prob.jl")
 
