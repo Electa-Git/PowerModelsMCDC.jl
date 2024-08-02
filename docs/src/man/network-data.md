@@ -54,7 +54,6 @@ Instead, a single status parameter is selected if the converter is monopolar (i.
 | :------------ | :-----: | :-------: | :------------------------------------------------- |
 | `conductors`  | {2,3}   |           | Number of conductors, including metallic return    |
 | `connect_at`  | {0,1,2} |           | Bus terminals where the branch is connected (only used if the DC branch is monopolar):``\\``0: positive and negative``\\``1: positive and neutral``\\``2: negative and neutral |
-| `return_type` |         |           | **Not used in package code, but present in input files.**``\\``Originally meant for modeling ground return (1) instead of metallic return (2). |
 | `return_z`    | (0,+∞)  | p.u.      | Metallic return impedance                          |
 | `status_p`    | {0,1}   |           | Status of the positive conductor:``\\``0: inactive``\\``1: active |
 | `status_n`    | {0,1}   |           | Status of the negative conductor:``\\``0: inactive``\\``1: active |

@@ -106,9 +106,9 @@ mpc.convdc = [
 ];
 
 %% DC branch
-%column_names% fbusdc tbusdc     r l c rateA rateB rateC status conductors return_type return_z connect_at status_p status_n status_r
+%column_names% fbusdc tbusdc     r l c rateA rateB rateC status conductors return_z connect_at status_p status_n status_r
 mpc.branchdc = [
-                    1      4 0.052 0 0   100   100   100      1          3           2    0.052          0        1        1        1; % bipolar
-                    2      4 0.052 0 0   100   100   100      1          3           2    0.052          0        1        1        1; % bipolar
-                    3      4 0.052 0 0    50    50    50      1          2           2    0.052          2        0        1        1; % monopolar
+                    1      4 0.052 0 0   100   100   100      1          3    0.052          0        1        1        1;
+                    2      4 0.052 0 0   100   100   100      1          3    0.052          0        1        1        1;
+                    3      4 0.052 0 0    50    50    50      1          2    0.052          2        0        1        1;
 ];

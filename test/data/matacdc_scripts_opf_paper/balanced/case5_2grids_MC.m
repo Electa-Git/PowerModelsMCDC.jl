@@ -87,12 +87,12 @@ mpc.convdc = [
 ];
 
 %% branches
-%column_names%   fbusdc  tbusdc  r      l        c   rateA   rateB   rateC   status conductors return_type return_z connect_at
+%column_names% fbusdc tbusdc     r l c rateA rateB rateC status conductors return_z connect_at
 mpc.branchdc = [
-  1       4       0.052   0   0    100     100     100     1  3 2 0.052 0;  %bipolar
-  2       4       0.052   0   0    100     100     100     1  3 2 0.052 0;  %bipolar
-  3       4       0.052   0   0     50      50      50     1  3 2 0.052 0;  %monopolar
- ];
+                    1      4 0.052 0 0   100   100   100      1          3    0.052          0;
+                    2      4 0.052 0 0   100   100   100      1          3    0.052          0;
+                    3      4 0.052 0 0    50    50    50      1          3    0.052          0;
+];
 
 %% generator cost data
 %	1	startup	shutdown	n	x1	y1	...	xn	yn
