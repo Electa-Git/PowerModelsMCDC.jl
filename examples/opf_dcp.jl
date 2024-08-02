@@ -5,7 +5,7 @@ import PowerModelsMCDC as _PMMCDC
 import HiGHS
 
 lp_solver = _PMMCDC.optimizer_with_attributes(HiGHS.Optimizer, "output_flag" => false)
-file = "./test/data/matacdc_scripts/case5_2grids_MC.m"
+file = "./test/data/case5_2grids_MC.m"
 
 s = Dict("conv_losses_mp" => false)
 result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.DCPPowerModel, lp_solver, setting=s)

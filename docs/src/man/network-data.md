@@ -67,6 +67,6 @@ are selected.
 Input data can be provided in the form of a file structured similarly to the format defined
 by Matpower.
 An
-[example `.m` file](https://github.com/Electa-Git/PowerModelsMCDC.jl/blob/master/test/data/matacdc_scripts/case5_2grids_MC.m)
+[example `.m` file](https://github.com/Electa-Git/PowerModelsMCDC.jl/blob/master/test/data/case5_2grids_MC.m)
 is available to illustrate the syntax.
 You can provide such a file to PowerModelsMCDC by using the [`parse_file`](@ref) function.
