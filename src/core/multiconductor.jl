@@ -13,9 +13,6 @@ const _convdc_uniform_parameters = Set([
         "Pacrated", "Qacrated"
     ])
 
-"Names of multiconductor status parameters"
-const _mc_status = ["status_p", "status_n", "status_r"]
-
 "Transforms single-conductor network data into multiconductor data"
 function make_multiconductor!(data::Dict{String,<:Any})
     if _IM.ismultinetwork(data)
@@ -41,16 +38,33 @@ end
 
 function _make_multiconductor_busdc!(busdc_dict::Dict{String,<:Any})
     for (b, busdc) in busdc_dict
-        terminals = 3
-        busdc["terminals"] = terminals
+
         # Voltage bounds: apply the same offset to each terminal
         for param in ["Vdcmin", "Vdcmax"]
-            busdc[param] = (busdc[param] - 1.0) .+ [1.0, -1.0, 0.0]
+            offset = busdc[param] - 1.0
+            busdc[param] = Dict{String,Float64}(
+                "p" =>  1.0 + offset,
+                "r" =>  0.0 + offset,
+                "n" => -1.0 + offset
+            )
         end
+
         # Voltage start value: apply the same magnitude to positive and negative terminals
-        busdc["Vdc"] = busdc["Vdc"] .* [1.0, -1.0, 0.0]
+        magnitude = busdc["Vdc"]
+        busdc["Vdc"] = Dict{String,Float64}(
+            "p" =>  magnitude,
+            "r" =>        0.0,
+            "n" => -magnitude
+        )
+
+        # Uniform parameters
         for param in _busdc_uniform_parameters
-            busdc[param] = fill(busdc[param], terminals)
+            uniform_value = busdc[param]
+            busdc[param] = Dict{String,Float64}(
+                "p" => uniform_value,
+                "r" => uniform_value,
+                "n" => uniform_value
+            )
         end
     end
 end
@@ -61,11 +75,44 @@ function _make_multiconductor_branchdc!(branchdc_dict::Dict{String,<:Any})
         if conductors ∉ (2, 3)
             _Memento.error(_LOGGER, "Unexpected \"conductors\" value for DC branch $b: found $conductors, expected 2 or 3.")
         end
-        branchdc["status"] = conductorsDC_status(branchdc) .* branchdc["status"]
-        branchdc["r"] = [fill(branchdc["r"], conductors-1)..., branchdc["return_z"]]
+        delete!(branchdc, "conductors")
+
+        # Status
+        overall_status = branchdc["status"]
+        branchdc["status"] = Dict{String,Int}()
+        if conductors == 3 || (conductors==2 && branchdc["connect_at"] != 2)
+            branchdc["status"]["p"] = overall_status * branchdc["status_p"]
+        end
+        if conductors == 3 || (conductors==2 && branchdc["connect_at"] != 0)
+            branchdc["status"]["r"] = overall_status * branchdc["status_r"]
+        end
+        if conductors == 3 || (conductors==2 && branchdc["connect_at"] != 1)
+            branchdc["status"]["n"] = overall_status * branchdc["status_n"]
+        end
+        delete!(branchdc, "status_p")
+        delete!(branchdc, "status_r")
+        delete!(branchdc, "status_n")
+        delete!(branchdc, "connect_at")
+
+        # Resistance
+        resistance_active_conductor = branchdc["r"]
+        branchdc["r"] = Dict{String,Float64}()
+        if haskey(branchdc["status"], "p")
+            branchdc["r"]["p"] = resistance_active_conductor
+        end
+        if haskey(branchdc["status"], "r")
+            branchdc["r"]["r"] = branchdc["return_z"]
+        end
+        if haskey(branchdc["status"], "n")
+            branchdc["r"]["n"] = resistance_active_conductor
+        end
         delete!(branchdc, "return_z")
+
+        # Uniform parameters
         for param in _branchdc_uniform_parameters
-            branchdc[param] = fill(branchdc[param], conductors)
+            branchdc[param] = Dict{String,Float64}(
+                conductor => branchdc[param] for conductor in keys(branchdc["status"])
+            )
         end
     end
 end
@@ -76,28 +123,30 @@ function _make_multiconductor_convdc!(convdc_dict::Dict{String,<:Any})
         if poles ∉ (1,2)
             _Memento.error(_LOGGER, "Unexpected \"poles\" value for DC converter $c: found $poles, expected 1 or 2.")
         end
-        convdc["status"] = conductorsDC_status(convdc) .* convdc["status"]
-        for param in _convdc_uniform_parameters
-            convdc[param] = fill(convdc[param], poles)
-        end
-    end
-end
+        delete!(convdc, "poles")
 
-"Generate vector of multi-conductor status states for `convdc` and `branchdc` components"
-function conductorsDC_status(item_data::Dict{String,<:Any})
-    poles = Vector{Int}()
-    if haskey(item_data, "poles")
-        if item_data["poles"] == 1
-            append!(poles, first(_component_busdc_terminal_lookup[item_data["connect_at"]], 1))
-        else
-            append!(poles, 1:2)
+        # Status
+        overall_status = convdc["status"]
+        convdc["status"] = Dict{String,Int}()
+        if poles == 2 || (poles==1 && convdc["connect_at"] == 1)
+            convdc["status"]["p"] = overall_status * convdc["status_p"]
         end
-    elseif haskey(item_data, "conductors")
-        if item_data["conductors"] == 2
-            append!(poles, _component_busdc_terminal_lookup[item_data["connect_at"]])
-        else
-            append!(poles, 1:3)
+        if poles == 1 && convdc["connect_at"] == 0
+            convdc["status"]["r"] = overall_status * convdc["status_r"]
+        end
+        if poles == 2 || (poles==1 && convdc["connect_at"] == 2)
+            convdc["status"]["n"] = overall_status * convdc["status_n"]
+        end
+        delete!(convdc, "status_p")
+        delete!(convdc, "status_r")
+        delete!(convdc, "status_n")
+        delete!(convdc, "connect_at")
+
+        # Uniform parameters
+        for param in _convdc_uniform_parameters
+            convdc[param] = Dict{String,Float64}(
+                pole => convdc[param] for pole in keys(convdc["status"])
+            )
         end
     end
-    return [item_data[key] for key in _mc_status[poles]]
 end
