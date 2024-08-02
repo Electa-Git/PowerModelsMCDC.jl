@@ -393,15 +393,13 @@ function check_conv_parameters(conv)
     end
 
     # Check if multi-conductor status parameters are defined
-    status = ["status_p", "status_n"]
+    status = ["status_p", "status_r", "status_n"]
     check = haskey.(Ref(conv), status)
     if sum(check) == 0
-        Memento.warn(_PM._LOGGER, "Parameters `status_p` and `status_n` are not defined for converter $conv_id. It is assumed that all poles are active.")
+        Memento.warn(_PM._LOGGER, "Parameters `status_p`, `status_r`, and `status_n` are not defined for converter $conv_id. It is assumed that all poles are active.")
         for key in status
             conv[key] = 1
         end
-    elseif sum(check) == 1
-        Memento.error(_PM._LOGGER, "Parameter `$(first(status[.!check]))` is not defined for converter $conv_id.")
     end
 end
 
