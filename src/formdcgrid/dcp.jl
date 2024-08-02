@@ -1,16 +1,16 @@
 """
 ```
-sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) + sum(pconvac[c] for c in bus_convs) - pd - gs*1^2
-sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) + sum(qconvac[c] for c in bus_convs) - qd + bs*1^2
+sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) + sum(pconvac[c] for c in bus_conv_poles) - pd - gs*1^2
+sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) + sum(qconvac[c] for c in bus_conv_poles) - qd + bs*1^2
 ```
 """
-function constraint_kcl_shunt(pm::_PM.AbstractDCPModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_convs, bus_loads, bus_shunts, pd, qd, gs, bs)
+function constraint_kcl_shunt(pm::_PM.AbstractDCPModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_conv_poles, bus_loads, bus_shunts, pd, qd, gs, bs)
     p = _PM.var(pm, n, :p)
     pg = _PM.var(pm, n, :pg)
     pconv_grid_ac = _PM.var(pm, n, :pconv_tf_fr)
     vm = 1
 
-    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in first(axes(_PM.var(pm, n, :pconv_tf_fr, c)))) for c in bus_convs) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
+    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][d] for d in first(axes(_PM.var(pm, n, :pconv_tf_fr, c)))) for c in bus_conv_poles) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
 end
 
 """
@@ -26,10 +26,10 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractDCPModel, n::Int, f_bus, t_bu
     i_dc_to = _PM.var(pm, n, :i_dcgrid, t_idx)
     vmdc_fr = _PM.var(pm, n, :vdcm, f_bus)
     vmdc_to = _PM.var(pm, n, :vdcm, t_bus)
-    busdc_terminal_arcdc_conductors = _PM.ref(pm, n, :busdc_terminal_arcdc_conductors)
+    busdc_terminal_arcsdc = _PM.ref(pm, n, :busdc_terminal_arcsdc)
 
     for k = 1:3
-        for (line, d) in busdc_terminal_arcdc_conductors[(f_bus, k)]
+        for (line, d) in busdc_terminal_arcsdc[(f_bus, k)]
             if line == f_idx
                 if r[d] == 0
                     JuMP.@constraint(pm.model, i_dc_fr[d] + i_dc_to[d] == 0)

@@ -4,11 +4,11 @@ end
 
 """
 ```
-sum(p_dcgrid[a] for a in busdc_terminal_arcdc_conductors) + sum(pconv_dc[c] for c in busdc_terminal_conv_poles) == pd
+sum(p_dcgrid[a] for a in busdc_terminal_arcsdc) + sum(pconv_dc[c] for c in busdc_terminal_conv_poles) == pd
 ```
 """
 
-function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int, pd, total_cond, busdc_terminal_arcdc_conductors, busdc_terminal_conv_poles, busdc_grounded_convs)
+function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int, pd, total_cond, busdc_terminal_arcsdc, busdc_terminal_conv_poles, busdc_grounded_convs)
     i_dcgrid = _PM.var(pm, n, :i_dcgrid)
     iconv_dc = _PM.var(pm, n, :iconv_dc)
     iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
@@ -16,7 +16,7 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int,
 
     for bus_cond in 1:total_cond
         JuMP.@constraint(pm.model,
-            sum(i_dcgrid[conv][conv_cond] for (conv, conv_cond) in busdc_terminal_arcdc_conductors[(i, bus_cond)])
+            sum(i_dcgrid[conv][conv_cond] for (conv, conv_cond) in busdc_terminal_arcsdc[(i, bus_cond)])
             + sum(iconv_dc[conv][conv_cond] for (conv, conv_cond) in busdc_terminal_conv_poles[(i, bus_cond)])
             + sum(iconv_dcg_shunt[conv] for conv in busdc_grounded_convs[(i, bus_cond)]) == 0
             )
