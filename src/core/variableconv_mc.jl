@@ -369,7 +369,7 @@ function variable_acside_current(pm::_PM.AbstractWModels; nw::Int=_PM.nw_id_defa
     report && _PM.sol_component_value(pm, nw, :convdc, :iconv_ac_sq, _PM.ids(pm, nw, :convdc), icsq)
 end
 
-function variable_converter_filter_voltage(pm::_PM.AbstractPowerModel; kwargs...)
+function variable_converter_filter_voltage(pm::Union{_PM.AbstractACPModel, _PM.DCPPowerModel}; kwargs...)
     variable_converter_filter_voltage_magnitude(pm; kwargs...)
     variable_converter_filter_voltage_angle(pm; kwargs...)
 end
@@ -414,7 +414,52 @@ function variable_converter_filter_voltage_angle(pm::_PM.AbstractPowerModel; nw:
     report && sol_component_value_status(pm, nw, :convdc, :vafilt, _PM.ids(pm, nw, :convdc), conductors, vars)
 end
 
-function variable_converter_internal_voltage(pm::_PM.AbstractPowerModel; kwargs...)
+function variable_converter_filter_voltage(pm::_PM.AbstractACRModel; kwargs...)
+    variable_converter_filter_voltage_real(pm; kwargs...)
+    variable_converter_filter_voltage_imaginary(pm; kwargs...)
+end
+
+"variable: `vrf[j]` for `j` in `convdc`"
+function variable_converter_filter_voltage_real(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+    bigM = 1.2 # only internal converter voltage is strictly regulated
+    conductors = _PM.ref(pm, nw, :convs_ac_cond)
+    vars = _PM.var(pm, nw)[:vrf] = Dict(i => JuMP.@variable(pm.model,
+        [first(conductors[i])], base_name = "$(nw)_vrf_$(i)",
+        start = _PM.ref(pm, nw, :convdc, i, "Vtar")
+    ) for i in _PM.ids(pm, nw, :convdc)
+    )
+
+    if bounded
+        for (i, convdc) in _PM.ref(pm, nw, :convdc)
+            JuMP.set_lower_bound.(vars[i], -convdc["Vmmax"][first(conductors[i])] * bigM)
+            JuMP.set_upper_bound.(vars[i],  convdc["Vmmax"][first(conductors[i])] * bigM)
+        end
+    end
+
+    report && sol_component_value_status(pm, nw, :convdc, :vrfilt, _PM.ids(pm, nw, :convdc), conductors, vars)
+end
+
+"variable: `vif[j]` for `j` in `convdc`"
+function variable_converter_filter_voltage_imaginary(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+    bigM = 1.2
+    conductors = _PM.ref(pm, nw, :convs_ac_cond)
+    vars = _PM.var(pm, nw)[:vif] = Dict(i => JuMP.@variable(pm.model,
+            [first(conductors[i])], base_name = "$(nw)_vif_$(i)",
+            start = 0
+        ) for i in _PM.ids(pm, nw, :convdc)
+    )
+
+    if bounded
+        for (i, convdc) in _PM.ref(pm, nw, :convdc)
+            JuMP.set_lower_bound.(vars[i], -convdc["Vmmax"] * bigM)
+            JuMP.set_upper_bound.(vars[i],  convdc["Vmmax"] * bigM)
+        end
+    end
+
+    report && sol_component_value_status(pm, nw, :convdc, :vifilt, _PM.ids(pm, nw, :convdc), conductors, vars)
+end
+
+function variable_converter_internal_voltage(pm::Union{_PM.AbstractACPModel, _PM.DCPPowerModel}; kwargs...)
     variable_converter_internal_voltage_magnitude(pm; kwargs...)
     variable_converter_internal_voltage_angle(pm; kwargs...)
 end
@@ -456,4 +501,48 @@ function variable_converter_internal_voltage_angle(pm::_PM.AbstractPowerModel; n
     end
 
     report && sol_component_value_status(pm, nw, :convdc, :vaconv, _PM.ids(pm, nw, :convdc), conductors, vars)
+end
+
+function variable_converter_internal_voltage(pm::_PM.AbstractACRModel; kwargs...)
+    variable_converter_internal_voltage_real(pm; kwargs...)
+    variable_converter_internal_voltage_imaginary(pm; kwargs...)
+end
+
+
+"variable: `vrc[j]` for `j` in `convdc`"
+function variable_converter_internal_voltage_real(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+    conductors = _PM.ref(pm, nw, :convs_ac_cond)
+    vars = _PM.var(pm, nw)[:vrc] = Dict(i => JuMP.@variable(pm.model,
+        [first(conductors[i])], base_name = "$(nw)_vrc_$(i)",
+        start = _PM.ref(pm, nw, :convdc, i, "Vtar")
+        ) for i in _PM.ids(pm, nw, :convdc)
+    )
+
+    if bounded
+        for (i, convdc) in _PM.ref(pm, nw, :convdc)
+            JuMP.set_lower_bound.(vars[i], -convdc["Vmmax"][first(conductors[i])])
+            JuMP.set_upper_bound.(vars[i],  convdc["Vmmax"][first(conductors[i])])
+        end
+    end
+
+    report && sol_component_value_status(pm, nw, :convdc, :vrconv, _PM.ids(pm, nw, :convdc), conductors, vars)
+end
+
+"variable: `vic[j]` for `j` in `convdc`"
+function variable_converter_internal_voltage_imaginary(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+    conductors = _PM.ref(pm, nw, :convs_ac_cond)
+    vars = _PM.var(pm, nw)[:vic] = Dict(i => JuMP.@variable(pm.model,
+        [first(conductors[i])], base_name = "$(nw)_vic_$(i)",
+        start = 0
+    ) for i in _PM.ids(pm, nw, :convdc)
+    )
+
+    if bounded
+        for (i, convdc) in _PM.ref(pm, nw, :convdc)
+            JuMP.set_lower_bound.(vars[i], -convdc["Vmmax"])
+            JuMP.set_upper_bound.(vars[i],  convdc["Vmmax"])
+        end
+    end
+
+    report && sol_component_value_status(pm, nw, :convdc, :viconv, _PM.ids(pm, nw, :convdc), conductors, vars)
 end

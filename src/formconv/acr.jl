@@ -71,7 +71,7 @@ p_pr_fr ==  gc *(vrf^2 + vif^2) + -gc *(vrc * vrf + vic * vif) + -bc *(-(vic * v
 q_pr_fr == -bc *(vrf^2 + vif^2) +  bc *(vrc * vrf + vic * vif) + -gc *(-(vic * vrf - vrc * vif))
 ```
 """
-function constraint_conv_reactor(pm::_PM.AbstractACRModel, n::Int, i::Int, rc, xc, reactor)
+function constraint_conv_reactor(pm::_PM.AbstractACRModel, n::Int, i::Int, rc, xc, reactor, cond)
     pconv_ac = _PM.var(pm, n,  :pconv_ac, i)[cond]
     qconv_ac = _PM.var(pm, n,  :qconv_ac, i)[cond]
     ppr_fr = _PM.var(pm, n,  :pconv_pr_fr, i)[cond]
@@ -107,7 +107,7 @@ ppr_fr + ptf_to == 0
 qpr_fr + qtf_to +  (-bv) * filter *(vrf^2 + vif^2) == 0
 ```
 """
-function constraint_conv_filter(pm::_PM.AbstractACRModel, n::Int, i::Int, bv, filter)
+function constraint_conv_filter(pm::_PM.AbstractACRModel, n::Int, i::Int, bv, filter, cond)
     ppr_fr = _PM.var(pm, n, :pconv_pr_fr, i)[cond]
     qpr_fr = _PM.var(pm, n, :qconv_pr_fr, i)[cond]
     ptf_to = _PM.var(pm, n, :pconv_tf_to, i)[cond]
