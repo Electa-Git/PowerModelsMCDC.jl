@@ -369,7 +369,7 @@ function variable_acside_current(pm::_PM.AbstractWModels; nw::Int=_PM.nw_id_defa
     report && _PM.sol_component_value(pm, nw, :convdc, :iconv_ac_sq, _PM.ids(pm, nw, :convdc), icsq)
 end
 
-function variable_converter_filter_voltage(pm::Union{_PM.AbstractACPModel, _PM.DCPPowerModel}; kwargs...)
+function variable_converter_filter_voltage(pm::_PM.AbstractPowerModel; kwargs...)
     variable_converter_filter_voltage_magnitude(pm; kwargs...)
     variable_converter_filter_voltage_angle(pm; kwargs...)
 end
@@ -459,7 +459,7 @@ function variable_converter_filter_voltage_imaginary(pm::_PM.AbstractPowerModel;
     report && sol_component_value_status(pm, nw, :convdc, :vifilt, _PM.ids(pm, nw, :convdc), conductors, vars)
 end
 
-function variable_converter_internal_voltage(pm::Union{_PM.AbstractACPModel, _PM.DCPPowerModel}; kwargs...)
+function variable_converter_internal_voltage(pm::_PM.AbstractPowerModel; kwargs...)
     variable_converter_internal_voltage_magnitude(pm; kwargs...)
     variable_converter_internal_voltage_angle(pm; kwargs...)
 end
