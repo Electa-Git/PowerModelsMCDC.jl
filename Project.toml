@@ -2,7 +2,7 @@ name = "PowerModelsMCDC"
 uuid = "05d58fe5-e6ff-58ad-86d6-05dcc0b74504"
 authors = ["Chandra Kant Jat", "Jay Dave", "Hakan Ergun"]
 repo = "https://github.com/Electa-Git/PowerModelsMCDC.jl"
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 InfrastructureModels = "2030c09a-7f63-5d83-885d-db604e0e9cc0"

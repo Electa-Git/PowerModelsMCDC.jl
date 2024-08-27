@@ -8,7 +8,7 @@ PowerModelsMCDC.jl is a Julia/JuMP/PowerModels package for hybrid AC/DC systems 
 
 ## Core Problem Specification
 * Non-linear AC/DC optimal power flow (OPF) model with multiconductor DC.
-* Only ACP and DCP formulations are complete. Convex relaxations are currently under development.
+* ACP, ACR and DCP formulations are complete. Convex relaxations are currently under development.
 
 ### Other problems (to be added to this package)
 * AC/DC SCOPF with multiconductor DC (MCDC SCOPF): complete, and planned to be added soon.
