@@ -1,19 +1,4 @@
 """
-Creates lossy converter model between AC and DC grid
-```
-pconv_ac[i] + pconv_dc[i] == a + bI + cI^2
-```
-"""
-function constraint_converter_losses(pm::_PM.AbstractACPModel, n::Int, i::Int, a, b, c, plmax, cond)
-    pconv_ac = _PM.var(pm, n, :pconv_ac, i)[cond] #cond defined over conveter
-    pconv_dc = _PM.var(pm, n, :pconv_dc, i)[cond]
-    pconv_dcg = _PM.var(pm, n, :pconv_dcg, i)[cond]
-    iconv = _PM.var(pm, n, :iconv_ac, i)[cond]
-
-    JuMP.@NLconstraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == a + b * iconv + c * iconv^2)
-end
-
-"""
 Links converter power & current
 ```
 pconv_ac[i]^2 + pconv_dc[i]^2 == vmc[i]^2 * iconv_ac[i]^2
@@ -26,45 +11,6 @@ function constraint_converter_current(pm::_PM.AbstractACPModel, n::Int, i::Int, 
     iconv = _PM.var(pm, n, :iconv_ac, i)[cond]
 
     JuMP.@NLconstraint(pm.model, pconv_ac^2 + qconv_ac^2 == vmc^2 * iconv^2)
-end
-
-function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::Int, busdc::Int, vdcm, bus_cond_convs_dc_cond)
-    pconv_dc = _PM.var(pm, n, :pconv_dc, i)
-    pconv_dcg = _PM.var(pm, n, :pconv_dcg, i)
-    iconv_dc = _PM.var(pm, n, :iconv_dc, i)
-    iconv_dcg = _PM.var(pm, n, :iconv_dcg, i)
-    vdcm = _PM.var(pm, n, :vdcm, busdc)
-
-    for (bus_cond, convs) in bus_cond_convs_dc_cond
-        for (conv, conv_cond) in convs
-            if conv == i
-                JuMP.@NLconstraint(pm.model, pconv_dc[conv_cond] == iconv_dc[conv_cond] * vdcm[bus_cond])
-            end
-        end
-    end
-    for c in first(axes(iconv_dcg))
-        JuMP.@NLconstraint(pm.model, pconv_dcg[c] == iconv_dcg[c] * vdcm[3]) # neutral is always connected at bus conductor "3"
-        JuMP.@constraint(pm.model, iconv_dc[c] + iconv_dcg[c] == 0)
-    end
-    JuMP.@constraint(pm.model, sum(iconv_dc) == 0)
-end
-
-function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::Int, bus_convs_grounding_shunt, r_earth)
-    pconv_dcg_shunt = _PM.var(pm, n, :pconv_dcg_shunt)
-    iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
-
-    for i in _PM.ids(pm, n, :busdc)
-        vdcm = _PM.var(pm, n, :vdcm, i)
-        for c in bus_convs_grounding_shunt[(i, 3)]
-            r = _PM.ref(pm, n, :convdc, c)["ground_z"] + r_earth # The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
-            if r == 0 #solid grounding
-                JuMP.@constraint(pm.model, vdcm[3] == 0)
-            else
-                JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c] == (1 / r) * vdcm[3]^2)
-                JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * vdcm[3])
-            end
-        end
-    end
 end
 
 """
@@ -93,7 +39,7 @@ function constraint_conv_transformer(pm::_PM.AbstractACPModel, n::Int, i::Int, r
         gtf = real(ytf)
         btf = imag(ytf)
         gtf_sh = 0
-        c1, c2, c3, c4 = ac_power_flow_constraints(pm.model, gtf, btf, gtf_sh, vm, vmf, va, vaf, ptf_fr, ptf_to, qtf_fr, qtf_to, tm)
+        ac_power_flow_constraints(pm, gtf, btf, gtf_sh, vm, vmf, va, vaf, ptf_fr, ptf_to, qtf_fr, qtf_to, tm)
     else
         JuMP.@constraint(pm.model, ptf_fr + ptf_to == 0)
         JuMP.@constraint(pm.model, qtf_fr + qtf_to == 0)
@@ -102,12 +48,11 @@ function constraint_conv_transformer(pm::_PM.AbstractACPModel, n::Int, i::Int, r
     end
 end
 "constraints for a voltage magnitude transformer + series impedance"
-function ac_power_flow_constraints(model, g, b, gsh_fr, vm_fr, vm_to, va_fr, va_to, p_fr, p_to, q_fr, q_to, tm)
-    c1 = JuMP.@NLconstraint(model, p_fr == g / (tm^2) * vm_fr^2 + -g / (tm) * vm_fr * vm_to * cos(va_fr - va_to) + -b / (tm) * vm_fr * vm_to * sin(va_fr - va_to))
-    c2 = JuMP.@NLconstraint(model, q_fr == -b / (tm^2) * vm_fr^2 + b / (tm) * vm_fr * vm_to * cos(va_fr - va_to) + -g / (tm) * vm_fr * vm_to * sin(va_fr - va_to))
-    c3 = JuMP.@NLconstraint(model, p_to == g * vm_to^2 + -g / (tm) * vm_to * vm_fr * cos(va_to - va_fr) + -b / (tm) * vm_to * vm_fr * sin(va_to - va_fr))
-    c4 = JuMP.@NLconstraint(model, q_to == -b * vm_to^2 + b / (tm) * vm_to * vm_fr * cos(va_to - va_fr) + -g / (tm) * vm_to * vm_fr * sin(va_to - va_fr))
-    return c1, c2, c3, c4
+function ac_power_flow_constraints(pm::_PM.AbstractACPModel, g, b, gsh_fr, vm_fr, vm_to, va_fr, va_to, p_fr, p_to, q_fr, q_to, tm)
+    JuMP.@NLconstraint(pm.model, p_fr == g / (tm^2) * vm_fr^2 + -g / (tm) * vm_fr * vm_to * cos(va_fr - va_to) + -b / (tm) * vm_fr * vm_to * sin(va_fr - va_to))
+    JuMP.@NLconstraint(pm.model, q_fr == -b / (tm^2) * vm_fr^2 + b / (tm) * vm_fr * vm_to * cos(va_fr - va_to) + -g / (tm) * vm_fr * vm_to * sin(va_fr - va_to))
+    JuMP.@NLconstraint(pm.model, p_to == g * vm_to^2 + -g / (tm) * vm_to * vm_fr * cos(va_to - va_fr) + -b / (tm) * vm_to * vm_fr * sin(va_to - va_fr))
+    JuMP.@NLconstraint(pm.model, q_to == -b * vm_to^2 + b / (tm) * vm_to * vm_fr * cos(va_to - va_fr) + -g / (tm) * vm_to * vm_fr * sin(va_to - va_fr))
 end
 """
 Converter reactor constraints
@@ -165,19 +110,4 @@ function constraint_conv_filter(pm::_PM.AbstractACPModel, n::Int, i::Int, bv, fi
 
     JuMP.@constraint(pm.model, ppr_fr + ptf_to == 0)
     JuMP.@NLconstraint(pm.model, qpr_fr + qtf_to + (-bv) * filter * vmf^2 == 0)
-end
-"""
-LCC firing angle constraints
-```
-pconv_ac == cos(phi) * Srated
-qconv_ac == sin(phi) * Srated
-```
-"""
-function constraint_conv_firing_angle(pm::_PM.AbstractACPModel, n::Int, i::Int, S, P1, Q1, P2, Q2, cond)
-    p = _PM.var(pm, n, :pconv_ac, i)[cond]
-    q = _PM.var(pm, n, :qconv_ac, i)[cond]
-    phi = _PM.var(pm, n, :phiconv, i)[cond]
-
-    JuMP.@NLconstraint(pm.model, p == cos(phi) * S)
-    JuMP.@NLconstraint(pm.model, q == sin(phi) * S)
 end
