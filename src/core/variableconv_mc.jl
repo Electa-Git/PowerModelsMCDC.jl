@@ -334,6 +334,10 @@ function variable_acside_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_d
             JuMP.set_lower_bound.(ic[c], 0)
             JuMP.set_upper_bound.(ic[c], convdc["Imax"])
         end
+    else
+        for (c, convdc) in _PM.ref(pm, nw, :convdc)
+            JuMP.set_lower_bound.(ic[c], 0)
+        end
     end
 
     report && _PM.sol_component_value(pm, nw, :convdc, :iconv, _PM.ids(pm, nw, :convdc), ic)
@@ -360,6 +364,11 @@ function variable_acside_current(pm::_PM.AbstractWModels; nw::Int=_PM.nw_id_defa
             JuMP.set_lower_bound.(icsq[c], 0)
             JuMP.set_upper_bound.(icsq[c], convdc["Imax"]^2)
         end
+    else 
+        for (c, convdc) in _PM.ref(pm, nw, :convdc)
+            JuMP.set_lower_bound.(ic[c], 0)
+            JuMP.set_lower_bound.(icsq[c], 0)
+        end
     end
 
     report && _PM.sol_component_value(pm, nw, :convdc, :iconv_ac, _PM.ids(pm, nw, :convdc), ic)
@@ -376,7 +385,7 @@ function variable_converter_filter_voltage_magnitude(pm::_PM.AbstractPowerModel;
     bigM = 1.2 # only internal converter voltage is strictly regulated
     vmf = _PM.var(pm, nw)[:vmf] = Dict(i => JuMP.@variable(pm.model,
         [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]], base_name = "$(nw)_vmf_$(i)",
-        start = 0 # start = _PM.ref(pm, nw, :convdc, i, "Vtar")
+        start = 1 # start = _PM.ref(pm, nw, :convdc, i, "Vtar")
     ) for i in _PM.ids(pm, nw, :convdc)
     )
 
@@ -384,6 +393,10 @@ function variable_converter_filter_voltage_magnitude(pm::_PM.AbstractPowerModel;
         for (c, convdc) in _PM.ref(pm, nw, :convdc)
             JuMP.set_lower_bound.(vmf[c], convdc["Vmmin"] / bigM)
             JuMP.set_upper_bound.(vmf[c], convdc["Vmmax"] * bigM)
+        end
+    else 
+        for (c, convdc) in _PM.ref(pm, nw, :convdc)
+            JuMP.set_lower_bound.(vmf[c], 0)
         end
     end
     report && _PM.sol_component_value(pm, nw, :convdc, :vmfilt, _PM.ids(pm, nw, :convdc), vmf)
@@ -416,7 +429,7 @@ end
 function variable_converter_internal_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     vmc = _PM.var(pm, nw)[:vmc] = Dict(i => JuMP.@variable(pm.model,
         [c in 1:_PM.ref(pm, nw, :convdc)[i]["conductors"]], base_name = "$(nw)_vmc_$(i)",
-        start = _PM.ref(pm, nw, :convdc, i, "Vtar")
+        start = 1 #_PM.ref(pm, nw, :convdc, i, "Vtar")
     ) for i in _PM.ids(pm, nw, :convdc)
     )
 
@@ -424,6 +437,11 @@ function variable_converter_internal_voltage_magnitude(pm::_PM.AbstractPowerMode
         for (c, convdc) in _PM.ref(pm, nw, :convdc)
             JuMP.set_lower_bound.(vmc[c], convdc["Vmmin"])
             JuMP.set_upper_bound.(vmc[c], convdc["Vmmax"])
+        end
+    else
+        for (c, convdc) in _PM.ref(pm, nw, :convdc)
+            @show c, convdc["Vmmin"], convdc["Vmmax"]
+           @show JuMP.set_lower_bound.(vmc[c], 0)
         end
     end
     report && _PM.sol_component_value(pm, nw, :convdc, :vmconv, _PM.ids(pm, nw, :convdc), vmc)

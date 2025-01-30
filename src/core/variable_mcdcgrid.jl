@@ -23,7 +23,11 @@ function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int
         for (i, busdc) in _PM.ref(pm, nw, :busdc)
             JuMP.set_lower_bound.(vdcm[i], busdc["Vdcmin"])
             JuMP.set_upper_bound.(vdcm[i], busdc["Vdcmax"])
-
+        end
+    else 
+        for (i, busdc) in _PM.ref(pm, nw, :busdc)
+            JuMP.set_lower_bound.(vdcm[i][1], 0)
+            JuMP.set_upper_bound.(vdcm[i][2], 0)
         end
     end
 

@@ -15,12 +15,12 @@ end
 
 ""
 function build_mcdcpf(pm::_PM.AbstractPowerModel)
-    _PM.variable_bus_voltage(pm, bounded = true)
+    _PM.variable_bus_voltage(pm, bounded = false)
     _PM.variable_gen_power(pm, bounded = false)
     _PM.variable_branch_power(pm, bounded = false)
 
     variable_mcdc_converter(pm, bounded = false)
-    variable_mcdcgrid_voltage_magnitude(pm, bounded = true)
+    variable_mcdcgrid_voltage_magnitude(pm, bounded = false)
     variable_mc_dcbranch_current(pm, bounded = false)
 
     # _PM.objective_min_fuel_cost(pm)

@@ -70,6 +70,8 @@ end
 function constraint_ac_voltage_setpoint(pm::_PM.AbstractACPModel, nw ::Int, i ::Int )
     ac_bus = _PM.ref(pm, nw, :convdc, i)["busac_i"]
     # @assert bus["bus_type"] == 2
+    vac_mag = _PM.ref(pm, nw, :convdc, i)["Vacset"]    
+    _PM.ref(pm, nw, :bus, ac_bus)["vm"] = vac_mag
     _PM.constraint_voltage_magnitude_setpoint(pm, ac_bus)
 end
 

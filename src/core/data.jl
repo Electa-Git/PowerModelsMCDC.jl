@@ -547,19 +547,24 @@ function pf_update_limits(base_data)
     
     for (i, bus) in base_data["bus"]
         bus["vmin"] = 0.2
-        bus["vmax"] = 10.0
+        bus["vmax"] = 5
     end
     for (i, busdc) in base_data["busdc"]
 
-        busdc["Vdcmax"][1] = 10.0
-        busdc["Vdcmin"][1] = -10
+        busdc["Vdcmax"][1] = 3
+        busdc["Vdcmin"][1] = -3
 
-        busdc["Vdcmax"][2] = 10
-        busdc["Vdcmin"][2] = -10.0
+        busdc["Vdcmax"][2] = 3
+        busdc["Vdcmin"][2] = -3
 
-        busdc["Vdcmax"][3] = 10
-        busdc["Vdcmin"][3] = -10
-        
+        busdc["Vdcmax"][3] = 3
+        busdc["Vdcmin"][3] = -3
+
+        # if busdc["Vdc"][2] >= 0
+        #     busdc["Vdc"][1] == 1
+        #     busdc["Vdc"][2] == -1
+        #     busdc["Vdc"][3] == 0
+        # end
         
     end
     for (c, conv) in base_data["convdc"]

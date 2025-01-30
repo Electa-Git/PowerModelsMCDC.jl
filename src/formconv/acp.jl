@@ -76,6 +76,10 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::I
                 JuMP.@NLconstraint(pm.model, pconv_dcg_shunt[c] == (1 / r) * vdc[3]^2)
                 JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * vdc[3])
             end
+
+            if conv["conv_confi"] == 1 && conv["connect_at"] == 0
+                JuMP.@constraint(pm.model, vdc[1] == -vdc[2])   
+            end 
         end
     end
 end
