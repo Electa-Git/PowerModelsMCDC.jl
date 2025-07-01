@@ -24,7 +24,7 @@ function build_mcdcpf(pm::_PM.AbstractPowerModel)
     variable_mc_dcbranch_current(pm, bounded = false)
 
     # _PM.objective_min_fuel_cost(pm)
-
+    objective_min_losses(pm)
     _PM.constraint_model_voltage(pm)
     constraint_voltage_dc(pm)
 
@@ -65,9 +65,9 @@ function build_mcdcpf(pm::_PM.AbstractPowerModel)
     # for c in _PM.ids(pm, :convdc)
     for (c, conv) in _PM.ref(pm, :convdc)
 
-        if conv["type_dc"] == 1 "dc_type =2: Vdc control"
+        if conv["type_dc"] == 1 "dc_type =1: P control"
             constraint_active_conv_setpoint(pm, c)
-        elseif conv["type_dc"] == 2
+        elseif conv["type_dc"] == 2 "dc_type =2: Vdc control"
             constraint_dc_voltage_magnitude_setpoint(pm, c)
         elseif conv["type_dc"] == 3
             constraint_dc_droop_control(pm, c)

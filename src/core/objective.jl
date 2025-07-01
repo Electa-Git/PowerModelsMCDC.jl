@@ -79,3 +79,15 @@ function objective_min_pwl_fuel_cost(pm::_PM.AbstractPowerModel)
             for (n, nw_ref) in _PM.nws(pm))
     )
 end
+
+
+""
+
+function objective_min_losses(pm::_PM.AbstractPowerModel; kwargs...)
+
+    return JuMP.@objective(pm.model, Min,
+        sum(
+            sum( _PM.var(pm, n, :pg, i)^2 for (i, gen) in nw_ref[:gen] )
+        for (n, nw_ref) in _PM.nws(pm))
+    )
+end
