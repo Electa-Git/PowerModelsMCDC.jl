@@ -440,8 +440,8 @@ function variable_converter_internal_voltage_magnitude(pm::_PM.AbstractPowerMode
         end
     else
         for (c, convdc) in _PM.ref(pm, nw, :convdc)
-            @show c, convdc["Vmmin"], convdc["Vmmax"]
-           @show JuMP.set_lower_bound.(vmc[c], 0)
+            #  c, convdc["Vmmin"], convdc["Vmmax"]
+            JuMP.set_lower_bound.(vmc[c], 0)
         end
     end
     report && _PM.sol_component_value(pm, nw, :convdc, :vmconv, _PM.ids(pm, nw, :convdc), vmc)

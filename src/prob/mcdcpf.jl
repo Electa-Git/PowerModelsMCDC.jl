@@ -24,7 +24,7 @@ function build_mcdcpf(pm::_PM.AbstractPowerModel)
     variable_mc_dcbranch_current(pm, bounded = false)
 
     # _PM.objective_min_fuel_cost(pm)
-    objective_min_losses(pm)
+    # objective_min_losses(pm)
     _PM.constraint_model_voltage(pm)
     constraint_voltage_dc(pm)
 
