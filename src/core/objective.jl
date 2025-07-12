@@ -84,10 +84,40 @@ end
 ""
 
 function objective_min_losses(pm::_PM.AbstractPowerModel; kwargs...)
-
+    # Set lower bounds on :pg
+    for (n, nw_ref) in _PM.nws(pm)
+        for (i, gen) in nw_ref[:gen]
+            pg = _PM.var(pm, n, :pg, i)
+            JuMP.set_lower_bound(pg, 0.0)
+        end
+    end
+        
+    # Define objective
     return JuMP.@objective(pm.model, Min,
         sum(
-            sum( _PM.var(pm, n, :pg, i)^2 for (i, gen) in nw_ref[:gen] )
-        for (n, nw_ref) in _PM.nws(pm))
+            sum(_PM.var(pm, n, :pg, i) for (i, gen) in nw_ref[:gen])
+            for (n, nw_ref) in _PM.nws(pm))
     )
 end
+
+# function objective_min_losses(pm::_PM.AbstractPowerModel; kwargs...)
+#     # Set lower bounds on :pg
+#     for (n, nw_ref) in _PM.nws(pm)
+#         for (i, gen) in nw_ref[:gen]
+#             pg = _PM.var(pm, n, :pg, i)
+#             JuMP.set_lower_bound(pg, 0.0)
+#         end
+#     end
+
+#     # Define objective (only for gens at ref bus)
+#     return JuMP.@objective(pm.model, Min,
+#         sum(
+#             sum(
+#                 _PM.var(pm, n, :pg, i)^2
+#                 for (i, gen) in nw_ref[:gen]
+#                 if nw_ref[:bus][gen["bus"]]["bus_type"] == 3
+#             )
+#             for (n, nw_ref) in _PM.nws(pm)
+#         )
+#     )
+# end
