@@ -147,12 +147,13 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
                 Memento.warn(_PM._LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
             end
         end
+        println(nw_ref)
     end
 end
 
 "compute bus pair level structures"
-function buspair_parameters_dc(arcs_dcgrid_from, branches, buses)
-    buspair_indexes = collect(Set([(i, j) for (l, i, j) in arcs_dcgrid_from]))
+function buspair_parameters_dc(arcsdc_from, branches, buses)
+    buspair_indexes = collect(Set([(i, j) for (l, i, j) in arcsdc_from]))
 
     bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
 

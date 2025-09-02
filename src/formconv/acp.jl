@@ -181,3 +181,38 @@ function constraint_conv_firing_angle(pm::_PM.AbstractACPModel, n::Int, i::Int, 
     JuMP.@NLconstraint(pm.model, p == cos(phi) * S)
     JuMP.@NLconstraint(pm.model, q == sin(phi) * S)
 end
+
+#################### New constraints ####################
+
+"""
+Creates lossy converter model between AC and DC grid
+```
+pconv_ac[i] + pconv_dc[i] == a + bI + cI^2
+```
+"""
+function constraint_converter_losses_new(pm::_PM.AbstractACPModel, n::Int, i::Int, a, b, c, plmax, poles)
+    for pole in poles
+        pconv_ac = _PM.var(pm, n, :pconv_ac, i, pole) #pole defined over converter
+        pconv_dc = _PM.var(pm, n, :pconv_dc, i, pole)
+        pconv_dcg = _PM.var(pm, n, :pconv_dcg, i,pole)
+        iconv = _PM.var(pm, n, :iconv_ac, i,pole)
+
+        JuMP.@NLconstraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == a + b * iconv + c * iconv^2)
+    end
+end
+
+"""
+Links converter power & current
+```
+pconv_ac[i]^2 + pconv_dc[i]^2 == vmc[i]^2 * iconv_ac[i]^2
+```
+"""
+function constraint_converter_current(pm::_PM.AbstractACPModel, n::Int, i::Int, Umax, Imax, poles)
+    for pole in poles
+        vmc = _PM.var(pm, n, :vmc, i, pole)
+        pconv_ac = _PM.var(pm, n, :pconv_ac, i, pole)
+        qconv_ac = _PM.var(pm, n, :qconv_ac, i, pole)
+        iconv = _PM.var(pm, n, :iconv_ac, i, pole)
+        JuMP.@NLconstraint(pm.model, pconv_ac^2 + qconv_ac^2 == vmc^2 * iconv^2)
+    end
+end

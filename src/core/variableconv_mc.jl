@@ -457,3 +457,53 @@ function variable_converter_internal_voltage_angle(pm::_PM.AbstractPowerModel; n
 
     report && sol_component_value_status(pm, nw, :convdc, :vaconv, _PM.ids(pm, nw, :convdc), poles, vars)
 end
+
+## NEW variables
+function variable_conv_tranformer_flow_new(pm::_PM.AbstractPowerModel; kwargs...)
+    variable_conv_transformer_active_power_to_new(pm; kwargs...)
+    variable_conv_transformer_reactive_power_to_new(pm; kwargs...)
+end
+
+
+"variable: `pconv_grid_ac_to[j]` for `j` in `convdc`"
+function variable_conv_transformer_active_power_to_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+    bigM = 2
+    #poles = _PM.ref(pm, nw, :conv_acpoles)
+    vars = _PM.var(pm, nw)[:pconv_tf_to] = Dict((i,pole) => JuMP.@variable(pm.model,
+    base_name = "$(nw)_pconv_tf_to_$(i)"
+    ) for (i,pole) in _PM.ref(pm, nw, :bus_conv_poles, bus) for bus in _PM.ids(pm, nw, :bus_conv_poles)
+    )
+
+    for bus in _PM.ids(pm, nw, :bus_conv_poles)
+        for (i, pole) in _PM.ref(pm, nw, :bus_conv_poles, bus)
+            JuMP.set_start_value.(vars[(i,pole)], comp_start_value(_PM.ref(pm, nw, :convdc, i, pole), "P_g", 1.0))
+            if bounded
+                JuMP.set_lower_bound.(vars[(i,pole)], -i[pole]["Pacrated"] * bigM)
+                JuMP.set_upper_bound.(vars[(i,pole)], i[pole]["Pacrated"] * bigM)
+            end
+        end
+    end
+
+    report #&& sol_component_value_status(pm, nw, :convdc, :ptf_to, _PM.ids(pm, nw, :convdc), poles, vars)
+end
+
+
+"variable: `qconv_grid_ac_to[j]` for `j` in `convdc`"
+function variable_conv_transformer_reactive_power_to_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+    bigM = 2
+    poles = _PM.ref(pm, nw, :conv_acpoles)
+    vars = _PM.var(pm, nw)[:qconv_tf_to] = Dict(i => JuMP.@variable(pm.model,
+        [first(poles[i])], base_name = "$(nw)_qconv_tf_to__$(i)"
+    ) for i in _PM.ids(pm, nw, :convdc)
+    )
+
+    for (i, convdc) in _PM.ref(pm, nw, :convdc)
+        JuMP.set_start_value.(vars[i], comp_start_value(_PM.ref(pm, nw, :convdc, i), "Q_g", first(poles[i]), 1.0))
+        if bounded
+            JuMP.set_lower_bound.(vars[i], -convdc["Qacrated"][first(poles[i])] * bigM)
+            JuMP.set_upper_bound.(vars[i], convdc["Qacrated"][first(poles[i])] * bigM)
+        end
+    end
+
+    report && sol_component_value_status(pm, nw, :convdc, :qtf_to, _PM.ids(pm, nw, :convdc), poles, vars)
+end
