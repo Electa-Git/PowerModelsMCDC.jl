@@ -84,38 +84,48 @@ end
 # Trying now
 ## New variables
 function variable_mc_dcbranch_current_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    conductors = _PM.ref(pm, nw, :branchdc_conductors)
-    vars = _PM.var(pm, nw)[:i_dcgrid] = Dict(((l, i, j), pole) => JuMP.@variable(pm.model,
-        base_name = "$(nw)_idcgrid_$((l,i,j))_pole_$(pole)",
-        )
-    for (l, i, j) in _PM.ref(pm, nw, :arcsdc) for pole in conductors[l])
+    vars = _PM.var(pm, nw)[:i_dcgrid] = Dict(((l, i, j)) => JuMP.@variable(pm.model,
+    [cond in keys(_PM.ref(pm, nw, :branchdc)[l]["status"])], base_name = "$(nw)_idcgrid_$((l,i,j))",
+    start = comp_start_value(_PM.ref(pm, nw, :branchdc, l), "i_start", cond, 0.0)
+    ) for (l, i, j) in _PM.ref(pm, nw, :arcsdc)
+    )
     
     for (l, i, j) in _PM.ref(pm, nw, :arcsdc)
-        for pole in conductors[l]
-            JuMP.set_start_value(vars[((l, i, j), pole)], comp_start_value(_PM.ref(pm, nw, :branchdc, l), "i_start", pole, 0.0))
-            if bounded
-                JuMP.set_lower_bound(vars[((l, i, j), pole)], -_PM.ref(pm, nw, :branchdc, l)["rateA"][pole])
-                JuMP.set_upper_bound(vars[((l, i, j), pole)], _PM.ref(pm, nw, :branchdc, l)["rateA"][pole])
+        for cond in keys(_PM.ref(pm, nw, :branchdc)[l]["status"]) 
+            if _PM.ref(pm, nw, :branchdc)[l]["status"][cond] == 1
+                if bounded
+                    JuMP.set_lower_bound.(vars[(l, i, j)][cond], -(_PM.ref(pm, nw, :branchdc,l)["rateA"][cond])/(_PM.ref(pm, nw, :branchdc,l)["r"][cond]))
+                    JuMP.set_upper_bound.(vars[(l, i, j)][cond],  (_PM.ref(pm, nw, :branchdc,l)["rateA"][cond])/(_PM.ref(pm, nw, :branchdc,l)["r"][cond]))
+                end
             end
         end
     end
 
-    report && sol_component_value_edge_status(pm, nw, :branchdc, :i_from, :i_to, _PM.ref(pm, nw, :arcsdc_from), _PM.ref(pm, nw, :arcsdc_to), conductors, vars)
+    conductors = Dict(
+        l => collect(keys(_PM.ref(pm, nw, :branchdc)[l]["status"]))
+        for (l, i, j) in _PM.ref(pm, nw, :arcsdc)
+    )
+
+    println("Conductors: $conductors")
+
+    report #&& sol_component_value_edge_status(pm, nw, :branchdc, :i_from, :i_to, _PM.ref(pm, nw, :arcsdc_from), _PM.ref(pm, nw, :arcsdc_to), conductors, vars)
 end
 
 function variable_mc_active_dcbranch_flow_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    conductors = _PM.ref(pm, nw, :branchdc_conductors)
-    vars = _PM.var(pm, nw)[:p_dcgrid] = Dict(((l, i, j), pole) => JuMP.@variable(pm.model,
-        base_name = "$(nw)_pdcgrid_$((l,i,j))",
-    ) for (l, i, j) in _PM.ref(pm, nw, :arcsdc) for pole in conductors[l])
+    vars = _PM.var(pm, nw)[:p_dcgrid] = Dict(((l, i, j)) => JuMP.@variable(pm.model,
+       [cond in keys(_PM.ref(pm, nw, :branchdc)[l]["status"])], base_name = "$(nw)_pdcgrid_$((l,i,j))",
+       start = comp_start_value(_PM.ref(pm, nw, :branchdc, l), "p_start", cond, 0.0)
+    ) for (l, i, j) in _PM.ref(pm, nw, :arcsdc)
+    )
     
     
     for (l, i, j) in _PM.ref(pm, nw, :arcsdc)
-        for pole in conductors[l]
-            JuMP.set_start_value.(vars[((l, i, j), pole)], comp_start_value(_PM.ref(pm, nw, :branchdc, l), "p_start", pole, 0.0))
-            if bounded
-                JuMP.set_lower_bound.(vars[((l, i, j), pole)], -_PM.ref(pm, nw, :branchdc,l)["rateA"][pole])
-                JuMP.set_upper_bound.(vars[((l, i, j), pole)], _PM.ref(pm, nw, :branchdc, l)["rateA"][pole])
+        for cond in keys(_PM.ref(pm, nw, :branchdc)[l]["status"]) 
+            if _PM.ref(pm, nw, :branchdc)[l]["status"][cond] == 1
+                if bounded
+                    JuMP.set_lower_bound.(vars[(l, i, j)][cond], -_PM.ref(pm, nw, :branchdc,l)["rateA"][cond])
+                    JuMP.set_upper_bound.(vars[(l, i, j)][cond], _PM.ref(pm, nw, :branchdc, l)["rateA"][cond])
+                end
             end
         end
     end
@@ -125,22 +135,21 @@ end
 
 function variable_mcdcgrid_voltage_magnitude_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     
-    vars = _PM.var(pm, nw)[:vdcm] = Dict((i,pole) => JuMP.@variable(pm.model,
-        base_name = "$(nw)_vdcm_$(i)_$(pole)",
-        #start = comp_start_value(_PM.ref(pm, nw, :busdc, i), "Vdc", c, 1.0)
-    ) for i in _PM.ids(pm, nw, :busdc) for pole in keys(_PM.ref(pm, nw, :busdc, i), "Vdc")
+    vars = _PM.var(pm, nw)[:vdcm] = Dict(i => JuMP.@variable(pm.model,
+    [terminal in keys(_PM.ref(pm, nw, :busdc)[i]["Vdc"])],base_name = "$(nw)_vdcm_$(i)",
+    start = comp_start_value(_PM.ref(pm, nw, :busdc, i), "Vdc", terminal, 1.0)
+    ) for i in _PM.ids(pm, nw, :busdc) 
     )
 
 
-    for (i, busdc) in _PM.ref(pm, nw, :busdc)
-        for poles in keys(busdc, "Vdc")
-            JuMP.set_start_value.(vars[(i, pole)], comp_start_value(_PM.ref(pm, nw, :busdc, i), "Vdc", pole, 1.0))
+    for i in _PM.ids(pm, nw, :busdc)
+        for terminal in keys(_PM.ref(pm, nw, :busdc,i)["Vdc"])
             if bounded
-                JuMP.set_lower_bound.(vars[i], busdc["Vdcmin"])
-                JuMP.set_upper_bound.(vars[i], busdc["Vdcmax"])
+                JuMP.set_lower_bound.(vars[i][terminal], -_PM.ref(pm, nw, :busdc, i)["Vdcmin"][terminal])
+                JuMP.set_upper_bound.(vars[i][terminal], -_PM.ref(pm, nw, :busdc, i)["Vdcmax"][terminal])
             end
         end
     end
 
-    report && _PM.sol_component_value(pm, nw, :busdc, :vm, _PM.ids(pm, nw, :busdc), vars)
+    report #&& _PM.sol_component_value(pm, nw, :busdc, :vm, _PM.ids(pm, nw, :busdc), vars)
 end

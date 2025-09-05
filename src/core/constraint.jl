@@ -23,7 +23,6 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int,
     end
 end
 
-mm
 "`pconv[i] == pconv`"
 function constraint_active_conv_setpoint(pm::_PM.AbstractPowerModel, n::Int, i, pconv_cond, cond)
     pconv_var = _PM.var(pm, n, :pconv_tf_fr, i)
@@ -34,4 +33,23 @@ end
 function constraint_reactive_conv_setpoint(pm::_PM.AbstractPowerModel, n::Int, i, qconv_cond, cond)
     qconv_var = _PM.var(pm, n, :qconv_tf_fr, i)
     JuMP.@constraint(pm.model, qconv_var[cond] == -qconv_cond)
+end
+
+######################### New constraints
+
+function constraint_kcl_shunt_dcgrid_new(pm::_PM.AbstractPowerModel, n::Int, i::Int, bus_arcs_dcgrid_terminals, bus_convs_dc_cond, bus_convs_grounding_shunt)
+    i_dcgrid = _PM.var(pm, n, :i_dcgrid)
+    iconv_dc = _PM.var(pm, n, :iconv_dc)
+    iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
+    "load (-pd[k] excluded), to be thought later"
+
+    terminals = keys(_PM.ref(pm, n, :busdc, i, "Vdc"))
+
+    for terminals in terminals
+        JuMP.@constraint(pm.model,
+            sum(i_dcgrid[branch][terminals] for branch in bus_arcs_dcgrid_terminals[(i, terminals)])
+            + sum(iconv_dc[conv][conv_cond] for (conv,conv_cond) in bus_convs_dc_cond[i][terminals])
+            + sum(iconv_dcg_shunt[conv] for conv in bus_convs_grounding_shunt[i]) == 0
+            )
+    end
 end

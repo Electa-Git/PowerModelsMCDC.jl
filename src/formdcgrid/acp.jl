@@ -62,7 +62,8 @@ function constraint_dc_voltage_magnitude_setpoint(pm::_PM.AbstractACPModel, n::I
 end
 
 #################### New constraints ####################
-function constraint_kcl_shunt_new(pm::_PM.AbstractACPModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_convs_ac, bus_loads, bus_shunts, pd, qd, gs, bs)
+
+function constraint_kcl_shunt_new(pm::_PM.AbstractACPModel, n::Int, i::Int, bus_arcs, bus_gens, bus_conv_poles, bus_loads, bus_shunts, pd, qd, gs, bs)
     vm = _PM.var(pm, n, :vm, i)
     p = _PM.var(pm, n, :p)
     q = _PM.var(pm, n, :q)
@@ -71,41 +72,29 @@ function constraint_kcl_shunt_new(pm::_PM.AbstractACPModel, n::Int, i::Int, bus_
     pconv_grid_ac = _PM.var(pm, n, :pconv_tf_fr)
     qconv_grid_ac = _PM.var(pm, n, :qconv_tf_fr)
 
-    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(pconv_grid_ac[d] in _PM.var(pm, n, :pconv_tf_fr, (c,pole)) for (c,pole) in bus_conv_poles[d]) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
-    JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(qconv_grid_ac[d] in _PM.var(pm, n, :qconv_tf_fr, (c,pole)) for (c,pole) in bus_conv_poles[d]) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts) * vm^2)
+    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][pole] for pole in keys(pconv_grid_ac[c])) for c in keys(bus_conv_poles)) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
+    JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(qconv_grid_ac[c][pole] for pole in keys(pconv_grid_ac[c])) for c in keys(bus_conv_poles)) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts) * vm^2)
 end
 
-function constraint_kcl_shunt_new(pm::_PM.AbstractACRModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_convs_ac, bus_loads, bus_shunts, pd, qd, gs, bs)
-    vr = _PM.var(pm, n, :vr, i)
-    vi = _PM.var(pm, n, :vi, i)
-    p = _PM.var(pm, n, :p)
-    q = _PM.var(pm, n, :q)
-    pg = _PM.var(pm, n, :pg)
-    qg = _PM.var(pm, n, :qg)
-    pconv_grid_ac = _PM.var(pm, n, :pconv_tf_fr)
-    qconv_grid_ac = _PM.var(pm, n, :qconv_tf_fr)
-
-    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(pconv_grid_ac[d] in _PM.var(pm, n, :pconv_tf_fr, (c,pole)) for (c,pole) in bus_conv_poles[d]) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * (vr^2+vi^2))
-    JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(qconv_grid_ac[d] in _PM.var(pm, n, :qconv_tf_fr, (c,pole)) for (c,pole) in bus_conv_poles[d]) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts) * (vr^2+vi^2))
-end
-
-function constraint_ohms_dc_branch_new(pm::_PM.AbstractPowerModel, n::Int, f_bus, t_bus, f_idx, t_idx, r, conductors)
+function constraint_ohms_dc_branch_new(pm::_PM.AbstractPowerModel, n::Int, f_bus, t_bus, f_idx, t_idx, branch)
     i_dc_fr = _PM.var(pm, n, :i_dcgrid, f_idx)
     i_dc_to = _PM.var(pm, n, :i_dcgrid, t_idx)
     vmdc_fr = _PM.var(pm, n, :vdcm, f_bus)
     vmdc_to = _PM.var(pm, n, :vdcm, t_bus)
+    r = branch["r"]
+    status = branch["status"]
 
-    busdc_terminal_arcsdc = _PM.ref(pm, n, :busdc_terminal_arcsdc)
+    conductors = keys(status)
+    busdc_terminal_arcdc_conductors = _PM.ref(pm, n, :busdc_terminal_arcsdc)
 
-     
     for cond in conductors
         for (l,i,j) in busdc_terminal_arcdc_conductors[(f_bus, cond)]
-            if line == f_idx
-                if r[l][cond] == 0
+            if (l,i,j) == f_idx
+                if r[cond] == 0
                     JuMP.@constraint(pm.model, i_dc_fr[cond] + i_dc_to[cond] == 0)
                     JuMP.@constraint(pm.model, vmdc_fr[cond] - vmdc_to[cond] == 0)
                 else
-                    g = 1 / r[l][cond]
+                    g = 1 / r[cond]
                     JuMP.@constraint(pm.model, i_dc_fr[cond] == g * (vmdc_fr[cond] - vmdc_to[cond]))
                     JuMP.@constraint(pm.model, i_dc_to[cond] == g * (vmdc_to[cond] - vmdc_fr[cond]))
                 end

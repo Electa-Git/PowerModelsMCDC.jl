@@ -1,4 +1,4 @@
-function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
+function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<:Any})
     for (n, nw_ref) in ref[:it][_PM.pm_it_sym][:nw]
 
         # Delete unused dicts created by PowerModels for `dcline` components.
@@ -56,14 +56,30 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
         )
 
         # Map AC bus to connected converter active poles
+        #bus_conv_poles = Dict(
+        #    i => Vector{Tuple{Int,String}}()
+        #    for i in keys(nw_ref[:bus])
+        #)
+        #for (c,poles) in nw_ref[:convdc_poles]
+        #    i = nw_ref[:convdc][c]["busac_i"]
+        #    for pole in poles
+        #        push!(bus_conv_poles[i], (c,pole))
+        #    end
+        #end
+        #nw_ref[:bus_conv_poles] = bus_conv_poles
+
+
         bus_conv_poles = Dict(
-            i => Vector{Tuple{Int,String}}()
+            i => Dict()
             for i in keys(nw_ref[:bus])
         )
+        
         for (c,poles) in nw_ref[:convdc_poles]
             i = nw_ref[:convdc][c]["busac_i"]
+            bus_conv_poles[i] = Dict(c => Vector{String}())
+            #bus_conv_poles["$i"]["$c"] => Vector{String}()
             for pole in poles
-                push!(bus_conv_poles[i], (c,pole))
+                push!(bus_conv_poles[i][c],pole)
             end
         end
         nw_ref[:bus_conv_poles] = bus_conv_poles
@@ -83,27 +99,34 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
         nw_ref[:busdc_terminal_arcsdc] = busdc_terminal_arcsdc
 
         # Map DC bus terminal to connected converter active poles
+        # ->  This was changed, let's see if it works 
         busdc_terminal_conv_poles = Dict(
-            (i,t) => Vector{Tuple{Int,String}}()
-            for (i,terminals) in nw_ref[:busdc_terminals]
-            for t in terminals
+            # b_id are buses and they can have up to three TERMINALS p,r,n
+            b_id => Dict()
+            for b_id in keys(nw_ref[:busdc])
         )
+        for b_id in keys(busdc_terminal_conv_poles)
+            for terminal in keys(nw_ref[:busdc][b_id]["Vdc"])
+                busdc_terminal_conv_poles[b_id][terminal] = Vector{Tuple{Int,String}}()
+            end
+        end
         for (c,poles) in nw_ref[:convdc_poles]
-            i = nw_ref[:convdc][c]["busdc_i"]
+            b_id = nw_ref[:convdc][c]["busdc_i"]
             if "p" in poles
-                push!(busdc_terminal_conv_poles[i,"p"], (c,"p"))
-                push!(busdc_terminal_conv_poles[i,"r"], (c,"p"))
+                push!(busdc_terminal_conv_poles[b_id]["p"],(Int64(c),"p"))
+                push!(busdc_terminal_conv_poles[b_id]["r"],(Int64(c),"p"))
             end
             if "r" in poles
-                push!(busdc_terminal_conv_poles[i,"p"], (c,"r"))
-                push!(busdc_terminal_conv_poles[i,"n"], (c,"r"))
+                push!(busdc_terminal_conv_poles[b_id]["p"],(Int64(c),"r"))
+                push!(busdc_terminal_conv_poles[b_id]["n"],(Int64(c),"r"))
             end
             if "n" in poles
-                push!(busdc_terminal_conv_poles[i,"r"], (c,"n"))
-                push!(busdc_terminal_conv_poles[i,"n"], (c,"n"))
+                push!(busdc_terminal_conv_poles[b_id]["r"],(Int64(c),"n"))
+                push!(busdc_terminal_conv_poles[b_id]["n"],(Int64(c),"n"))
             end
         end
         nw_ref[:busdc_terminal_conv_poles] = busdc_terminal_conv_poles
+
 
         # Map DC bus to connected grounded converters
         busdc_grounded_convs = Dict(
