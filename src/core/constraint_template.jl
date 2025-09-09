@@ -82,7 +82,7 @@ function constraint_converter_dc_current(pm::_PM.AbstractPowerModel, i::Int; nw:
     busdc_terminal_conv_poles = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
 
     bus_cond_convs_dc_cond = Dict(c => busdc_terminal_conv_poles[(conv["busdc_i"], c)] for c in 1:busdc["terminals"])
-    vdcm = [c == 3 ? -0.0 : sign(busdc["Vdcmin"][c]) for c in 1:busdc["terminals"]]
+    #vdcm = [c == 3 ? -0.0 : sign(busdc["Vdcmin"][c]) for c in 1:busdc["terminals"]]
 
     constraint_converter_dc_current(pm, nw, i, conv["busdc_i"], vdcm, bus_cond_convs_dc_cond)
 end
@@ -160,11 +160,11 @@ end
 
 function constraint_kcl_shunt_dcgrid_new(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     busdc = _PM.ref(pm, nw, :busdc, i)
-    busdc_terminal_arcsdc = _PM.ref(pm, nw, :busdc_terminal_arcsdc)
-    busdc_terminal_conv_poles = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
-    busdc_grounded_convs = _PM.ref(pm, nw, :busdc_grounded_convs)
+    busdc_terminal_arcsdc_ = _PM.ref(pm, nw, :busdc_terminal_arcsdc)
+    busdc_terminal_conv_poles_ = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
+    busdc_grounded_convs_ = _PM.ref(pm, nw, :busdc_grounded_convs)
 
-    constraint_kcl_shunt_dcgrid_new(pm, nw, i, busdc_terminal_arcsdc, busdc_terminal_conv_poles, busdc_grounded_convs)
+    constraint_kcl_shunt_dcgrid_new(pm, nw, i, busdc_terminal_arcsdc_, busdc_terminal_conv_poles_, busdc_grounded_convs_)
 end
 
 function constraint_ohms_dc_branch_new(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
@@ -180,17 +180,20 @@ end
 function constraint_converter_losses_new(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
     poles = keys(conv["status"])
-
+    for pole in poles
     #plmax = conv["LossA"][cond] + conv["LossB"][cond] * conv["Pacrated"][cond] + conv["LossCinv"][cond] * (conv["Pacrated"][cond])^2
-    constraint_converter_losses_new(pm, nw, i, conv, poles)
+        constraint_converter_losses_new(pm, nw, i, conv, pole)
+    end
 end
 
 
 function constraint_converter_current_new(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
     poles = keys(conv["status"])
-
-    constraint_converter_current_new(pm, nw, i, conv, poles)
+    
+    for pole in poles
+        constraint_converter_current_new(pm, nw, i, pole)
+    end
 end
 
 function constraint_converter_dc_current_new(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
@@ -201,35 +204,39 @@ function constraint_converter_dc_current_new(pm::_PM.AbstractPowerModel, i::Int;
     terminals = keys(_PM.ref(pm, nw, :busdc_terminal_conv_poles,busdc)) #terminal
     println("terminals: ", terminals)
     busdc_terminal_conv_poles = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
-
     constraint_converter_dc_current_new(pm, nw, i, busdc, terminals, poles, busdc_terminal_conv_poles)
 end
 
 function constraint_conv_transformer_new(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
     poles = keys(conv["status"])
-
-    constraint_conv_transformer_new(pm, nw, i, conv["rtf"], conv["xtf"], conv["busac_i"], conv["tm"], Bool(conv["transformer"]), poles)
+    for pole in poles
+        constraint_conv_transformer_new(pm, nw, i, conv["rtf"][pole], conv["xtf"][pole], conv["busac_i"], conv["tm"][pole], Bool(conv["transformer"]), pole)
+    end
 end
 
 function constraint_conv_reactor_new(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
     poles = keys(conv["status"])
-
-    constraint_conv_reactor_new(pm, nw, i, conv["rc"], conv["xc"], Bool(conv["reactor"]), poles)
+    for pole in poles
+        constraint_conv_reactor_new(pm, nw, i, conv["rc"][pole], conv["xc"][pole], Bool(conv["reactor"]), pole)
+    end
 end
 
 function constraint_conv_filter_new(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
     poles = keys(conv["status"])
-
-    constraint_conv_filter_new(pm, nw, i, conv["bf"], Bool(conv["filter"]), poles)
+    for pole in poles
+        constraint_conv_filter_new(pm, nw, i, conv["bf"][pole], Bool(conv["filter"]), pole)
+    end
 end
 
 function constraint_conv_firing_angle_new(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
     poles = keys(conv["status"])
-    constraint_conv_firing_angle_new(pm, nw, i, poles)
+    for pole in poles
+        constraint_conv_firing_angle_new(pm, nw, i, pole)
+    end
 end
 
 function constraint_converter_dc_ground_shunt_ohm_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default)

@@ -177,7 +177,7 @@ for (c,poles) in check["convdc_poles"]
     end
 end
 
-busdc_terminal_conv_poles["3"]
+busdc_terminal_conv_poles["1"]
 
 ## UPDATE THE BASE FUNCTION AND BRACE YOURSELF FOR THE NEXT ONEÍ
 
@@ -206,7 +206,6 @@ function build_model_check(pm::_PM.AbstractPowerModel)
     _PMMCDC.variable_mc_active_dcbranch_flow_new(pm, bounded=true)
     _PMMCDC.variable_mc_dcbranch_current_new(pm, bounded=true)
     _PMMCDC.variable_mcdcgrid_voltage_magnitude_new(pm, bounded=true)
-    
     _PMMCDC.variable_mcdc_converter_new(pm, bounded=true)
 
     _PM.objective_min_fuel_cost(pm)
@@ -244,6 +243,7 @@ function build_model_check(pm::_PM.AbstractPowerModel)
         _PMMCDC.constraint_conv_transformer_new(pm, i)
         _PMMCDC.constraint_conv_reactor_new(pm, i)
         _PMMCDC.constraint_conv_filter_new(pm, i)
+
         if pm.ref[:it][_PM.pm_it_sym][:nw][_PM.nw_id_default][:convdc][i]["islcc"] == 1
             _PMMCDC.constraint_conv_firing_angle(pm, i)
         end
@@ -252,9 +252,48 @@ function build_model_check(pm::_PM.AbstractPowerModel)
 end
 
 
-#pm[][]:arcsdc_from
-
 pm = solve_model_check(data, _PM.ACPPowerModel)
+result = solve_mcdcopf_new(data, _PM.ACPPowerModel, nlp_solver, setting=s)
 
 
-#result = solve_mcdcopf_new(data, _PM.ACPPowerModel, nlp_solver, setting=s)
+
+pm.ref[:it][:pm][:nw][0][:arcsdc]
+pm.var[:it][:pm][:nw][0][:pconv_tf_fr][3]
+pm.var[:it][:pm][:nw][0][:i_dcgrid][(2,4,2)]
+first(axes(pm.var[:it][:pm][:nw][0][:iconv_dcg][1]))
+
+pm.ref[:it][:pm][:nw][0][:bus_conv_poles]
+pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]
+pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles]
+
+pm.ref[:it][:pm][:nw][0][:busdc_terminal_arcsdc]
+pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles][1]
+pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]
+
+
+busdc_terminal_conv_poles["1"]
+
+#pm.var[:it][:pm][:nw][0][:vmc][1][4]["n"]
+#pm.var[:it][:pm][:nw][0][:vaf_check][3]
+
+
+
+
+#convs_ac_cond = Dict(i => conv["status"] for (i, conv) in data["convdc"]) 
+#convs_ac_cond["1"]
+
+for (cv_id,cv) in data["convdc"]
+    cv["transformer"] = 0
+    cv["reactor"]= 0
+    cv["filter"] = 0
+end
+
+for i in keys(data["busdc"])
+    println("busdc: ", i)
+    #vdcm = _PM.var(pm, n, :vdcm, i)
+    for cv_id in busdc_grounded_convs[i]
+        println(" grounded conv: ", cv_id)
+    end
+end
+
+convs_ac_cond = Dict(i => (findall(x -> !iszero(x), conv["status"]), conv["status"]) for (i, conv) in data["convdc"])

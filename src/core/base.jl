@@ -55,6 +55,12 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<:Any})
             for (c, conv) in nw_ref[:convdc]
         )
 
+        # Same as previous one
+        nw_ref[:convac_poles] = Dict(
+            c => Set(pole for (pole, status) in conv["status"] if status == 1)
+            for (c, conv) in nw_ref[:convdc]
+        )
+
         # Map AC bus to connected converter active poles
         #bus_conv_poles = Dict(
         #    i => Vector{Tuple{Int,String}}()

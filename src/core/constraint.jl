@@ -45,11 +45,12 @@ function constraint_kcl_shunt_dcgrid_new(pm::_PM.AbstractPowerModel, n::Int, i::
 
     terminals = keys(_PM.ref(pm, n, :busdc, i, "Vdc"))
 
-    for terminals in terminals
+    for terminal in terminals
         JuMP.@constraint(pm.model,
-            sum(i_dcgrid[branch][terminals] for branch in bus_arcs_dcgrid_terminals[(i, terminals)])
-            + sum(iconv_dc[conv][conv_cond] for (conv,conv_cond) in bus_convs_dc_cond[i][terminals])
+            sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
+            + sum(iconv_dc[conv][conv_cond] for (conv,conv_cond) in bus_convs_dc_cond[i][terminal])
             + sum(iconv_dcg_shunt[conv] for conv in bus_convs_grounding_shunt[i]) == 0
             )
     end
+
 end
