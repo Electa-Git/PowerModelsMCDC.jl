@@ -227,9 +227,7 @@ function constraint_converter_dc_current_new(pm::_PM.AbstractACPModel, n::Int, i
     vdcm = _PM.var(pm, n, :vdcm, busdc)
 
     for terminal in terminals
-        println("Terminal in all this dioboia: $(terminal)")
         for (conv_id,pole) in busdc_terminal_conv_poles[busdc][terminal]
-            println("In all this dioboia we should have convid $(conv_id) and pole == $(pole)")
             JuMP.@constraint(pm.model, pconv_dc[pole] == iconv_dc[pole] * vdcm[terminal])
         end
     end
@@ -363,9 +361,7 @@ function constraint_converter_dc_ground_shunt_ohm_new(pm::_PM.AbstractACPModel, 
 
     for i in _PM.ids(pm, n, :busdc)
         vdcm = _PM.var(pm, n, :vdcm, i)
-        println("Bus DC ID: ", i)
         for cv_id in busdc_grounded_convs[i]
-            println("  Conv DC ID: ", cv_id)
             r = _PM.ref(pm, n, :convdc, cv_id)["ground_z"] + r_earth # The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
             if r == 0 #solid grounding
                 JuMP.@constraint(pm.model, vdcm["r"] == 0)

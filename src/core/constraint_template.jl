@@ -200,9 +200,7 @@ function constraint_converter_dc_current_new(pm::_PM.AbstractPowerModel, i::Int;
     conv = _PM.ref(pm, nw, :convdc, i)
     poles = keys(conv["status"])
     busdc = conv["busdc_i"]
-    println("busdc: ", busdc)
     terminals = keys(_PM.ref(pm, nw, :busdc_terminal_conv_poles,busdc)) #terminal
-    println("terminals: ", terminals)
     busdc_terminal_conv_poles = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
     constraint_converter_dc_current_new(pm, nw, i, busdc, terminals, poles, busdc_terminal_conv_poles)
 end

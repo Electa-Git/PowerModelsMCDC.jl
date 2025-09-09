@@ -745,7 +745,7 @@ function variable_dcside_current_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_
         for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
             for pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])
                 if bounded
-                    JuMP.set_lower_bound.(vars[cv_id][pole],0)
+                    JuMP.set_lower_bound.(vars[cv_id][pole],- _PM.ref(pm, nw, :convdc, cv_id)["Imax"][pole])
                     JuMP.set_upper_bound.(vars[cv_id][pole],_PM.ref(pm, nw, :convdc, cv_id)["Imax"][pole])
                 end
             end
@@ -769,8 +769,8 @@ function variable_dcside_current_ground_new(pm::_PM.AbstractPowerModel; nw::Int=
     for cv_id in _PM.ids(pm, nw, :convdc)
         for pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])
             if bounded
-                JuMP.set_lower_bound.(vars[cv_id], - (_PM.ref(pm, nw, :convdc, cv_id)["Imax"]["n"]))
-                JuMP.set_upper_bound.(vars[cv_id], _PM.ref(pm, nw, :convdc, cv_id)["Imax"]["n"])
+                JuMP.set_lower_bound.(vars[cv_id], - (_PM.ref(pm, nw, :convdc, cv_id)["Imax"][pole]))
+                JuMP.set_upper_bound.(vars[cv_id], _PM.ref(pm, nw, :convdc, cv_id)["Imax"][pole])
             end
         end
     end
@@ -851,8 +851,8 @@ function variable_dcside_ground_power_new(pm::_PM.AbstractPowerModel; nw::Int=_P
     for cv_id in _PM.ids(pm, nw, :convdc)
         for pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])
             if bounded
-                JuMP.set_lower_bound.(vars[cv_id], - (_PM.ref(pm, nw, :convdc, cv_id)["Pacrated"]["n"]))
-                JuMP.set_upper_bound.(vars[cv_id], _PM.ref(pm, nw, :convdc, cv_id)["Pacrated"]["n"])
+                JuMP.set_lower_bound.(vars[cv_id], - (_PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][pole])*bigM)
+                JuMP.set_upper_bound.(vars[cv_id], _PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][pole]*bigM)
             end
         end
     end
@@ -875,9 +875,10 @@ function variable_dcside_grounding_shunt_power_new(pm::_PM.AbstractPowerModel; n
 
     if bounded
         for b_id in _PM.ids(pm, nw, :busdc_grounded_convs)
-            for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs,b_id))            
-                    JuMP.set_lower_bound(vars[cv_id], -(_PM.ref(pm, nw, :convdc, cv_id)["Pacrated"]["n"]) * 0.1 * bigM)
-                    JuMP.set_upper_bound(vars[cv_id], _PM.ref(pm, nw, :convdc, cv_id)["Pacrated"]["n"] * 0.1 * bigM)
+            for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs,b_id))    
+                    poles = keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])        
+                    JuMP.set_lower_bound(vars[cv_id], -(_PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][first(poles)]) * 0.1 * bigM * _PM.ref(pm, nw, :convdc, cv_id)["ground_type"]) #Making sure there is a pole
+                    JuMP.set_upper_bound(vars[cv_id], _PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][first(poles)] * 0.1 * bigM * _PM.ref(pm, nw, :convdc, cv_id)["ground_type"])
             end
         end
     end
@@ -939,7 +940,7 @@ function variable_converter_filter_voltage_magnitude_new(pm::_PM.AbstractPowerMo
         for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
             for pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])
                 if bounded
-                    JuMP.set_lower_bound.(vars[cv_id][pole],-(_PM.ref(pm, nw, :convdc, cv_id)["Vmmin"][pole]) / bigM)
+                    JuMP.set_lower_bound.(vars[cv_id][pole], _PM.ref(pm, nw, :convdc, cv_id)["Vmmin"][pole] / bigM)
                     JuMP.set_upper_bound.(vars[cv_id][pole], _PM.ref(pm, nw, :convdc, cv_id)["Vmmax"][pole] * bigM)
                 end
             end
