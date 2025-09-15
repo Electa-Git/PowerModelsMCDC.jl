@@ -791,19 +791,20 @@ function variable_dcside_current_grounding_shunt_new(pm::_PM.AbstractPowerModel;
     ) for b_id in _PM.ids(pm, nw, :busdc_grounded_convs) for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs, b_id))
     )
 
-    if bounded
-        for b_id in _PM.ids(pm, nw, :busdc_grounded_convs)
-            for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs,b_id))            
-                    JuMP.set_lower_bound(vars[cv_id], -(_PM.ref(pm, nw, :convdc, cv_id)["Imax"]["n"]) * 0.1 * bigM)
-                    JuMP.set_upper_bound(vars[cv_id], _PM.ref(pm, nw, :convdc, cv_id)["Imax"]["n"] * 0.1 * bigM)
-            end
-        end
-    end
-
     poles = Dict(
         cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
         for b_id in _PM.ids(pm, nw, :busdc_grounded_convs) for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs, b_id))
     )
+
+    if bounded
+        for b_id in _PM.ids(pm, nw, :busdc_grounded_convs)
+            for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs,b_id))            
+                    JuMP.set_lower_bound(vars[cv_id], -(_PM.ref(pm, nw, :convdc, cv_id)["Imax"][first(poles[cv_id])]) * 0.1 * bigM)
+                    JuMP.set_upper_bound(vars[cv_id], _PM.ref(pm, nw, :convdc, cv_id)["Imax"][first(poles[cv_id])] * 0.1 * bigM)
+            end
+        end
+    end
+
 
     report #&& sol_component_value_status_new(pm, nw, :convdc, :iconv_dcg_shunt, _PM.ids(pm, nw, :convdc), poles, vars)
 
@@ -873,20 +874,21 @@ function variable_dcside_grounding_shunt_power_new(pm::_PM.AbstractPowerModel; n
     ) for b_id in _PM.ids(pm, nw, :busdc_grounded_convs) for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs, b_id))
     )
 
-    if bounded
-        for b_id in _PM.ids(pm, nw, :busdc_grounded_convs)
-            for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs,b_id))    
-                    poles = keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])        
-                    JuMP.set_lower_bound(vars[cv_id], -(_PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][first(poles)]) * 0.1 * bigM * _PM.ref(pm, nw, :convdc, cv_id)["ground_type"]) #Making sure there is a pole
-                    JuMP.set_upper_bound(vars[cv_id], _PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][first(poles)] * 0.1 * bigM * _PM.ref(pm, nw, :convdc, cv_id)["ground_type"])
-            end
-        end
-    end
-
     poles = Dict(
         cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
         for b_id in _PM.ids(pm, nw, :busdc_grounded_convs) for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs, b_id))
     )
+
+    if bounded
+        for b_id in _PM.ids(pm, nw, :busdc_grounded_convs)
+            for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs,b_id))    
+                
+                    JuMP.set_lower_bound(vars[cv_id], -(_PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][first(poles[cv_id])]) * 0.1 * bigM * _PM.ref(pm, nw, :convdc, cv_id)["ground_type"]) #Making sure there is a pole
+                    JuMP.set_upper_bound(vars[cv_id], _PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][first(poles[cv_id])] * 0.1 * bigM * _PM.ref(pm, nw, :convdc, cv_id)["ground_type"])
+            end
+        end
+    end
+
 
     report #&& sol_component_value_status_new(pm, nw, :convdc, :pdcg_shunt, _PM.ids(pm, nw, :convdc), poles, vars)
 end

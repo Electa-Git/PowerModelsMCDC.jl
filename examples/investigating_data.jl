@@ -255,11 +255,12 @@ end
 pm = solve_model_check(data, _PM.ACPPowerModel)
 result = solve_mcdcopf_new(data, _PM.ACPPowerModel, nlp_solver, setting=s)
 
-
+busdc_terminal_arcsdc
 
 pm.ref[:it][:pm][:nw][0][:arcsdc]
 pm.var[:it][:pm][:nw][0][:pconv_tf_fr][3]
 pm.var[:it][:pm][:nw][0][:i_dcgrid][(2,4,2)]
+pm.var[:it][:pm][:nw][0][:iconv_dcg_shunt]
 first(axes(pm.var[:it][:pm][:nw][0][:iconv_dcg][1]))
 
 pm.ref[:it][:pm][:nw][0][:bus_conv_poles]
@@ -267,7 +268,7 @@ pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]
 pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles]
 
 pm.ref[:it][:pm][:nw][0][:busdc_terminal_arcsdc]
-pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles][1]
+pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles]
 pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]
 
 
