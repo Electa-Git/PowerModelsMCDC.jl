@@ -80,8 +80,7 @@ function _calc_branch_power_max_frto(branch::Dict, bus_fr::Dict, bus_to::Dict)
     return _calc_branch_power_max(branch, bus_fr), _calc_branch_power_max(branch, bus_to)
 end
 
-## Why not writing everything from scratch?
-# Trying now
+
 ## New variables
 function variable_mc_dcbranch_current_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     vars = _PM.var(pm, nw)[:i_dcgrid] = Dict(((l, i, j)) => JuMP.@variable(pm.model,
@@ -92,12 +91,12 @@ function variable_mc_dcbranch_current_new(pm::_PM.AbstractPowerModel; nw::Int=_P
     
     for (l, i, j) in _PM.ref(pm, nw, :arcsdc)
         for cond in keys(_PM.ref(pm, nw, :branchdc)[l]["status"]) 
-            #if _PM.ref(pm, nw, :branchdc)[l]["status"][cond] == 1
+            if _PM.ref(pm, nw, :branchdc)[l]["status"][cond] == 1
                 if bounded
                     JuMP.set_lower_bound.(vars[(l, i, j)][cond], -(_PM.ref(pm, nw, :branchdc,l)["rateA"][cond])/(_PM.ref(pm, nw, :branchdc,l)["r"][cond]))
                     JuMP.set_upper_bound.(vars[(l, i, j)][cond],  (_PM.ref(pm, nw, :branchdc,l)["rateA"][cond])/(_PM.ref(pm, nw, :branchdc,l)["r"][cond]))
                 end
-            #end
+            end
         end
     end
 

@@ -220,22 +220,30 @@ end
 
 
 function constraint_converter_dc_current_new(pm::_PM.AbstractACPModel, n::Int, i::Int, busdc::Int, terminals, poles, busdc_terminal_conv_poles)
-    pconv_dc = _PM.var(pm, n, :pconv_dc, i)
-    pconv_dcg = _PM.var(pm, n, :pconv_dcg, i)
-    iconv_dc = _PM.var(pm, n, :iconv_dc, i)
-    iconv_dcg = _PM.var(pm, n, :iconv_dcg, i)
-    vdcm = _PM.var(pm, n, :vdcm, busdc)
+    pconv_dc = _PM.var(pm, n, :pconv_dc)
+    pconv_dcg = _PM.var(pm, n, :pconv_dcg)
+    iconv_dc = _PM.var(pm, n, :iconv_dc)
+    iconv_dcg = _PM.var(pm, n, :iconv_dcg)
+    vdcm = _PM.var(pm, n, :vdcm)
 
     for terminal in terminals
         for (conv_id,pole) in busdc_terminal_conv_poles[busdc][terminal]
-            JuMP.@constraint(pm.model, pconv_dc[pole] == iconv_dc[pole] * vdcm[terminal])
+            # CHECK THIS !!!
+            if terminal != "r"
+                println("Converter: $i, Conv_id: $conv_id, Pole: $pole, Terminal: $terminal")
+                JuMP.@constraint(pm.model, pconv_dc[conv_id][pole] == iconv_dc[conv_id][pole] * vdcm[busdc][terminal])
+            else
+                JuMP.@constraint(pm.model, pconv_dc[conv_id][terminal] == iconv_dc[conv_id][terminal] * vdcm[busdc][terminal])
+            end
         end
     end
     for pole in poles
-        JuMP.@constraint(pm.model, pconv_dcg[pole] == iconv_dcg[pole] * vdcm["r"])
-        JuMP.@constraint(pm.model, iconv_dc[pole] + iconv_dcg[pole] == 0)
+        println("Converter: $i, Pole: $pole")
+        JuMP.@constraint(pm.model, pconv_dcg[i][pole] == iconv_dcg[i][pole] * vdcm[busdc]["r"])
+        JuMP.@constraint(pm.model, iconv_dc[i][pole] + iconv_dcg[i][pole] == 0)
     end
-    JuMP.@constraint(pm.model, sum(iconv_dc) == 0)
+
+    JuMP.@constraint(pm.model, sum(iconv_dc[i]) == 0)
 end
 
 """
@@ -279,7 +287,7 @@ function ac_power_flow_constraints_new(pm::_PM.AbstractACPModel, g, b, gsh_fr, v
     JuMP.@constraint(pm.model, q_to == -b * vm_to^2 + b / (tm) * vm_to * vm_fr * cos(va_to - va_fr) + -g / (tm) * vm_to * vm_fr * sin(va_to - va_fr))
 end
 
-# It seems okay until here
+
 """
 Converter reactor constraints
 ```
@@ -310,8 +318,8 @@ function constraint_conv_reactor_new(pm::_PM.AbstractACPModel, n::Int, i::Int, r
         JuMP.@constraint(pm.model, ppr_fr == gc * vmf^2 + -gc * vmf * vmc * cos(vaf - vac) + -bc * vmf * vmc * sin(vaf - vac))
         JuMP.@constraint(pm.model, qpr_fr == -bc * vmf^2 + bc * vmf * vmc * cos(vaf - vac) + -gc * vmf * vmc * sin(vaf - vac))
     else
-        ppr_to = -pconv_ac
-        qpr_to = -qconv_ac
+        ppr_to = pconv_ac
+        qpr_to = qconv_ac
         JuMP.@constraint(pm.model, ppr_fr + ppr_to == 0)
         JuMP.@constraint(pm.model, qpr_fr + qpr_to == 0)
         JuMP.@constraint(pm.model, vac == vaf)
@@ -362,6 +370,7 @@ function constraint_converter_dc_ground_shunt_ohm_new(pm::_PM.AbstractACPModel, 
     for i in _PM.ids(pm, n, :busdc)
         vdcm = _PM.var(pm, n, :vdcm, i)
         for cv_id in busdc_grounded_convs[i]
+            println("Converter id grounded at busdc $i: $cv_id")
             r = _PM.ref(pm, n, :convdc, cv_id)["ground_z"] + r_earth # The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
             if r == 0 #solid grounding
                 JuMP.@constraint(pm.model, vdcm["r"] == 0)

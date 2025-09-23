@@ -173,6 +173,7 @@ function constraint_ohms_dc_branch_new(pm::_PM.AbstractPowerModel, i::Int; nw::I
     t_bus = branch["tbusdc"]
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
+
     constraint_ohms_dc_branch_new(pm, nw, f_bus, t_bus, f_idx, t_idx, branch)
 end
 
@@ -181,6 +182,7 @@ function constraint_converter_losses_new(pm::_PM.AbstractPowerModel, i::Int; nw:
     conv = _PM.ref(pm, nw, :convdc, i)
     poles = keys(conv["status"])
     for pole in poles
+        println("Converter: $i, Pole: $pole")
     #plmax = conv["LossA"][cond] + conv["LossB"][cond] * conv["Pacrated"][cond] + conv["LossCinv"][cond] * (conv["Pacrated"][cond])^2
         constraint_converter_losses_new(pm, nw, i, conv, pole)
     end

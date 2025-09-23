@@ -1,6 +1,4 @@
-"do nothing, this model does not have complex voltage constraints"
-function constraint_voltage_dc(pm::_PM.AbstractPowerModel, n::Int)
-end
+
 
 """
 ```
@@ -46,11 +44,21 @@ function constraint_kcl_shunt_dcgrid_new(pm::_PM.AbstractPowerModel, n::Int, i::
     terminals = keys(_PM.ref(pm, n, :busdc, i, "Vdc"))
 
     for terminal in terminals
-        JuMP.@constraint(pm.model,
-            sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
-            + sum(iconv_dc[conv][conv_cond] for (conv,conv_cond) in bus_convs_dc_cond[i][terminal])
-            + sum(iconv_dcg_shunt[conv] for conv in bus_convs_grounding_shunt[i]) == 0
-            )
+        println("Working on terminal $terminal of bus $i")
+        if terminal == "r"
+            println("  Working on converter terminal $terminal")
+            JuMP.@constraint(pm.model,
+                sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
+                + sum(iconv_dc[conv][conv_cond] for (conv,conv_cond) in bus_convs_dc_cond[i][terminal])
+                + sum(iconv_dcg_shunt[conv] for conv in bus_convs_grounding_shunt[i]) == 0
+                )
+        else
+            println("  Working on non-converter terminal $terminal")
+            JuMP.@constraint(pm.model,
+                sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
+                + sum(iconv_dc[conv][conv_cond] for (conv,conv_cond) in bus_convs_dc_cond[i][terminal]) == 0
+                ) 
+        end
     end
 
 end

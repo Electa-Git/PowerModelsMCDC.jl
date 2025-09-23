@@ -191,6 +191,8 @@ end
 
 function variable_dcside_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     poles = _PM.ref(pm, nw, :conv_dcpoles)
+    # Adding metallic return pole "r" to the list of poles for each converter
+
     vars = _PM.var(pm, nw)[:iconv_dc] = Dict(i => JuMP.@variable(pm.model,
         [first(poles[i])], base_name = "$(nw)_iconv_dc_$(i)",
         start = 1.0
@@ -735,27 +737,30 @@ end
 
 function variable_dcside_current_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
 
+    poles = Dict(
+        cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
+        for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
+    )
+    for cv_id in keys(poles)
+        push!(poles[cv_id],"r") # add grounding pole for current variable
+    end
+
     vars = _PM.var(pm, nw)[:iconv_dc] = Dict(cv_id => JuMP.@variable(pm.model,
-    [pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])], base_name = "$(nw)_iconv_dc_$(bus)_$(cv_id)",
+    [pole in poles[cv_id]], base_name = "$(nw)_iconv_dc_$(bus)_$(cv_id)",
     start = comp_start_value(_PM.ref(pm, nw, :convdc, cv_id), "I_conv_dc_start", pole, 1.0)
     ) for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus])
 
 
     for bus in _PM.ids(pm, nw, :bus_conv_poles) 
         for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
-            for pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])
+            for pole in poles[cv_id] #keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])
                 if bounded
-                    JuMP.set_lower_bound.(vars[cv_id][pole],- _PM.ref(pm, nw, :convdc, cv_id)["Imax"][pole])
-                    JuMP.set_upper_bound.(vars[cv_id][pole],_PM.ref(pm, nw, :convdc, cv_id)["Imax"][pole])
+                    JuMP.set_lower_bound.(vars[cv_id][pole],- _PM.ref(pm, nw, :convdc, cv_id)["Imax"][first(poles[cv_id])]) # max current is same for all poles
+                    JuMP.set_upper_bound.(vars[cv_id][pole],_PM.ref(pm, nw, :convdc, cv_id)["Imax"][first(poles[cv_id])])
                 end
             end
         end
     end
-
-    poles = Dict(
-        cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
-        for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
-    )
 
     report && sol_component_value_status_new(pm, nw, :convdc, :iconv_dc, _PM.ids(pm, nw, :convdc), poles, vars)
 end
@@ -791,9 +796,15 @@ function variable_dcside_current_grounding_shunt_new(pm::_PM.AbstractPowerModel;
     ) for b_id in _PM.ids(pm, nw, :busdc_grounded_convs) for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs, b_id))
     )
 
-    poles = Dict(
+    grounded_convs = Dict(
+        cv_id => ["r"]
+        for b_id in keys(pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]) for cv_id in keys(pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs][b_id])
+    )
+
+
+        poles = Dict(
         cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
-        for b_id in _PM.ids(pm, nw, :busdc_grounded_convs) for cv_id in keys(_PM.ref(pm, nw, :busdc_grounded_convs, b_id))
+        for cv_id in _PM.ids(pm, nw, :convdc)
     )
 
     if bounded
@@ -806,36 +817,46 @@ function variable_dcside_current_grounding_shunt_new(pm::_PM.AbstractPowerModel;
     end
 
 
-    report #&& sol_component_value_status_new(pm, nw, :convdc, :iconv_dcg_shunt, _PM.ids(pm, nw, :convdc), poles, vars)
-
+    report && sol_component_value_status_grounding_new(pm, nw, :convdc, :iconv_dcg_shunt, keys(grounded_convs), grounded_convs, vars)
+    #report && _PM.sol_component_value(pm, nw, :convdc, :iconv_dcg_shunt, _PM.ids(pm, nw, :convdc), vars)
 end
 
 
 
 "variable: `pconv_dc[j]` for `j` in `convdc`"
 function variable_dcside_power_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+    poles = Dict(
+        cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
+        for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
+    )
+    for cv_id in keys(poles)
+        push!(poles[cv_id],"r") # add grounding pole for current variable
+    end
+    
     bigM = 1.2 # to account for losses, maximum losses to be derived
     vars = _PM.var(pm, nw)[:pconv_dc] = Dict(cv_id => JuMP.@variable(pm.model,
-    [pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])], base_name = "$(nw)_pconv_dc_$(bus)_$(cv_id)",
+    [pole in poles[cv_id]], base_name = "$(nw)_pconv_dc_$(bus)_$(cv_id)",
     start = comp_start_value(_PM.ref(pm, nw, :convdc, cv_id), "P_conv_dc_start", pole, 1.0)
     ) for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus])
 
-
+    # There is the need to assign one Pacrated here, assuming the first value among the poles
+    #first_pole = Dict(cv_id => first(poles[cv_id]) for cv_id in keys(poles))
+    
     for bus in _PM.ids(pm, nw, :bus_conv_poles) 
         for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
-            for pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])
+            for pole in poles[cv_id] #keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])
                 if bounded
-                    JuMP.set_lower_bound.(vars[cv_id][pole],- (_PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][pole]* bigM))
-                    JuMP.set_upper_bound.(vars[cv_id][pole], _PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][pole]* bigM)
+                    JuMP.set_lower_bound.(vars[cv_id][pole],- (_PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][first(poles[cv_id])]* bigM))
+                    JuMP.set_upper_bound.(vars[cv_id][pole], _PM.ref(pm, nw, :convdc, cv_id)["Pacrated"][first(poles[cv_id])]* bigM)
                 end
             end
         end
     end
 
-    poles = Dict(
-        cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
-        for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
-    )
+    #poles = Dict(
+    #    cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
+    #    for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
+    #)
 
     report && sol_component_value_status_new(pm, nw, :convdc, :pdc, _PM.ids(pm, nw, :convdc), poles, vars)
 

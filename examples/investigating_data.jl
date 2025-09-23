@@ -211,7 +211,6 @@ function build_model_check(pm::_PM.AbstractPowerModel)
     _PM.objective_min_fuel_cost(pm)
 
     _PM.constraint_model_voltage(pm)
-    _PMMCDC.constraint_voltage_dc(pm)
 
     for i in _PM.ids(pm, :ref_buses)
         _PM.constraint_theta_ref(pm, i)
@@ -258,18 +257,23 @@ result = solve_mcdcopf_new(data, _PM.ACPPowerModel, nlp_solver, setting=s)
 busdc_terminal_arcsdc
 
 pm.ref[:it][:pm][:nw][0][:arcsdc]
-pm.var[:it][:pm][:nw][0][:pconv_tf_fr][3]
-pm.var[:it][:pm][:nw][0][:i_dcgrid][(2,4,2)]
-pm.var[:it][:pm][:nw][0][:iconv_dcg_shunt]
+pm.var[:it][:pm][:nw][0][:iconv_dcg][1]
+pm.var[:it][:pm][:nw][0][:i_dcgrid][(1,4,1)]
+pm.var[:it][:pm][:nw][0][:pconv_tf_fr][1]
+pm.var[:it][:pm][:nw][0][:vmc]
 first(axes(pm.var[:it][:pm][:nw][0][:iconv_dcg][1]))
 
-pm.ref[:it][:pm][:nw][0][:bus_conv_poles]
+pm.ref[:it][:pm][:nw][0][:bus_gens]
 pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]
 pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles]
 
 pm.ref[:it][:pm][:nw][0][:busdc_terminal_arcsdc]
 pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles]
 pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]
+pm.ref[:it][:pm][:nw][0][:bus_conv_poles]
+
+pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles][1]
+
 
 
 busdc_terminal_conv_poles["1"]
@@ -277,6 +281,16 @@ busdc_terminal_conv_poles["1"]
 #pm.var[:it][:pm][:nw][0][:vmc][1][4]["n"]
 #pm.var[:it][:pm][:nw][0][:vaf_check][3]
 
+for (b_id,b) in data["bus"]
+    for c in keys(pm.ref[:it][:pm][:nw][0][:bus_conv_poles][parse(Int64,b_id)])
+        for pole in keys(pm.var[:it][:pm][:nw][0][:pconv_tf_fr][c])
+            println("Pole: $pole")
+            println("c: $c")
+            println("pconv: ", pm.var[:it][:pm][:nw][0][:pconv_tf_fr][c][pole])
+        end
+    end
+end
+first(axes(pm.var[:it][:pm][:nw][0][:pconv_tf_fr][1]))
 
 
 
@@ -297,4 +311,14 @@ for i in keys(data["busdc"])
     end
 end
 
-convs_ac_cond = Dict(i => (findall(x -> !iszero(x), conv["status"]), conv["status"]) for (i, conv) in data["convdc"])
+
+
+    grounded_convs = Dict(
+        cv_id => ["r"]
+        for b_id in keys(pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]) for cv_id in keys(pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs][b_id])
+    )
+
+        poles = Dict(
+        cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
+        for cv_id in _PM.ids(pm, nw, :convdc)
+    )
