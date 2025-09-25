@@ -134,6 +134,35 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<:Any})
         nw_ref[:busdc_terminal_conv_poles] = busdc_terminal_conv_poles
 
 
+        busdc_terminal_i_conv_dc_poles = Dict(
+        # i are buses amnd they can have up to three TERMINALS p,r,n
+        b_id => Dict()
+        for b_id in keys(nw_ref[:busdc])
+        )
+        for b_id in keys(busdc_terminal_i_conv_dc_poles)
+            for terminal in keys(nw_ref[:busdc][b_id]["Vdc"])
+                busdc_terminal_i_conv_dc_poles[b_id][terminal] = Vector{Tuple{Int,String}}()
+            end
+        end
+
+        for (c,poles) in nw_ref[:convdc_poles]
+            b_id = nw_ref[:convdc][c]["busdc_i"]
+            if "p" in poles && !("n" in poles)
+                push!(busdc_terminal_i_conv_dc_poles[b_id]["p"],(Int64(c),"p"))
+                push!(busdc_terminal_i_conv_dc_poles[b_id]["r"],(Int64(c),"p"))
+            end
+            if "p" in poles && "n" in poles
+                push!(busdc_terminal_i_conv_dc_poles[b_id]["p"],(Int64(c),"p"))
+                push!(busdc_terminal_i_conv_dc_poles[b_id]["n"],(Int64(c),"n"))
+                push!(busdc_terminal_i_conv_dc_poles[b_id]["r"],(Int64(c),"r"))
+            end
+            if "n" in poles && !("p" in poles)
+                push!(busdc_terminal_i_conv_dc_poles[b_id]["r"],(Int64(c),"n"))
+                push!(busdc_terminal_i_conv_dc_poles[b_id]["n"],(Int64(c),"n"))
+            end
+        end
+        nw_ref[:busdc_terminal_i_conv_dc_poles] = busdc_terminal_i_conv_dc_poles
+
         # Map DC bus to connected grounded converters
         busdc_grounded_convs = Dict(
             i => Vector{Int}()
@@ -176,7 +205,6 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<:Any})
                 Memento.warn(_PM._LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
             end
         end
-        println(nw_ref)
     end
 end
 

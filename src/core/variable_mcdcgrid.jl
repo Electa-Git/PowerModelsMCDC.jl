@@ -81,7 +81,7 @@ function _calc_branch_power_max_frto(branch::Dict, bus_fr::Dict, bus_to::Dict)
 end
 
 
-## New variables
+## Updated variables
 function variable_mc_dcbranch_current_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     vars = _PM.var(pm, nw)[:i_dcgrid] = Dict(((l, i, j)) => JuMP.@variable(pm.model,
     [cond in keys(_PM.ref(pm, nw, :branchdc)[l]["status"])], base_name = "$(nw)_idcgrid_$((l,i,j))",

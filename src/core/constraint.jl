@@ -35,7 +35,7 @@ end
 
 ######################### New constraints
 
-function constraint_kcl_shunt_dcgrid_new(pm::_PM.AbstractPowerModel, n::Int, i::Int, bus_arcs_dcgrid_terminals, bus_convs_dc_cond, bus_convs_grounding_shunt)
+function constraint_kcl_shunt_dcgrid_new(pm::_PM.AbstractPowerModel, n::Int, i::Int, bus_arcs_dcgrid_terminals, bus_convs_dc_cond, bus_convs_grounding_shunt, bus_convs_i_dc_cond)
     i_dcgrid = _PM.var(pm, n, :i_dcgrid)
     iconv_dc = _PM.var(pm, n, :iconv_dc)
     iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
@@ -46,13 +46,17 @@ function constraint_kcl_shunt_dcgrid_new(pm::_PM.AbstractPowerModel, n::Int, i::
     for terminal in terminals
         println("Working on terminal $terminal of bus $i")
         if terminal == "r"
+            unique_convs = unique([cvs[1] for cvs in bus_convs_dc_cond[i][terminal]])
             println("  Working on converter terminal $terminal")
+            println("  Unique converters connected to this terminal: $unique_convs")
             JuMP.@constraint(pm.model,
                 sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
-                + sum(iconv_dc[conv][conv_cond] for (conv,conv_cond) in bus_convs_dc_cond[i][terminal])
+                #+ sum(iconv_dc[conv][terminal] for (conv,conv_cond) in bus_convs_dc_cond[i][terminal]) # this one to be fixed still, we are getting there come on
+                + sum(iconv_dc[conv][terminal] for conv in unique_convs) # this one to be fixed still, we are getting there come on
                 + sum(iconv_dcg_shunt[conv] for conv in bus_convs_grounding_shunt[i]) == 0
                 )
         else
+            # top and bottom parts of Figure 5 paper
             println("  Working on non-converter terminal $terminal")
             JuMP.@constraint(pm.model,
                 sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])

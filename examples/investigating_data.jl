@@ -177,9 +177,40 @@ for (c,poles) in check["convdc_poles"]
     end
 end
 
+busdc_terminal_i_conv_dc_poles = Dict(
+    # i are buses amnd they can have up to three TERMINALS p,r,n
+    b_id => Dict()
+    for b_id in keys(data["busdc"])
+)
+for b_id in keys(busdc_terminal_i_conv_dc_poles)
+    for terminal in keys(data["busdc"][b_id]["Vdc"])
+        busdc_terminal_i_conv_dc_poles["$b_id"][terminal] = Vector{Tuple{Int,String}}()
+    end
+end
+
+for (c,poles) in check["convdc_poles"]
+    b_id = data["convdc"][c]["busdc_i"]
+    if "p" in poles && !("n" in poles)
+        push!(busdc_terminal_i_conv_dc_poles["$b_id"]["p"],(parse(Int64,c),"p"))
+        push!(busdc_terminal_i_conv_dc_poles["$b_id"]["r"],(parse(Int64,c),"p"))
+    end
+    if "p" in poles && "n" in poles
+        push!(busdc_terminal_i_conv_dc_poles["$b_id"]["p"],(parse(Int64,c),"p"))
+        push!(busdc_terminal_i_conv_dc_poles["$b_id"]["n"],(parse(Int64,c),"n"))
+        push!(busdc_terminal_i_conv_dc_poles["$b_id"]["r"],(parse(Int64,c),"r"))
+    end
+    if "n" in poles && !("p" in poles)
+        push!(busdc_terminal_i_conv_dc_poles["$b_id"]["r"],(parse(Int64,c),"n"))
+        push!(busdc_terminal_i_conv_dc_poles["$b_id"]["n"],(parse(Int64,c),"n"))
+    end
+end
+
+
+
+busdc_terminal_i_conv_dc_poles["1"]
 busdc_terminal_conv_poles["1"]
 
-## UPDATE THE BASE FUNCTION AND BRACE YOURSELF FOR THE NEXT ONEÍ
+## UPDATE THE BASE FUNCTION AND BRACE YOURSELF FOR THE NEXT ONE
 
 
 function solve_mcdcopf_new(data::Dict{String,Any}, model_type::Type, optimizer; kwargs...)
@@ -254,25 +285,100 @@ end
 pm = solve_model_check(data, _PM.ACPPowerModel)
 result = solve_mcdcopf_new(data, _PM.ACPPowerModel, nlp_solver, setting=s)
 
-busdc_terminal_arcsdc
+#############################
+# Checking results
+for (cv_id,cv) in data["convdc"]
+    println("Converter $cv_id:")
+    for pole in keys(cv["status"])
+        println("  Pole: $pole")
+        println("    pgrid: ",result["solution"]["convdc"][cv_id]["pgrid"][pole])
+    end
+    println("--------------")
+end
+
+for (cv_id,cv) in data["convdc"]
+    println("Converter $cv_id:")
+    for pole in ["p","n","r"]
+        if haskey(result["solution"]["convdc"][cv_id]["pdc"], pole)
+            println("  Pole: $pole")
+            println("    pdc: ",result["solution"]["convdc"][cv_id]["pdc"][pole])
+
+        end
+    end
+    println("--------------")
+end
+
+for (cv_id,cv) in data["convdc"]
+    println("Converter $cv_id:")
+    for pole in ["p","n","r"]
+        if haskey(result["solution"]["convdc"][cv_id]["pdc"], pole)
+            println("  Pole: $pole")
+            println("    idc: ",result["solution"]["convdc"][cv_id]["iconv_dc"][pole])
+            
+        end
+    end
+    println("--------------")
+end
+
+
+
+
+########################
 
 pm.ref[:it][:pm][:nw][0][:arcsdc]
-pm.var[:it][:pm][:nw][0][:iconv_dcg][1]
-pm.var[:it][:pm][:nw][0][:i_dcgrid][(1,4,1)]
+pm.var[:it][:pm][:nw][0][:iconv_dc][3]
+
+i_dcgrid_var = pm.var[:it][:pm][:nw][0][:i_dcgrid]
+iconv_dc_var = pm.var[:it][:pm][:nw][0][:iconv_dc]
+iconv_dcg_shunt_var = pm.var[:it][:pm][:nw][0][:iconv_dcg_shunt]
+
 pm.var[:it][:pm][:nw][0][:pconv_tf_fr][1]
-pm.var[:it][:pm][:nw][0][:vmc]
+pm.var[:it][:pm][:nw][0][:pconv_dc][3]
 first(axes(pm.var[:it][:pm][:nw][0][:iconv_dcg][1]))
 
 pm.ref[:it][:pm][:nw][0][:bus_gens]
-pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]
-pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles]
+bus_arcs_dcgrid_terminals = pm.ref[:it][:pm][:nw][0][:busdc_terminal_arcsdc]
+bus_convs_grounding_shunt = pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]
+bus_convs_dc_cond = pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles]
+pm.ref[:it][:pm][:nw][0][:busdc_terminal_i_conv_dc_poles][3]
+
+# Get unique first values in all bus_convs_dc_cond["r"] elements
+terminals = ["p","r","n"]
+for i in keys(data["convdc"])
+    for terminal in terminals
+        println("Working on terminal $terminal of bus $i")
+        if terminal == "r"
+            println(i_dcgrid_var[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(parse(Int64,i), "$terminal")])
+            println(iconv_dc_var[conv][conv_cond] for (conv,conv_cond) in bus_convs_dc_cond[parse(Int64,i)][terminal]) # this one to be fixed still, we are getting there come on
+            println(iconv_dcg_shunt_var[conv] for conv in bus_convs_grounding_shunt[parse(Int64,i)])
+        end
+    end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 pm.ref[:it][:pm][:nw][0][:busdc_terminal_arcsdc]
-pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles]
+pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles][1]
 pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]
+
 pm.ref[:it][:pm][:nw][0][:bus_conv_poles]
 
-pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles][1]
+pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles]
 
 
 
@@ -298,27 +404,28 @@ first(axes(pm.var[:it][:pm][:nw][0][:pconv_tf_fr][1]))
 #convs_ac_cond["1"]
 
 for (cv_id,cv) in data["convdc"]
-    cv["transformer"] = 0
-    cv["reactor"]= 0
-    cv["filter"] = 0
+    cv["transformer"] = 1
+    cv["reactor"]= 1
+    cv["filter"] = 1
 end
 
-for i in keys(data["busdc"])
-    println("busdc: ", i)
-    #vdcm = _PM.var(pm, n, :vdcm, i)
-    for cv_id in busdc_grounded_convs[i]
-        println(" grounded conv: ", cv_id)
+
+import PowerModelsACDC as _PMACDC
+
+result_acdc = _PMACDC.solve_acdcopf(file, _PM.ACPPowerModel, nlp_solver, setting=s)
+
+for (g_id,g) in data["gen"]
+    println("Generator $g_id:")
+    println("  Pg: ",result_acdc["solution"]["gen"][g_id]["pg"])
+    println("  Pg mcdc: ",result["solution"]["gen"][g_id]["pg"])
+    println("--------------")
+end
+
+terminals = ["p","r","n"]
+for (b_id,b) in data["busdc"]
+    for terminal in terminals
+        println("Bus $b_id:")
+        println("  Vm: ",result["solution"]["busdc"][b_id]["vm"][terminal])
+        println("--------------")
     end
 end
-
-
-
-    grounded_convs = Dict(
-        cv_id => ["r"]
-        for b_id in keys(pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]) for cv_id in keys(pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs][b_id])
-    )
-
-        poles = Dict(
-        cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
-        for cv_id in _PM.ids(pm, nw, :convdc)
-    )
