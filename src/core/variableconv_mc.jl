@@ -1,13 +1,13 @@
 "All converter variables"
 ## Updated variables
-function variable_conv_transformer_flow_new(pm::_PM.AbstractPowerModel; kwargs...)
-    variable_conv_transformer_active_power_to_new(pm; kwargs...)
-    variable_conv_transformer_reactive_power_to_new(pm; kwargs...)
+function variable_conv_transformer_flow(pm::_PM.AbstractPowerModel; kwargs...)
+    variable_conv_transformer_active_power_to(pm; kwargs...)
+    variable_conv_transformer_reactive_power_to(pm; kwargs...)
 end
 
 
 "variable: `pconv_grid_ac_to[j]` for `j` in `convdc`"
-function variable_conv_transformer_active_power_to_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_conv_transformer_active_power_to(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     
     bigM = 2
     #poles = _PM.ref(pm, nw, :conv_acpoles)
@@ -33,12 +33,12 @@ function variable_conv_transformer_active_power_to_new(pm::_PM.AbstractPowerMode
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :ptf_to, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :ptf_to, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 
 "variable: `qconv_grid_ac_to[j]` for `j` in `convdc`"
-function variable_conv_transformer_reactive_power_to_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_conv_transformer_reactive_power_to(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2
     #poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:qconv_tf_to] = Dict(cv_id => JuMP.@variable(pm.model,
@@ -63,16 +63,16 @@ function variable_conv_transformer_reactive_power_to_new(pm::_PM.AbstractPowerMo
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :qtf_to, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :qtf_to, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 
-function variable_conv_reactor_flow_new(pm::_PM.AbstractPowerModel; kwargs...)
-    variable_conv_reactor_active_power_from_new(pm; kwargs...)
-    variable_conv_reactor_reactive_power_from_new(pm; kwargs...)
+function variable_conv_reactor_flow(pm::_PM.AbstractPowerModel; kwargs...)
+    variable_conv_reactor_active_power_from(pm; kwargs...)
+    variable_conv_reactor_reactive_power_from(pm; kwargs...)
 end
 
-function variable_conv_reactor_active_power_from_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_conv_reactor_active_power_from(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2
 
     vars = _PM.var(pm, nw)[:pconv_pr_fr] = Dict(cv_id => JuMP.@variable(pm.model,
@@ -97,12 +97,12 @@ function variable_conv_reactor_active_power_from_new(pm::_PM.AbstractPowerModel;
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :ppr_fr, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :ppr_fr, _PM.ids(pm, nw, :convdc), poles, vars)
 
 end
 
 "variable: `qconv_pr_from[j]` for `j` in `convdc`"
-function variable_conv_reactor_reactive_power_from_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_conv_reactor_reactive_power_from(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2
 
     vars = _PM.var(pm, nw)[:qconv_pr_fr] = Dict(cv_id => JuMP.@variable(pm.model,
@@ -127,34 +127,34 @@ function variable_conv_reactor_reactive_power_from_new(pm::_PM.AbstractPowerMode
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :qpr_fr, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :qpr_fr, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
-function variable_mcdc_converter_new(pm::_PM.AbstractPowerModel; kwargs...)
-    variable_conv_transformer_flow_new(pm; kwargs...)
-    variable_conv_reactor_flow_new(pm; kwargs...)
+function variable_mcdc_converter(pm::_PM.AbstractPowerModel; kwargs...)
+    variable_conv_transformer_flow(pm; kwargs...)
+    variable_conv_reactor_flow(pm; kwargs...)
 
-    variable_converter_active_power_new(pm; kwargs...)
-    variable_converter_reactive_power_new(pm; kwargs...)
-    variable_acside_current_new(pm; kwargs...)
-    variable_dcside_current_new(pm; kwargs...)
-    variable_dcside_current_ground_new(pm; kwargs...)
-    variable_dcside_current_grounding_shunt_new(pm; kwargs...)
-    variable_dcside_power_new(pm; kwargs...)
-    variable_dcside_ground_power_new(pm; kwargs...)
-    variable_dcside_grounding_shunt_power_new(pm; kwargs...)
-    variable_converter_firing_angle_new(pm; kwargs...)
+    variable_converter_active_power(pm; kwargs...)
+    variable_converter_reactive_power(pm; kwargs...)
+    variable_acside_current(pm; kwargs...)
+    variable_dcside_current(pm; kwargs...)
+    variable_dcside_current_ground(pm; kwargs...)
+    variable_dcside_current_grounding_shunt(pm; kwargs...)
+    variable_dcside_power(pm; kwargs...)
+    variable_dcside_ground_power(pm; kwargs...)
+    variable_dcside_grounding_shunt_power(pm; kwargs...)
+    variable_converter_firing_angle(pm; kwargs...)
 
-    variable_converter_filter_voltage_new(pm; kwargs...)
-    variable_converter_internal_voltage_new(pm; kwargs...)
+    variable_converter_filter_voltage(pm; kwargs...)
+    variable_converter_internal_voltage(pm; kwargs...)
 
-    variable_converter_to_grid_active_power_new(pm; kwargs...)
-    variable_converter_to_grid_reactive_power_new(pm; kwargs...)
+    variable_converter_to_grid_active_power(pm; kwargs...)
+    variable_converter_to_grid_reactive_power(pm; kwargs...)
 end
 
 
 "variable: `pconv_ac[j]` for `j` in `convdc`"
-function variable_converter_active_power_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_converter_active_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     vars = _PM.var(pm, nw)[:pconv_ac] = Dict(cv_id => JuMP.@variable(pm.model,
     [pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])], base_name = "$(nw)_pconv_ac_$(bus)_$(cv_id)",
     start = comp_start_value(_PM.ref(pm, nw, :convdc, cv_id), "P_g", pole, 1.0)
@@ -177,12 +177,12 @@ function variable_converter_active_power_new(pm::_PM.AbstractPowerModel; nw::Int
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :pconv, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :pconv, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 
 "variable: `qconv_ac[j]` for `j` in `convdc`"
-function variable_converter_reactive_power_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_converter_reactive_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     vars = _PM.var(pm, nw)[:qconv_ac] = Dict(cv_id => JuMP.@variable(pm.model,
     [pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])], base_name = "$(nw)_qconv_ac_$(bus)_$(cv_id)",
     start = comp_start_value(_PM.ref(pm, nw, :convdc, cv_id), "Q_g", pole, 1.0)
@@ -205,11 +205,11 @@ function variable_converter_reactive_power_new(pm::_PM.AbstractPowerModel; nw::I
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :qconv, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :qconv, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 "variable: `iconv_ac[j]` for `j` in `convdc`"
-function variable_acside_current_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_acside_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
 
     vars = _PM.var(pm, nw)[:iconv_ac] = Dict(cv_id => JuMP.@variable(pm.model,
     [pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])], base_name = "$(nw)_iconv_ac_$(bus)_$(cv_id)",
@@ -233,11 +233,11 @@ function variable_acside_current_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :iconv_ac, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :iconv_ac, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 "variable: `iconv_ac[j]` and `iconv_ac_sq[j]` for `j` in `convdc`"
-function variable_acside_current_new(pm::_PM.AbstractWModels; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_acside_current(pm::_PM.AbstractWModels; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
 
     vars = _PM.var(pm, nw)[:iconv_ac] = Dict(cv_id => JuMP.@variable(pm.model,
     [pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])], base_name = "$(nw)_iconv_ac_$(bus)_$(cv_id)",
@@ -269,12 +269,12 @@ function variable_acside_current_new(pm::_PM.AbstractWModels; nw::Int=_PM.nw_id_
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :iconv_ac, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :iconv_ac, _PM.ids(pm, nw, :convdc), poles, vars)
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :iconv_ac_sq, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :iconv_ac_sq, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
-function variable_dcside_current_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_dcside_current(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
 
     poles = Dict(
         cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
@@ -301,10 +301,10 @@ function variable_dcside_current_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_
         end
     end
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :iconv_dc, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :iconv_dc, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
-function variable_dcside_current_ground_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_dcside_current_ground(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     vars = _PM.var(pm, nw)[:iconv_dcg] = Dict(cv_id => JuMP.@variable(pm.model,[pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])], base_name = "$(nw)_iconv_dcg_$(cv_id)",
         start = comp_start_value(_PM.ref(pm, nw, :convdc, cv_id), "I_conv_dcg_start", pole, 1.0)
     ) for cv_id in _PM.ids(pm, nw, :convdc)
@@ -324,11 +324,11 @@ function variable_dcside_current_ground_new(pm::_PM.AbstractPowerModel; nw::Int=
         for cv_id in _PM.ids(pm, nw, :convdc)
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :iconv_dcg, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :iconv_dcg, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 
-function variable_dcside_current_grounding_shunt_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_dcside_current_grounding_shunt(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 1.2 # to account for losses, maximum losses to be derived
     vars = _PM.var(pm, nw)[:iconv_dcg_shunt] = Dict(cv_id => JuMP.@variable(pm.model,
         base_name = "$(nw)_iconv_dcg_shunt_$(cv_id)",start = comp_start_value(_PM.ref(pm, nw, :convdc, cv_id), "I_conv_dcg_shunt_start", 0.0)
@@ -356,14 +356,14 @@ function variable_dcside_current_grounding_shunt_new(pm::_PM.AbstractPowerModel;
     end
 
 
-    report && sol_component_value_status_grounding_new(pm, nw, :convdc, :iconv_dcg_shunt, keys(grounded_convs), grounded_convs, vars)
+    report && sol_component_value_status_grounding(pm, nw, :convdc, :iconv_dcg_shunt, keys(grounded_convs), grounded_convs, vars)
     #report && _PM.sol_component_value(pm, nw, :convdc, :iconv_dcg_shunt, _PM.ids(pm, nw, :convdc), vars)
 end
 
 
 
 "variable: `pconv_dc[j]` for `j` in `convdc`"
-function variable_dcside_power_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_dcside_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     poles = Dict(
         cv_id => collect(keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"]))
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
@@ -397,12 +397,12 @@ function variable_dcside_power_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id
     #    for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     #)
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :pdc, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :pdc, _PM.ids(pm, nw, :convdc), poles, vars)
 
 end
 
 "variable: `pconv_dcg[j]` for `j` in `convdc`"
-function variable_dcside_ground_power_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_dcside_ground_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 1.2 # to account for losses, maximum losses to be derived
     vars = _PM.var(pm, nw)[:pconv_dcg] = Dict(cv_id => JuMP.@variable(pm.model,[pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])], base_name = "$(nw)_pconv_dcg_$(cv_id)",
     start = comp_start_value(_PM.ref(pm, nw, :convdc, cv_id), "P_conv_dcg_start", pole, 1.0)
@@ -423,11 +423,11 @@ function variable_dcside_ground_power_new(pm::_PM.AbstractPowerModel; nw::Int=_P
         for cv_id in _PM.ids(pm, nw, :convdc)
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :pdcg, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :pdcg, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 "variable: `pconv_dcg_shunt[j]` for `j` in `convdc`"
-function variable_dcside_grounding_shunt_power_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_dcside_grounding_shunt_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 1.2 # to account for losses, maximum losses to be derived
     vars = _PM.var(pm, nw)[:pconv_dcg_shunt] = Dict(cv_id => JuMP.@variable(pm.model,
         base_name = "$(nw)_pconv_dcg_shunt_$(cv_id)",start = comp_start_value(_PM.ref(pm, nw, :convdc, cv_id), "P_conv_dcg_shunt_start", 0.0)
@@ -450,12 +450,12 @@ function variable_dcside_grounding_shunt_power_new(pm::_PM.AbstractPowerModel; n
     end
 
 
-    report #&& sol_component_value_status_new(pm, nw, :convdc, :pdcg_shunt, _PM.ids(pm, nw, :convdc), poles, vars)
+    report #&& sol_component_value_status(pm, nw, :convdc, :pdcg_shunt, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 
 "variable: `pconv_dc[j]` for `j` in `convdc`"
-function variable_converter_firing_angle_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_converter_firing_angle(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
 
     vars = _PM.var(pm, nw)[:phiconv] = Dict(cv_id => JuMP.@variable(pm.model,
     [pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])], base_name = "$(nw)_phiconv_$(bus)_$(cv_id)",
@@ -479,17 +479,17 @@ function variable_converter_firing_angle_new(pm::_PM.AbstractPowerModel; nw::Int
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :phi, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :phi, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 
-function variable_converter_filter_voltage_new(pm::_PM.AbstractPowerModel; kwargs...)
-    variable_converter_filter_voltage_magnitude_new(pm; kwargs...)
-    variable_converter_filter_voltage_angle_new(pm; kwargs...)
+function variable_converter_filter_voltage(pm::_PM.AbstractPowerModel; kwargs...)
+    variable_converter_filter_voltage_magnitude(pm; kwargs...)
+    variable_converter_filter_voltage_angle(pm; kwargs...)
 end
 
 "variable: `vmf[j]` for `j` in `convdc`"
-function variable_converter_filter_voltage_magnitude_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_converter_filter_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 1.2 # only internal converter voltage is strictly regulated
 
     vars = _PM.var(pm, nw)[:vmf] = Dict(cv_id => JuMP.@variable(pm.model,
@@ -514,12 +514,12 @@ function variable_converter_filter_voltage_magnitude_new(pm::_PM.AbstractPowerMo
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :vmfilt, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :vmfilt, _PM.ids(pm, nw, :convdc), poles, vars)
     
 end
 
 "variable: `vaf[j]` for `j` in `convdc`"
-function variable_converter_filter_voltage_angle_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_converter_filter_voltage_angle(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2 * pi #
 
     vars = _PM.var(pm, nw)[:vaf] = Dict(cv_id => JuMP.@variable(pm.model,
@@ -545,17 +545,17 @@ function variable_converter_filter_voltage_angle_new(pm::_PM.AbstractPowerModel;
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :vafilt, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :vafilt, _PM.ids(pm, nw, :convdc), poles, vars)
 
 end
 
-function variable_converter_internal_voltage_new(pm::_PM.AbstractPowerModel; kwargs...)
-    variable_converter_internal_voltage_magnitude_new(pm; kwargs...)
-    variable_converter_internal_voltage_angle_new(pm; kwargs...)
+function variable_converter_internal_voltage(pm::_PM.AbstractPowerModel; kwargs...)
+    variable_converter_internal_voltage_magnitude(pm; kwargs...)
+    variable_converter_internal_voltage_angle(pm; kwargs...)
 end
 
 "variable: `vmc[j]` for `j` in `convdc`"
-function variable_converter_internal_voltage_magnitude_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_converter_internal_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
 
     vars = _PM.var(pm, nw)[:vmc] = Dict(cv_id => JuMP.@variable(pm.model,
     [pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])], base_name = "$(nw)_vmc_$(bus)_$(cv_id)",
@@ -580,11 +580,11 @@ function variable_converter_internal_voltage_magnitude_new(pm::_PM.AbstractPower
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :vmconv, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :vmconv, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 "variable: `vac[j]` for `j` in `convdc`"
-function variable_converter_internal_voltage_angle_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_converter_internal_voltage_angle(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2 * pi #
 
     vars = _PM.var(pm, nw)[:vac] = Dict(cv_id => JuMP.@variable(pm.model,
@@ -609,12 +609,12 @@ function variable_converter_internal_voltage_angle_new(pm::_PM.AbstractPowerMode
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :vaconv, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :vaconv, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 
 "variable: `pconv_grid_ac[j]` for `j` in `convdc`"
-function variable_converter_to_grid_active_power_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_converter_to_grid_active_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2
 
     vars = _PM.var(pm, nw)[:pconv_tf_fr] = Dict(cv_id => JuMP.@variable(pm.model,
@@ -639,11 +639,11 @@ function variable_converter_to_grid_active_power_new(pm::_PM.AbstractPowerModel;
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :pgrid, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :pgrid, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 "variable: `qconv_grid_ac[j]` for `j` in `convdc`"
-function variable_converter_to_grid_reactive_power_new(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_converter_to_grid_reactive_power(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2
     vars = _PM.var(pm, nw)[:qconv_tf_fr] = Dict(cv_id => JuMP.@variable(pm.model,
     [pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])], base_name = "$(nw)_qconv_tf_fr_$(bus)_$(cv_id)",
@@ -667,11 +667,11 @@ function variable_converter_to_grid_reactive_power_new(pm::_PM.AbstractPowerMode
         for bus in _PM.ids(pm, nw, :bus_conv_poles) for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
     )
 
-    report && sol_component_value_status_new(pm, nw, :convdc, :qgrid, _PM.ids(pm, nw, :convdc), poles, vars)
+    report && sol_component_value_status(pm, nw, :convdc, :qgrid, _PM.ids(pm, nw, :convdc), poles, vars)
 end
 
 
-function variable_converter_filter_voltage_angle_new_check(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
+function variable_converter_filter_voltage_angle_check(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
     bigM = 2 * pi #
     #poles = _PM.ref(pm, nw, :conv_acpoles)
     vars = _PM.var(pm, nw)[:vaf_check] = Dict(i => JuMP.@variable(pm.model,

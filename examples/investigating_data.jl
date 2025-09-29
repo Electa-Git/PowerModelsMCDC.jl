@@ -3,35 +3,17 @@
 import PowerModels as _PM
 import PowerModelsMCDC as _PMMCDC
 import Ipopt
+import Gurobi
 
 nlp_solver = _PMMCDC.optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6, "print_level" => 0)
+gurobi = _PMMCDC.optimizer_with_attributes(Gurobi.Optimizer)
+
 file = "$(dirname(@__DIR__))/test/data/case5_2grids_MC.m"
 
 
 data = _PMMCDC.parse_file(file)
 
 s = Dict("conv_losses_mp" => false)
-#result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.ACPPowerModel, nlp_solver, setting=s)
-
-
-## Comparison with PowerModelsACDC (single conductor model)
-#=
-import PowerModelsACDC as _PMACDC
-
-result_acdc = _PMACDC.run_acdcopf(file, _PM.ACPPowerModel, nlp_solver, setting=s)
-
-printstyled("Multiconductor OPF\n"; bold=true)
-println(" termination status: ", result_mcdc["termination_status"])
-println("          objective: ", result_mcdc["objective"])
-println("         solve time: ", result_mcdc["solve_time"])
-
-printstyled("\nSingle-conductor OPF\n"; bold=true)
-println(" termination status: ", result_acdc["termination_status"])
-println("          objective: ", result_acdc["objective"])
-println("         solve time: ", result_acdc["solve_time"])
-=#
-
-
 
 
 ########################
@@ -206,13 +188,6 @@ for (c,poles) in check["convdc_poles"]
 end
 
 
-
-busdc_terminal_i_conv_dc_poles["1"]
-busdc_terminal_conv_poles["1"]
-
-## UPDATE THE BASE FUNCTION AND BRACE YOURSELF FOR THE NEXT ONE
-
-
 function solve_mcdcopf_new(data::Dict{String,Any}, model_type::Type, optimizer; kwargs...)
     return _PM.solve_model(data, model_type, optimizer, build_model_check; ref_extensions=[_PMMCDC.add_ref_dcgrid!], kwargs...)
 end
@@ -285,6 +260,8 @@ end
 pm = solve_model_check(data, _PM.ACPPowerModel)
 result = solve_mcdcopf_new(data, _PM.ACPPowerModel, nlp_solver, setting=s)
 
+result_dc = solve_mcdcopf_new(data, _PM.DCPPowerModel, gurobi, setting=s)
+
 #############################
 # Checking results
 for (cv_id,cv) in data["convdc"]
@@ -325,107 +302,6 @@ end
 
 ########################
 
-pm.ref[:it][:pm][:nw][0][:arcsdc]
-pm.var[:it][:pm][:nw][0][:iconv_dc][3]
-
-i_dcgrid_var = pm.var[:it][:pm][:nw][0][:i_dcgrid]
-iconv_dc_var = pm.var[:it][:pm][:nw][0][:iconv_dc]
-iconv_dcg_shunt_var = pm.var[:it][:pm][:nw][0][:iconv_dcg_shunt]
-
-pm.var[:it][:pm][:nw][0][:pconv_tf_fr][1]
-pm.var[:it][:pm][:nw][0][:pconv_dc][3]
-first(axes(pm.var[:it][:pm][:nw][0][:iconv_dcg][1]))
-
-pm.ref[:it][:pm][:nw][0][:bus_gens]
-bus_arcs_dcgrid_terminals = pm.ref[:it][:pm][:nw][0][:busdc_terminal_arcsdc]
-bus_convs_grounding_shunt = pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]
-bus_convs_dc_cond = pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles]
-pm.ref[:it][:pm][:nw][0][:busdc_terminal_i_conv_dc_poles][3]
-
-# Get unique first values in all bus_convs_dc_cond["r"] elements
-terminals = ["p","r","n"]
-for i in keys(data["convdc"])
-    for terminal in terminals
-        println("Working on terminal $terminal of bus $i")
-        if terminal == "r"
-            println(i_dcgrid_var[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(parse(Int64,i), "$terminal")])
-            println(iconv_dc_var[conv][conv_cond] for (conv,conv_cond) in bus_convs_dc_cond[parse(Int64,i)][terminal]) # this one to be fixed still, we are getting there come on
-            println(iconv_dcg_shunt_var[conv] for conv in bus_convs_grounding_shunt[parse(Int64,i)])
-        end
-    end
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-pm.ref[:it][:pm][:nw][0][:busdc_terminal_arcsdc]
-pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles][1]
-pm.ref[:it][:pm][:nw][0][:busdc_grounded_convs]
-
-pm.ref[:it][:pm][:nw][0][:bus_conv_poles]
-
-pm.ref[:it][:pm][:nw][0][:busdc_terminal_conv_poles]
-
-
-
-busdc_terminal_conv_poles["1"]
-
-#pm.var[:it][:pm][:nw][0][:vmc][1][4]["n"]
-#pm.var[:it][:pm][:nw][0][:vaf_check][3]
-
-for (b_id,b) in data["bus"]
-    for c in keys(pm.ref[:it][:pm][:nw][0][:bus_conv_poles][parse(Int64,b_id)])
-        for pole in keys(pm.var[:it][:pm][:nw][0][:pconv_tf_fr][c])
-            println("Pole: $pole")
-            println("c: $c")
-            println("pconv: ", pm.var[:it][:pm][:nw][0][:pconv_tf_fr][c][pole])
-        end
-    end
-end
-first(axes(pm.var[:it][:pm][:nw][0][:pconv_tf_fr][1]))
-
-
-
-#convs_ac_cond = Dict(i => conv["status"] for (i, conv) in data["convdc"]) 
-#convs_ac_cond["1"]
-
-for (cv_id,cv) in data["convdc"]
-    cv["transformer"] = 1
-    cv["reactor"]= 1
-    cv["filter"] = 1
-end
-
-
 import PowerModelsACDC as _PMACDC
 
 result_acdc = _PMACDC.solve_acdcopf(file, _PM.ACPPowerModel, nlp_solver, setting=s)
-
-for (g_id,g) in data["gen"]
-    println("Generator $g_id:")
-    println("  Pg: ",result_acdc["solution"]["gen"][g_id]["pg"])
-    println("  Pg mcdc: ",result["solution"]["gen"][g_id]["pg"])
-    println("--------------")
-end
-
-terminals = ["p","r","n"]
-for (b_id,b) in data["busdc"]
-    for terminal in terminals
-        println("Bus $b_id:")
-        println("  Vm: ",result["solution"]["busdc"][b_id]["vm"][terminal])
-        println("--------------")
-    end
-end

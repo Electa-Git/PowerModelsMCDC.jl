@@ -5,7 +5,7 @@ Creates lossy converter model between AC and DC grid
 pconv_ac[i] + pconv_dc[i] == a + bI + cI^2
 ```
 """
-function constraint_converter_losses_new(pm::_PM.AbstractACPModel, n::Int, i::Int, conv, pole)
+function constraint_converter_losses(pm::_PM.AbstractACPModel, n::Int, i::Int, conv, pole)
     
     pconv_ac = _PM.var(pm, n, :pconv_ac, i)[pole] 
     pconv_dc = _PM.var(pm, n, :pconv_dc, i)[pole]
@@ -25,7 +25,7 @@ Links converter power & current
 pconv_ac[i]^2 + pconv_dc[i]^2 == vmc[i]^2 * iconv_ac[i]^2
 ```
 """
-function constraint_converter_current_new(pm::_PM.AbstractACPModel, n::Int, i::Int, pole)
+function constraint_converter_current(pm::_PM.AbstractACPModel, n::Int, i::Int, pole)
     vmc = _PM.var(pm, n, :vmc, i)[pole]
     pconv_ac = _PM.var(pm, n, :pconv_ac, i)[pole]
     qconv_ac = _PM.var(pm, n, :qconv_ac, i)[pole]
@@ -35,7 +35,7 @@ function constraint_converter_current_new(pm::_PM.AbstractACPModel, n::Int, i::I
 end
 
 
-function constraint_converter_dc_current_new(pm::_PM.AbstractACPModel, n::Int, i::Int, busdc::Int, terminals, poles, busdc_terminal_conv_poles)
+function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::Int, busdc::Int, terminals, poles, busdc_terminal_conv_poles)
     pconv_dc = _PM.var(pm, n, :pconv_dc)
     pconv_dcg = _PM.var(pm, n, :pconv_dcg)
     iconv_dc = _PM.var(pm, n, :iconv_dc)
@@ -45,7 +45,6 @@ function constraint_converter_dc_current_new(pm::_PM.AbstractACPModel, n::Int, i
     for terminal in terminals
         for (conv_id,pole) in busdc_terminal_conv_poles[busdc][terminal]
             if terminal != "r"
-                println("Converter: $i, Conv_id: $conv_id, Pole: $pole, Terminal: $terminal")
                 JuMP.@constraint(pm.model, pconv_dc[conv_id][pole] == iconv_dc[conv_id][pole] * vdcm[busdc][terminal])
             else
                 JuMP.@constraint(pm.model, pconv_dc[conv_id][terminal] == iconv_dc[conv_id][terminal] * vdcm[busdc][terminal])
@@ -53,7 +52,6 @@ function constraint_converter_dc_current_new(pm::_PM.AbstractACPModel, n::Int, i
         end
     end
     for pole in poles
-        println("Converter: $i, Pole: $pole")
         JuMP.@constraint(pm.model, pconv_dcg[i][pole] == iconv_dcg[i][pole] * vdcm[busdc]["r"])
         JuMP.@constraint(pm.model, iconv_dc[i][pole] + iconv_dcg[i][pole] == 0)
     end
@@ -70,7 +68,7 @@ p_tf_to ==  g*vm_to^2 + -g/(tm)*vm_to*vm_fr  *    cos(va_to - va_fr)     + -b/(t
 q_tf_to == -b*vm_to^2 +  b/(tm)*vm_to*vm_fr  *    cos(va_to - va_fr)     + -g/(tm)*vm_to*vm_fr    *sin(va_to - va_fr)
 ```
 """
-function constraint_conv_transformer_new(pm::_PM.AbstractACPModel, n::Int, i::Int, rtf, xtf, acbus, tm, transformer, pole)
+function constraint_conv_transformer(pm::_PM.AbstractACPModel, n::Int, i::Int, rtf, xtf, acbus, tm, transformer, pole)
     ptf_fr = _PM.var(pm, n, :pconv_tf_fr, i)[pole]
     qtf_fr = _PM.var(pm, n, :qconv_tf_fr, i)[pole]
     ptf_to = _PM.var(pm, n, :pconv_tf_to, i)[pole]
@@ -86,7 +84,7 @@ function constraint_conv_transformer_new(pm::_PM.AbstractACPModel, n::Int, i::In
         gtf = real(ytf)
         btf = imag(ytf)
         gtf_sh = 0
-        ac_power_flow_constraints_new(pm, gtf, btf, gtf_sh, vm, vmf, va, vaf, ptf_fr, ptf_to, qtf_fr, qtf_to, tm)
+        ac_power_flow_constraints(pm, gtf, btf, gtf_sh, vm, vmf, va, vaf, ptf_fr, ptf_to, qtf_fr, qtf_to, tm)
     else
         JuMP.@constraint(pm.model, ptf_fr + ptf_to == 0)
         JuMP.@constraint(pm.model, qtf_fr + qtf_to == 0)
@@ -95,7 +93,7 @@ function constraint_conv_transformer_new(pm::_PM.AbstractACPModel, n::Int, i::In
     end
 end
 "constraints for a voltage magnitude transformer + series impedance"
-function ac_power_flow_constraints_new(pm::_PM.AbstractACPModel, g, b, gsh_fr, vm_fr, vm_to, va_fr, va_to, p_fr, p_to, q_fr, q_to, tm)
+function ac_power_flow_constraints(pm::_PM.AbstractACPModel, g, b, gsh_fr, vm_fr, vm_to, va_fr, va_to, p_fr, p_to, q_fr, q_to, tm)
     JuMP.@constraint(pm.model, p_fr == g / (tm^2) * vm_fr^2 + -g / (tm) * vm_fr * vm_to * cos(va_fr - va_to) + -b / (tm) * vm_fr * vm_to * sin(va_fr - va_to))
     JuMP.@constraint(pm.model, q_fr == -b / (tm^2) * vm_fr^2 + b / (tm) * vm_fr * vm_to * cos(va_fr - va_to) + -g / (tm) * vm_fr * vm_to * sin(va_fr - va_to))
     JuMP.@constraint(pm.model, p_to == g * vm_to^2 + -g / (tm) * vm_to * vm_fr * cos(va_to - va_fr) + -b / (tm) * vm_to * vm_fr * sin(va_to - va_fr))
@@ -112,7 +110,7 @@ p_pr_fr ==  gc *vmf^2 + -gc *vmf*vmc*cos(vaf - vac) + -bc *vmf*vmc*sin(vaf - vac
 q_pr_fr == -bc *vmf^2 +  bc *vmf*vmc*cos(vaf - vac) + -gc *vmf*vmc*sin(vaf - vac)
 ```
 """
-function constraint_conv_reactor_new(pm::_PM.AbstractACPModel, n::Int, i::Int, rc, xc, reactor, pole)
+function constraint_conv_reactor(pm::_PM.AbstractACPModel, n::Int, i::Int, rc, xc, reactor, pole)
     pconv_ac = _PM.var(pm, n, :pconv_ac, i)[pole]
     qconv_ac = _PM.var(pm, n, :qconv_ac, i)[pole]
     ppr_fr = _PM.var(pm, n, :pconv_pr_fr, i)[pole]
@@ -148,7 +146,7 @@ ppr_fr + ptf_to == 0
 qpr_fr + qtf_to +  (-bv) * filter *vmf^2 == 0
 ```
 """
-function constraint_conv_filter_new(pm::_PM.AbstractACPModel, n::Int, i::Int, bv, filter, pole)
+function constraint_conv_filter(pm::_PM.AbstractACPModel, n::Int, i::Int, bv, filter, pole)
     ppr_fr = _PM.var(pm, n, :pconv_pr_fr, i)[pole]
     qpr_fr = _PM.var(pm, n, :qconv_pr_fr, i)[pole]
     ptf_to = _PM.var(pm, n, :pconv_tf_to, i)[pole]
@@ -166,7 +164,7 @@ pconv_ac == cos(phi) * Srated
 qconv_ac == sin(phi) * Srated
 ```
 """
-function constraint_conv_firing_angle_new(pm::_PM.AbstractACPModel, n::Int, i::Int, poles)
+function constraint_conv_firing_angle(pm::_PM.AbstractACPModel, n::Int, i::Int, pole)
     p = _PM.var(pm, n, :pconv_ac, i)[pole]
     q = _PM.var(pm, n, :qconv_ac, i)[pole]
     phi = _PM.var(pm, n, :phiconv, i)[pole]
@@ -177,7 +175,7 @@ function constraint_conv_firing_angle_new(pm::_PM.AbstractACPModel, n::Int, i::I
     JuMP.constraint(pm.model, q == sin(phi) * S)
 end
 
-function constraint_converter_dc_ground_shunt_ohm_new(pm::_PM.AbstractACPModel, n::Int, busdc_grounded_convs, r_earth)
+function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::Int, busdc_grounded_convs, r_earth)
     pconv_dcg_shunt = _PM.var(pm, n, :pconv_dcg_shunt)
     iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
 
@@ -185,7 +183,6 @@ function constraint_converter_dc_ground_shunt_ohm_new(pm::_PM.AbstractACPModel, 
     for i in _PM.ids(pm, n, :busdc)
         vdcm = _PM.var(pm, n, :vdcm, i)
         for cv_id in busdc_grounded_convs[i]
-            println("Converter id grounded at busdc $i: $cv_id")
             r = _PM.ref(pm, n, :convdc, cv_id)["ground_z"] + r_earth # The r_earth is kept to indicate the inclusion of earth resistance, if required in case of ground return
             if r == 0 #solid grounding
                 JuMP.@constraint(pm.model, vdcm["r"] == 0)

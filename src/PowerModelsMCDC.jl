@@ -37,6 +37,10 @@ include("formconv/dcp.jl")
 include("formdcgrid/acp.jl")
 include("formconv/acp.jl")
 
+include("formdcgrid/lpac.jl")
+include("formconv/lpac.jl")
+
+
 include("prob/mcdcopf.jl")
 
 include("io/parse.jl")

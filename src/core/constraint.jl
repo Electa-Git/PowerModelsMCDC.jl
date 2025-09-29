@@ -1,24 +1,35 @@
 
-
 """
 ```
 sum(p_dcgrid[a] for a in busdc_terminal_arcsdc) + sum(pconv_dc[c] for c in busdc_terminal_conv_poles) == pd
 ```
 """
 
-function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int, pd, total_cond, busdc_terminal_arcsdc, busdc_terminal_conv_poles, busdc_grounded_convs)
+function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int, bus_arcs_dcgrid_terminals, bus_convs_dc_cond, bus_convs_grounding_shunt, bus_convs_i_dc_cond)
     i_dcgrid = _PM.var(pm, n, :i_dcgrid)
     iconv_dc = _PM.var(pm, n, :iconv_dc)
     iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
     "load (-pd[k] excluded), to be thought later"
 
-    for bus_cond in 1:total_cond
-        JuMP.@constraint(pm.model,
-            sum(i_dcgrid[conv][conv_cond] for (conv, conv_cond) in busdc_terminal_arcsdc[(i, bus_cond)])
-            + sum(iconv_dc[conv][conv_cond] for (conv, conv_cond) in busdc_terminal_conv_poles[(i, bus_cond)])
-            + sum(iconv_dcg_shunt[conv] for conv in busdc_grounded_convs[(i, bus_cond)]) == 0
-            )
+    terminals = keys(_PM.ref(pm, n, :busdc, i, "Vdc"))
+
+    for terminal in terminals
+        if terminal == "r"
+            unique_convs = unique([cvs[1] for cvs in bus_convs_dc_cond[i][terminal]])
+            JuMP.@constraint(pm.model,
+                sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
+                #+ sum(iconv_dc[conv][terminal] for (conv,conv_cond) in bus_convs_dc_cond[i][terminal]) # this one to be fixed still, we are getting there come on
+                + sum(iconv_dc[conv][terminal] for conv in unique_convs) # this one to be fixed still, we are getting there come on
+                + sum(iconv_dcg_shunt[conv] for conv in bus_convs_grounding_shunt[i]) == 0
+                )
+        else
+            JuMP.@constraint(pm.model,
+                sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
+                + sum(iconv_dc[conv][conv_cond] for (conv,conv_cond) in bus_convs_dc_cond[i][terminal]) == 0
+                ) 
+        end
     end
+
 end
 
 "`pconv[i] == pconv`"
@@ -34,35 +45,3 @@ function constraint_reactive_conv_setpoint(pm::_PM.AbstractPowerModel, n::Int, i
 end
 
 ######################### New constraints
-
-function constraint_kcl_shunt_dcgrid_new(pm::_PM.AbstractPowerModel, n::Int, i::Int, bus_arcs_dcgrid_terminals, bus_convs_dc_cond, bus_convs_grounding_shunt, bus_convs_i_dc_cond)
-    i_dcgrid = _PM.var(pm, n, :i_dcgrid)
-    iconv_dc = _PM.var(pm, n, :iconv_dc)
-    iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
-    "load (-pd[k] excluded), to be thought later"
-
-    terminals = keys(_PM.ref(pm, n, :busdc, i, "Vdc"))
-
-    for terminal in terminals
-        println("Working on terminal $terminal of bus $i")
-        if terminal == "r"
-            unique_convs = unique([cvs[1] for cvs in bus_convs_dc_cond[i][terminal]])
-            println("  Working on converter terminal $terminal")
-            println("  Unique converters connected to this terminal: $unique_convs")
-            JuMP.@constraint(pm.model,
-                sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
-                #+ sum(iconv_dc[conv][terminal] for (conv,conv_cond) in bus_convs_dc_cond[i][terminal]) # this one to be fixed still, we are getting there come on
-                + sum(iconv_dc[conv][terminal] for conv in unique_convs) # this one to be fixed still, we are getting there come on
-                + sum(iconv_dcg_shunt[conv] for conv in bus_convs_grounding_shunt[i]) == 0
-                )
-        else
-            # top and bottom parts of Figure 5 paper
-            println("  Working on non-converter terminal $terminal")
-            JuMP.@constraint(pm.model,
-                sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
-                + sum(iconv_dc[conv][conv_cond] for (conv,conv_cond) in bus_convs_dc_cond[i][terminal]) == 0
-                ) 
-        end
-    end
-
-end

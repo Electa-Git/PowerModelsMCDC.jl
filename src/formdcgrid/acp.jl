@@ -1,6 +1,6 @@
 #################### Updated constraints ####################
 
-function constraint_kcl_shunt_new(pm::_PM.AbstractACPModel, n::Int, i::Int, bus_arcs, bus_gens, bus_conv_poles, bus_loads, bus_shunts, pd, qd, gs, bs)
+function constraint_kcl_shunt(pm::_PM.AbstractACPModel, n::Int, i::Int, bus_arcs, bus_gens, bus_conv_poles, bus_loads, bus_shunts, pd, qd, gs, bs)
     vm = _PM.var(pm, n, :vm, i)
     p = _PM.var(pm, n, :p)
     q = _PM.var(pm, n, :q)
@@ -13,7 +13,7 @@ function constraint_kcl_shunt_new(pm::_PM.AbstractACPModel, n::Int, i::Int, bus_
     JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][pole] for pole in bus_conv_poles[c]) for c in keys(bus_conv_poles)) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
 end
 
-function constraint_ohms_dc_branch_new(pm::_PM.AbstractPowerModel, n::Int, f_bus, t_bus, f_idx, t_idx, branch)
+function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, n::Int, f_bus, t_bus, f_idx, t_idx, branch)
     i_dc = _PM.var(pm, n, :i_dcgrid)
     #i_dc_to = _PM.var(pm, n, :i_dcgrid)
     vmdc = _PM.var(pm, n, :vdcm)
@@ -23,11 +23,9 @@ function constraint_ohms_dc_branch_new(pm::_PM.AbstractPowerModel, n::Int, f_bus
 
     conductors = keys(status)
     busdc_terminal_arcsdc = _PM.ref(pm, n, :busdc_terminal_arcsdc)
-    count_ = 0
     for cond in conductors
         for (l,i,j) in busdc_terminal_arcsdc[(f_bus, cond)]            
             if (l,i,j) == f_idx
-                println("Let's go with $((l,i,j)) and cond $cond, f_idx is $f_idx")
                 if r[cond] == 0
                     JuMP.@constraint(pm.model, i_dc[(l,i,j)][cond] + i_dc[(l,j,i)][cond] == 0)
                     JuMP.@constraint(pm.model, vmdc[i][cond] - vmdc[j][cond] == 0)

@@ -1,18 +1,10 @@
 "builds solution structure composed by both variables and fixed values based on multi-conductor status parameter"
-function sol_component_value_status(pm::_PM.AbstractPowerModel, n::Int, comp_name::Symbol, field_name::Symbol, comp_ids, conductors, variables, constant=0.0)
-
-    data = Dict{Int, Any}()
-    for i in comp_ids
-        data[i] = [in(c, first(conductors[i])) ? variables[i][c] : constant for c in 1:last(conductors[i])]
-    end  
-    _PM.sol_component_value(pm, n, comp_name, field_name, comp_ids, data)
-end
 
 
 
-### New functions -> THESE STILL HAVE TO BE CHANGED
+### Updated functions 
 
-function sol_component_value_status_new(pm::_PM.AbstractPowerModel, n::Int, comp_name::Symbol, field_name::Symbol, comp_ids, conductors, variables)
+function sol_component_value_status(pm::_PM.AbstractPowerModel, n::Int, comp_name::Symbol, field_name::Symbol, comp_ids, conductors, variables)
 
     data = Dict{Int, Any}()
     for i in comp_ids
@@ -21,7 +13,7 @@ function sol_component_value_status_new(pm::_PM.AbstractPowerModel, n::Int, comp
     _PM.sol_component_value(pm, n, comp_name, field_name, comp_ids, data)
 end
 
-function sol_component_value_status_grounding_new(pm::_PM.AbstractPowerModel, n::Int, comp_name::Symbol, field_name::Symbol, comp_ids, grounded_convs, variables)
+function sol_component_value_status_grounding(pm::_PM.AbstractPowerModel, n::Int, comp_name::Symbol, field_name::Symbol, comp_ids, grounded_convs, variables)
 
     data = Dict{Int, Any}()
     for i in comp_ids
@@ -34,7 +26,7 @@ end
 
 
 "builds solution structure composed by both edge variables and fixed values based on multi-conductor status parameter"
-function sol_component_value_edge_status_new(pm::_PM.AbstractPowerModel, n::Int, comp_name::Symbol, field_name_fr::Symbol, field_name_to::Symbol, comp_ids_fr, comp_ids_to, conductors, variables)
+function sol_component_value_edge_status(pm::_PM.AbstractPowerModel, n::Int, comp_name::Symbol, field_name_fr::Symbol, field_name_to::Symbol, comp_ids_fr, comp_ids_to, conductors, variables)
 
     data = Dict{Tuple{Int, Int, Int}, Any}()
     for (l, i, j) in comp_ids_fr
