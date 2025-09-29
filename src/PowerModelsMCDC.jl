@@ -8,7 +8,6 @@ import JuMP
 import InfrastructureModels as _IM
 import PowerModels as _PM
 
-
 ## Memento settings
 
 # Create our module level logger (this will get precompiled)
