@@ -31,9 +31,7 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractLPACModel, n::Int,  f_bus, t_
     i_dc = _PM.var(pm, n, :i_dcgrid)
     phi_dc = _PM.var(pm, n, :phi_vdcm)
     r = branch["r"]
-    status = branch["status"]
-
-    conductors = keys(status)
+    conductors = keys(branch["status"])
     busdc_terminal_arcsdc = _PM.ref(pm, n, :busdc_terminal_arcsdc)
     for cond in conductors
         for (l,i,j) in busdc_terminal_arcsdc[(f_bus, cond)]            
@@ -43,12 +41,8 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractLPACModel, n::Int,  f_bus, t_
                     JuMP.@constraint(pm.model, phi_dc[i][cond] - phi_dc[j][cond] == 0)
                 else
                     g = 1 / r[cond]
-                    #JuMP.@constraint(pm.model, i_dc[(l,i,j)][cond] == g * (phi_dc[i][cond] - phi_dc[j][cond]))
-                    #JuMP.@constraint(pm.model, i_dc[(l,j,i)][cond] == g * (phi_dc[j][cond] - phi_dc[i][cond]))
-
-                    # I'm just trying here
-                    JuMP.@constraint(pm.model, i_dc[(l,i,j)][cond] == (phi_dc[i][cond] - phi_dc[j][cond]))
-                    JuMP.@constraint(pm.model, i_dc[(l,j,i)][cond] == (phi_dc[j][cond] - phi_dc[i][cond]))
+                    JuMP.@constraint(pm.model, i_dc[(l,i,j)][cond] == g * (phi_dc[i][cond] - phi_dc[j][cond]))
+                    JuMP.@constraint(pm.model, i_dc[(l,j,i)][cond] == g * (phi_dc[j][cond] - phi_dc[i][cond]))
                 end
             end
         end
@@ -57,3 +51,35 @@ end
 
 
 
+function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractLPACModel; nw::Int=_PM.nw_id_default, bounded = true, report::Bool=true)
+    vars = _PM.var(pm, nw)[:phi_vdcm] = Dict(i => JuMP.@variable(pm.model,
+    [terminal in keys(_PM.ref(pm, nw, :busdc)[i]["Vdc"])], base_name="$(nw)_phi_vdcm_$(i)",
+    start = comp_start_value(_PM.ref(pm, nw, :busdc, i), "Vdc", terminal, 0.1)
+    ) for i in _PM.ids(pm, nw, :busdc) 
+    )
+
+    for i in _PM.ids(pm, nw, :busdc)
+        for terminal in keys(_PM.ref(pm, nw, :busdc)[i]["Vdc"])
+            if bounded
+                if terminal == "p"
+                    JuMP.set_lower_bound.(vars[i][terminal], _PM.ref(pm, nw, :busdc, i)["Vdcmin"][terminal] - 1)
+                    JuMP.set_upper_bound.(vars[i][terminal], _PM.ref(pm, nw, :busdc, i)["Vdcmax"][terminal] - 1)
+                elseif terminal == "n"
+                    JuMP.set_lower_bound.(vars[i][terminal], _PM.ref(pm, nw, :busdc, i)["Vdcmin"][terminal] + 1)
+                    JuMP.set_upper_bound.(vars[i][terminal], _PM.ref(pm, nw, :busdc, i)["Vdcmax"][terminal] + 1)
+                elseif terminal == "r"
+                    JuMP.set_lower_bound.(vars[i][terminal], _PM.ref(pm, nw, :busdc, i)["Vdcmin"][terminal])
+                    JuMP.set_upper_bound.(vars[i][terminal], _PM.ref(pm, nw, :busdc, i)["Vdcmax"][terminal])
+                end
+            end
+        end
+    end
+
+    terminals = Dict(
+        i => collect(keys(_PM.ref(pm, nw, :busdc)[i]["Vdc"]))
+        for i in _PM.ids(pm, nw, :busdc)
+    )
+
+    report && sol_component_value_status(pm, nw, :busdc, :phivdcm, _PM.ids(pm, nw, :busdc), terminals, vars)
+
+end

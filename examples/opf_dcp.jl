@@ -15,7 +15,7 @@ result_mcdc = _PMMCDC.solve_mcdcopf(file, _PM.DCPPowerModel, lp_solver, setting=
 
 import PowerModelsACDC as _PMACDC
 
-result_acdc = _PMACDC.run_acdcopf(file, _PM.DCPPowerModel, lp_solver, setting=s)
+result_acdc = _PMACDC.solve_acdcopf(file, _PM.DCPPowerModel, lp_solver, setting=s)
 
 printstyled("Multiconductor OPF\n"; bold=true)
 println(" termination status: ", result_mcdc["termination_status"])

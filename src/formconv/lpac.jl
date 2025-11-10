@@ -34,7 +34,6 @@ function variable_converter_filter_voltage_magnitude(pm::_PM.AbstractLPACModel; 
         )
     
         report && sol_component_value_status(pm, nw, :convdc, :phi_vmf, _PM.ids(pm, nw, :convdc), poles, vars)
-
 end
 
 
@@ -47,7 +46,7 @@ function variable_converter_filter_voltage_angle_cs(pm::_PM.AbstractLPACModel; n
     for bus in _PM.ids(pm, nw, :bus_conv_poles) 
         for (cv_id,cv) in _PM.ref(pm, nw, :bus_conv_poles)[bus]
             for pole in keys(_PM.ref(pm, nw, :convdc)[cv_id]["status"])
-                if bounded.0
+                if bounded
                     JuMP.set_lower_bound(vars[cv_id][pole], 0.0)
                     JuMP.set_upper_bound(vars[cv_id][pole], 1.0)
                 end
@@ -127,14 +126,8 @@ function constraint_converter_losses(pm::_PM.AbstractLPACModel, n::Int, i::Int, 
     b = conv["LossB"][pole]
     c = conv["LossCinv"][pole]
 
-    plmax = conv["LossA"][pole] + conv["LossB"][pole] * conv["Pacrated"][pole] + conv["LossCinv"][pole] * (conv["Pacrated"][pole])^2
-    v = 1.0 #pu, assumption to approximate current
-    cm_conv_ac = pconv_ac / v # can actually be negative, not a very nice model...
-    JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg >= a + b * cm_conv_ac)
-    JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg >= a - b * cm_conv_ac)
-    JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg <= plmax)
-
-    #JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == a + b * iconv)
+    JuMP.@constraint(pm.model, pconv_ac + pconv_dc + pconv_dcg == a + b * iconv)
+    #JuMP.@constraint(pm.model, pconv_ac + pconv_dc == a + b * iconv)
 end
 
 """
@@ -163,7 +156,7 @@ function constraint_conv_transformer(pm::_PM.AbstractLPACModel, n::Int, i::Int, 
         ytf = 1/(rtf + im*xtf)
         gtf = real(ytf)
         btf = imag(ytf)
-        lpac_power_flow_constraints(pm.model, gtf, btf, phi, phi_vmf, va, vaf, ptf_fr, ptf_to, qtf_fr, qtf_to, tm, cs)
+        lpac_power_flow_constraints(pm, gtf, btf, phi, phi_vmf, va, vaf, ptf_fr, ptf_to, qtf_fr, qtf_to, tm, cs)
         constraint_cos_angle_diff_PWL(pm, n, cs, va, vaf)
     else
         JuMP.@constraint(pm.model, ptf_fr + ptf_to == 0)
@@ -175,12 +168,12 @@ end
 
 "constraints for a voltage magnitude transformer + series impedance"
 
-function lpac_power_flow_constraints(model, g, b, phi_fr, phi_to, va_fr, va_to, p_fr, p_to, q_fr, q_to, tm, cs)
+function lpac_power_flow_constraints(pm::_PM.AbstractLPACModel, g, b, phi_fr, phi_to, va_fr, va_to, p_fr, p_to, q_fr, q_to, tm, cs)
 
-    JuMP.@constraint(model, p_fr ==  g/(tm^2)*(1.0 + 2*phi_fr) + (-g/tm)*(cs + phi_fr + phi_to) + (-b/tm)*(va_fr-va_to))
-    JuMP.@constraint(model, q_fr == -b/(tm^2)*(1.0 + 2*phi_fr) - (-b/tm)*(cs + phi_fr + phi_to) + (-g/tm)*(va_fr-va_to))
-    JuMP.@constraint(model, p_to ==  g*(1.0 + 2*phi_to) + (-g/tm)*(cs + phi_fr + phi_to) + (-b/tm)*-(va_fr-va_to))
-    JuMP.@constraint(model, q_to == -b*(1.0 + 2*phi_to) - (-b/tm)*(cs + phi_fr + phi_to) + (-g/tm)*-(va_fr-va_to))
+    JuMP.@constraint(pm.model, p_fr ==  g/(tm^2)*(1.0 + 2*phi_fr) + (-g/tm)*(cs + phi_fr + phi_to) + (-b/tm)*(va_fr-va_to))
+    JuMP.@constraint(pm.model, q_fr == -b/(tm^2)*(1.0 + 2*phi_fr) - (-b/tm)*(cs + phi_fr + phi_to) + (-g/tm)*(va_fr-va_to))
+    JuMP.@constraint(pm.model, p_to ==  g*(1.0 + 2*phi_to) + (-g/tm)*(cs + phi_fr + phi_to) + (-b/tm)*-(va_fr-va_to))
+    JuMP.@constraint(pm.model, q_to == -b*(1.0 + 2*phi_to) - (-b/tm)*(cs + phi_fr + phi_to) + (-g/tm)*-(va_fr-va_to))
 end
 
 """
@@ -215,7 +208,7 @@ function constraint_conv_reactor(pm::_PM.AbstractLPACModel, n::Int, i::Int, rc, 
         yc = 1/(zc)
         gc = real(yc)
         bc = imag(yc)
-        lpac_power_flow_constraints(pm.model, gc, bc, phi_vmf, phi_vmc, vaf, vac, ppr_fr, ppr_to, qpr_fr, qpr_to, 1, cs)
+        lpac_power_flow_constraints(pm, gc, bc, phi_vmf, phi_vmc, vaf, vac, ppr_fr, ppr_to, qpr_fr, qpr_to, 1, cs)
         constraint_cos_angle_diff_PWL(pm, n, cs, vaf, vac)
         constraint_conv_capacity_PWL(pm, n, ppr_to, qpr_to, ppr_to_ub, qpr_to_ub, Smax)
    else
@@ -240,16 +233,14 @@ end
 
 
 function constraint_converter_current(pm::_PM.AbstractLPACModel, n::Int, i::Int, pole)
-    
-    phi_vmc = _PM.var(pm, n, :phi_vmc, i)[pole]
-    pconv_ac = _PM.var(pm, n, :pconv_ac, i)[pole]
-    qconv_ac = _PM.var(pm, n, :qconv_ac, i)[pole]
-    iconv = _PM.var(pm, n, :iconv_ac, i)[pole]
-
-    Imax = _PM.ref(pm, n, :convdc, i)["Imax"][pole]
-
-    JuMP.@constraint(pm.model, iconv <= Imax)
-    
+    #phi_vmc = _PM.var(pm, n, :phi_vmc, i)
+    #pconv_ac = _PM.var(pm, n, :pconv_ac, i)
+    #qconv_ac = _PM.var(pm, n, :qconv_ac, i)
+    #iconv = _PM.var(pm, n, :iconv_ac, i)
+    #conv = _PM.ref(pm, n, :convdc, i)
+    #Imax = conv["Imax"][pole]
+    #println("Imax: ", Imax)
+    #JuMP.@constraint(pm.model, iconv <= Imax)
 end
 
 function constraint_converter_dc_current(pm::_PM.AbstractLPACModel, n::Int, i::Int, busdc::Int, terminals, poles, busdc_terminal_conv_poles)
@@ -275,8 +266,8 @@ function constraint_converter_dc_current(pm::_PM.AbstractLPACModel, n::Int, i::I
         end
     end
     for pole in poles
-        vdcm = 0.0
-        JuMP.@constraint(pm.model, pconv_dcg[i][pole] == iconv_dcg[i][pole]) # to be checked here
+        #vdcm = 0.0
+        #JuMP.@constraint(pm.model, pconv_dcg[i][pole] == iconv_dcg[i][pole]) # to be checked here
         JuMP.@constraint(pm.model, iconv_dc[i][pole] + iconv_dcg[i][pole] == 0)
     end
 
@@ -328,8 +319,8 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractLPACModel, n::
             if r == 0 #solid grounding
                 JuMP.@constraint(pm.model, phi["r"] == 0)
             else
-                JuMP.@constraint(pm.model, pconv_dcg_shunt[c] == (1 / r) * (1 - phi["r"]))
-                JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * (1 - phi["r"]))
+                JuMP.@constraint(pm.model, pconv_dcg_shunt[c] == iconv_dcg_shunt[c])
+                JuMP.@constraint(pm.model, iconv_dcg_shunt[c] == (1 / r) * (1 + phi["r"]))
             end
         end
     end

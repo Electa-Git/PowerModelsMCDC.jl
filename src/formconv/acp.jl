@@ -100,6 +100,30 @@ function ac_power_flow_constraints(pm::_PM.AbstractACPModel, g, b, gsh_fr, vm_fr
     JuMP.@constraint(pm.model, q_to == -b * vm_to^2 + b / (tm) * vm_to * vm_fr * cos(va_to - va_fr) + -g / (tm) * vm_to * vm_fr * sin(va_to - va_fr))
 end
 
+function constraint_conv_transformer_sw(pm::_PM.AbstractACPModel, n::Int, i::Int, rtf, xtf, acbus, tm, transformer, pole)
+    ptf_fr = _PM.var(pm, n, :pconv_tf_fr, i)[pole]
+    qtf_fr = _PM.var(pm, n, :qconv_tf_fr, i)[pole]
+    ptf_to = _PM.var(pm, n, :pconv_tf_to, i)[pole]
+    qtf_to = _PM.var(pm, n, :qconv_tf_to, i)[pole]
+
+    vm = _PM.var(pm, n, :vm, acbus)
+    va = _PM.var(pm, n, :va, acbus)
+    vmf = _PM.var(pm, n, :vmf, i)[pole]
+    vaf = _PM.var(pm, n, :vaf, i)[pole]
+    ztf = rtf + im * xtf
+    if transformer
+        ytf = 1 / (rtf + im * xtf)
+        gtf = real(ytf)
+        btf = imag(ytf)
+        gtf_sh = 0
+        ac_power_flow_constraints(pm, gtf, btf, gtf_sh, vm, vmf, va, vaf, ptf_fr, ptf_to, qtf_fr, qtf_to, tm)
+    else
+        JuMP.@constraint(pm.model, ptf_fr + ptf_to == 0)
+        JuMP.@constraint(pm.model, qtf_fr + qtf_to == 0)
+        JuMP.@constraint(pm.model, va == vaf)
+        JuMP.@constraint(pm.model, vm == vmf)
+    end
+end
 
 """
 Converter reactor constraints

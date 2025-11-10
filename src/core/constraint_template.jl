@@ -16,6 +16,41 @@ function constraint_kcl_shunt(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw
     constraint_kcl_shunt(pm, nw, i, bus_arcs, bus_gens, bus_conv_poles, bus_loads, bus_shunts, pd, qd, gs, bs)
 end
 
+function constraint_kcl_shunt_sw(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    bus = _PM.ref(pm, nw, :bus, i)
+    bus_arcs = _PM.ref(pm, nw, :bus_arcs, i)
+    bus_arcs_sw = _PM.ref(pm, nw, :bus_arcs_sw, i)
+    bus_gens = _PM.ref(pm, nw, :bus_gens, i)
+    bus_conv_poles = _PM.ref(pm, nw, :bus_conv_poles, i)
+    bus_loads = _PM.ref(pm, nw, :bus_loads, i)
+    bus_shunts = _PM.ref(pm, nw, :bus_shunts, i)
+
+    pd = Dict(k => _PM.ref(pm, nw, :load, k, "pd") for k in bus_loads)
+    qd = Dict(k => _PM.ref(pm, nw, :load, k, "qd") for k in bus_loads)
+
+    gs = Dict(k => _PM.ref(pm, nw, :shunt, k, "gs") for k in bus_shunts)
+    bs = Dict(k => _PM.ref(pm, nw, :shunt, k, "bs") for k in bus_shunts)
+
+    constraint_kcl_shunt_sw(pm, nw, i, bus_arcs, bus_gens, bus_conv_poles, bus_loads, bus_shunts, bus_arcs_sw, pd, qd, gs, bs)
+end
+
+function constraint_kcl_shunt_fc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    bus = _PM.ref(pm, nw, :bus, i)
+    bus_arcs = _PM.ref(pm, nw, :bus_arcs, i)
+    bus_gens = _PM.ref(pm, nw, :bus_gens, i)
+    bus_conv_poles = _PM.ref(pm, nw, :bus_conv_poles, i)
+    bus_loads = _PM.ref(pm, nw, :bus_loads, i)
+    bus_shunts = _PM.ref(pm, nw, :bus_shunts, i)
+
+    pd = Dict(k => _PM.ref(pm, nw, :load, k, "pd") for k in bus_loads)
+    qd = Dict(k => _PM.ref(pm, nw, :load, k, "qd") for k in bus_loads)
+
+    gs = Dict(k => _PM.ref(pm, nw, :shunt, k, "gs") for k in bus_shunts)
+    bs = Dict(k => _PM.ref(pm, nw, :shunt, k, "bs") for k in bus_shunts)
+
+    constraint_kcl_shunt_fc(pm, nw, i, bus_arcs, bus_gens, bus_conv_poles, bus_loads, bus_shunts, pd, qd, gs, bs)
+end
+
 function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     busdc = _PM.ref(pm, nw, :busdc, i)
     busdc_terminal_arcsdc_ = _PM.ref(pm, nw, :busdc_terminal_arcsdc)
@@ -48,6 +83,7 @@ end
 function constraint_converter_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
     poles = keys(conv["status"])
+    println("Converter $i poles: ", poles)
     
     for pole in poles
         constraint_converter_current(pm, nw, i, pole)
@@ -68,6 +104,14 @@ function constraint_conv_transformer(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     poles = keys(conv["status"])
     for pole in poles
         constraint_conv_transformer(pm, nw, i, conv["rtf"][pole], conv["xtf"][pole], conv["busac_i"], conv["tm"][pole], Bool(conv["transformer"]), pole)
+    end
+end
+
+function constraint_conv_transformer_sw(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    conv = _PM.ref(pm, nw, :convdc, i)
+    poles = keys(conv["status"])
+    for pole in poles
+        constraint_conv_transformer_sw(pm, nw, i, conv["rtf"][pole], conv["xtf"][pole], conv["busac_i"][pole], conv["tm"][pole], Bool(conv["transformer"]), pole)
     end
 end
 

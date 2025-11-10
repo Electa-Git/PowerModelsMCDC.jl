@@ -7,6 +7,8 @@ import Memento
 import JuMP
 import InfrastructureModels as _IM
 import PowerModels as _PM
+import PowerModelsTopologicalActionsII as _PMTP
+import PowerModelsACDC as _PMACDC
 
 ## Memento settings
 
@@ -39,8 +41,9 @@ include("formconv/acp.jl")
 include("formdcgrid/lpac.jl")
 include("formconv/lpac.jl")
 
-
 include("prob/mcdcopf.jl")
+include("prob/mcdc_acdcsw_AC.jl")
+include("prob/mcdc_acdcsw_DC.jl")
 
 include("io/parse.jl")
 

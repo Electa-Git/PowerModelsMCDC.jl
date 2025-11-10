@@ -9,8 +9,36 @@ function constraint_kcl_shunt(pm::_PM.AbstractACPModel, n::Int, i::Int, bus_arcs
     pconv_grid_ac = _PM.var(pm, n, :pconv_tf_fr)
     qconv_grid_ac = _PM.var(pm, n, :qconv_tf_fr)
 
-    JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(qconv_grid_ac[c][pole] for pole in bus_conv_poles[c]) for c in keys(bus_conv_poles)) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts) * vm^2)
     JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][pole] for pole in bus_conv_poles[c]) for c in keys(bus_conv_poles)) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
+    JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(qconv_grid_ac[c][pole] for pole in bus_conv_poles[c]) for c in keys(bus_conv_poles)) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts) * vm^2)
+end
+
+function constraint_kcl_shunt_sw(pm::_PM.AbstractACPModel, n::Int, i::Int, bus_arcs, bus_gens, bus_conv_poles, bus_loads, bus_shunts, bus_arcs_sw, pd, qd, gs, bs)
+    vm = _PM.var(pm, n, :vm, i)
+    p = _PM.var(pm, n, :p)
+    q = _PM.var(pm, n, :q)
+    pg = _PM.var(pm, n, :pg)
+    qg = _PM.var(pm, n, :qg)
+    pconv_grid_ac = _PM.var(pm, n, :pconv_tf_fr)
+    qconv_grid_ac = _PM.var(pm, n, :qconv_tf_fr)
+    psw  = _PM.var(pm, n, :psw)
+    qsw  = _PM.var(pm, n, :qsw)
+
+    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][pole] for pole in bus_conv_poles[c]) for c in keys(bus_conv_poles)) + sum(psw[sw] for sw in bus_arcs_sw) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
+    JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(qconv_grid_ac[c][pole] for pole in bus_conv_poles[c]) for c in keys(bus_conv_poles)) + sum(qsw[sw] for sw in bus_arcs_sw) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts) * vm^2)
+end
+
+function constraint_kcl_shunt_fc(pm::_PM.AbstractACPModel, n::Int, i::Int, bus_arcs, bus_gens, bus_conv_poles, bus_loads, bus_shunts, pd, qd, gs, bs)
+    vm = _PM.var(pm, n, :vm, i)
+    p = _PM.var(pm, n, :p)
+    q = _PM.var(pm, n, :q)
+    pg = _PM.var(pm, n, :pg)
+    qg = _PM.var(pm, n, :qg)
+    pconv_grid_ac = _PM.var(pm, n, :pconv_tf_fr)
+    qconv_grid_ac = _PM.var(pm, n, :qconv_tf_fr)
+
+    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(sum(pconv_grid_ac[c][pole] for pole in bus_conv_poles[c]) for c in keys(bus_conv_poles)) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts) * vm^2)
+    JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(sum(qconv_grid_ac[c][pole] for pole in bus_conv_poles[c]) for c in keys(bus_conv_poles)) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts) * vm^2)
 end
 
 function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, n::Int, f_bus, t_bus, f_idx, t_idx, branch)
