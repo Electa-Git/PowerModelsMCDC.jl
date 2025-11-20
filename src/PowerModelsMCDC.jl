@@ -29,6 +29,7 @@ include("core/objective.jl")
 include("core/multiconductor.jl")
 include("core/constraint_template.jl")
 include("core/variable_mcdcgrid.jl")
+include("core/variable_switching.jl")
 include("core/variableconv_mc.jl")
 include("core/solution.jl")
 

@@ -45,3 +45,18 @@ function constraint_reactive_conv_setpoint(pm::_PM.AbstractPowerModel, n::Int, i
 end
 
 ######################### New constraints
+function constraint_dc_switch_thermal_limit_mc(pm::_PM.AbstractPowerModel, n::Int, f_idx, rating)
+    psw = _PM.var(pm, n, :p_dc_sw_mc, f_idx)
+
+    JuMP.@constraint(pm.model, psw <= rating)
+end
+
+function constraint_dc_switch_power_on_off_mc(pm::_PM.AbstractPowerModel, n::Int, i, f_idx)
+    psw = _PM.var(pm, n, :p_dc_sw_mc, f_idx)
+    z = _PM.var(pm, n, :z_dcswitch, i)
+
+    psw_lb, psw_ub = _IM.variable_domain(psw)
+
+    JuMP.@constraint(pm.model, psw <= psw_ub*z)
+    JuMP.@constraint(pm.model, psw_lb*z <= psw)
+end

@@ -59,6 +59,46 @@ function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::In
     JuMP.@constraint(pm.model, sum(iconv_dc[i]) == 0)
 end
 
+function constraint_converter_dc_current_sw(pm::_PM.AbstractACPModel, n::Int, i::Int, busdc, terminals, poles, busdc_terminal_conv_poles)
+    pconv_dc = _PM.var(pm, n, :pconv_dc)
+    pconv_dcg = _PM.var(pm, n, :pconv_dcg)
+    iconv_dc = _PM.var(pm, n, :iconv_dc)
+    iconv_dcg = _PM.var(pm, n, :iconv_dcg)
+    vdcm = _PM.var(pm, n, :vdcm)
+
+    for terminal in terminals
+        for p in poles
+            for (conv_id,pole) in busdc_terminal_conv_poles[busdc[p]][terminal]
+                if terminal != "r"
+                    JuMP.@constraint(pm.model, pconv_dc[conv_id][pole] == iconv_dc[conv_id][pole] * vdcm[busdc[pole]][terminal])
+                else
+                    JuMP.@constraint(pm.model, pconv_dc[conv_id][terminal] == iconv_dc[conv_id][terminal] * vdcm[busdc[pole]][terminal])
+                end
+            end
+        end
+    end
+    for pole in poles
+        JuMP.@constraint(pm.model, pconv_dcg[i][pole] == iconv_dcg[i][pole] * vdcm[busdc[pole]]["r"])
+        JuMP.@constraint(pm.model, iconv_dc[i][pole] + iconv_dcg[i][pole] == 0)
+    end
+
+    JuMP.@constraint(pm.model, sum(iconv_dc[i]) == 0)
+end
+
+function constraint_dc_switch_voltage_on_off_big_M_mc(pm::_PM.AbstractACPModel, n::Int, i, f_busdc, t_busdc, terminal)
+    vm_fr = _PM.var(pm, n, :vdcm, f_busdc)[terminal]
+    vm_to = _PM.var(pm, n, :vdcm, t_busdc)[terminal]
+    z = _PM.var(pm, n, :z_dcswitch, i)
+    M_vm = 1
+
+    JuMP.@constraint(pm.model, vm_fr - vm_to <= (1-z)*M_vm)
+    JuMP.@constraint(pm.model,  - (1-z)*M_vm <= vm_fr - vm_to)
+
+    JuMP.@constraint(pm.model, vm_to - vm_fr <= (1-z)*M_vm)
+    JuMP.@constraint(pm.model,  - (1-z)*M_vm <= vm_to - vm_fr)
+end
+
+
 """
 Converter transformer constraints
 ```
@@ -106,8 +146,8 @@ function constraint_conv_transformer_sw(pm::_PM.AbstractACPModel, n::Int, i::Int
     ptf_to = _PM.var(pm, n, :pconv_tf_to, i)[pole]
     qtf_to = _PM.var(pm, n, :qconv_tf_to, i)[pole]
 
-    vm = _PM.var(pm, n, :vm, acbus)
-    va = _PM.var(pm, n, :va, acbus)
+    vm = _PM.var(pm, n, :vm, acbus)[pole]
+    va = _PM.var(pm, n, :va, acbus)[pole]
     vmf = _PM.var(pm, n, :vmf, i)[pole]
     vaf = _PM.var(pm, n, :vaf, i)[pole]
     ztf = rtf + im * xtf
@@ -217,3 +257,16 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractACPModel, n::I
         end
     end
 end
+
+function constraint_BS_OTS_dcbranch_mc(pm::_PM.AbstractPowerModel, n::Int,i_1, i_2, pf, pt, qf, qt ,sw,aux)
+    z_1 = _PM.var(pm, n, :z_dcswitch, i_1)
+    z_2 = _PM.var(pm, n, :z_dcswitch, i_2)
+    pf_ = _PM.var(pm, n, :p_dcgrid, pf)
+    pt_ = _PM.var(pm, n, :p_dcgrid, pt)
+
+    JuMP.@constraint(pm.model, pf_ <= (z_1+z_2)*10)
+    JuMP.@constraint(pm.model, pt_ <= (z_1+z_2)*10)
+    JuMP.@constraint(pm.model, - (z_1+z_2)*10 <= pf_)
+    JuMP.@constraint(pm.model, - (z_1+z_2)*10 <= pt_)
+end
+

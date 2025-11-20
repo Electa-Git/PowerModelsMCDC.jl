@@ -12,19 +12,20 @@ function build_acdcsw_DC(pm::_PM.AbstractPowerModel)
     _PM.variable_branch_power(pm)
 
     # DC grid
-    #_PMTP.variable_dc_switch_indicator(pm) # binary variable to indicate the status of a dc switch
-    #_PMTP.variable_dc_switch_power(pm) # variable to indicate the power flowing through a dc switch (if closed)
+    _PMTP.variable_dc_switch_indicator(pm) # binary variable to indicate the status of a dc switch
+    variable_dc_switch_power_mc(pm) # variable to indicate the power flowing through a dc switch (if closed)
 
     # DC grid
-    #variable_mc_active_dcbranch_flow_sw(pm, bounded=true)
-    #variable_mc_dcbranch_current(pm, bounded=true)
-    #variable_mcdcgrid_voltage_magnitude(pm, bounded=true)
-    #variable_mcdc_converter(pm, bounded=true)
+    variable_mc_active_dcbranch_flow_sw(pm, bounded=true)
+    variable_mc_dcbranch_current_sw(pm, bounded=true)
+    variable_mcdcgrid_voltage_magnitude(pm, bounded=true)
+    variable_mcdc_converter(pm, bounded=true)
 
-    #=
+    
     # Objective function
     _PMTP.objective_min_fuel_cost_dc_switch(pm)
 
+    
     # Constraints
     _PM.constraint_model_voltage(pm)
 
@@ -33,21 +34,22 @@ function build_acdcsw_DC(pm::_PM.AbstractPowerModel)
     end
 
     for i in _PM.ids(pm, :bus)
-        constraint_kcl_shunt_sw(pm, i)
+        constraint_kcl_shunt(pm, i)
     end
 
+    
     for i in _PM.ids(pm, :dcswitch)
-        _PMTP.constraint_dc_switch_thermal_limit(pm, i) # limiting the apparent power flowing through a dc switch
-        _PMTP.constraint_dc_switch_power_on_off(pm,i)  # limiting the maximum active power through a dc switch
-        _PMTP.constraint_dc_switch_voltage_on_off_big_M(pm, i)
+        constraint_dc_switch_thermal_limit_mc(pm, i) # limiting the apparent power flowing through a dc switch
+        constraint_dc_switch_power_on_off_mc(pm,i)  # limiting the maximum active power through a dc switch
+        constraint_dc_switch_voltage_on_off_big_M_mc(pm, i)
     end
-
+    
     for i in _PM.ids(pm, :dcswitch_couples)
         _PMTP.constraint_exclusivity_dc_switch(pm, i) # the sum of the switches in a couple must be lower or equal than one (if OTS is allowed, like here), as each grid element is connected to either part of a split busbar no matter if the ZIL switch is opened or closed
         _PMTP.constraint_BS_OTS_dcbranch(pm, i) # making sure that if the grid element is not reconnected to the split busbar, the active and reactive power flowing through the switch is 0
         _PMTP.constraint_ZIL_dc_switch(pm,i)
     end
-
+    
     for i in _PM.ids(pm, :branch)
         _PM.constraint_ohms_yt_from(pm, i)
         _PM.constraint_ohms_yt_to(pm, i)
@@ -55,22 +57,26 @@ function build_acdcsw_DC(pm::_PM.AbstractPowerModel)
         _PM.constraint_thermal_limit_from(pm, i)
         _PM.constraint_thermal_limit_to(pm, i)
     end
-
+    #=
     for i in _PM.ids(pm, :busdc)
         constraint_power_balance_dc_switch(pm, i) # taking into account dc switches in the power balance of the dc part of an AC/DC grid
     end
     for i in _PM.ids(pm, :branchdc)
         _PMACDC.constraint_ohms_dc_branch(pm, i)
     end
+    =#
+
     for i in _PM.ids(pm, :convdc)
-        _PMACDC.constraint_converter_losses(pm, i)
-        _PMACDC.constraint_converter_current(pm, i)
-        _PMACDC.constraint_conv_transformer(pm, i)
-        _PMACDC.constraint_conv_reactor(pm, i)
-        _PMACDC.constraint_conv_filter(pm, i)
-        if pm.ref[:it][:pm][:nw][_PM.nw_id_default][:convdc][i]["islcc"] == 1
-            _PMACDC.constraint_conv_firing_angle(pm, i)
+        constraint_converter_losses(pm, i)
+        constraint_converter_current(pm, i)
+        constraint_converter_dc_current_sw(pm, i)
+        #constraint_conv_transformer(pm, i)
+        #constraint_conv_reactor(pm, i)
+        #constraint_conv_filter(pm, i)
+
+        if pm.ref[:it][_PM.pm_it_sym][:nw][_PM.nw_id_default][:convdc][i]["islcc"] == 1
+            #constraint_conv_firing_angle(pm, i)
         end
     end
-    =#
+    #constraint_converter_dc_ground_shunt_ohm(pm)    
 end

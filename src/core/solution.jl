@@ -39,3 +39,17 @@ function sol_component_value_edge_status(pm::_PM.AbstractPowerModel, n::Int, com
 
     _PM.sol_component_value_edge(pm, n, comp_name, field_name_fr, field_name_to, comp_ids_fr, comp_ids_to, data)
 end
+
+function sol_component_value_edge_status_sw(pm::_PM.AbstractPowerModel, n::Int, comp_name::Symbol, field_name_fr::Symbol, field_name_to::Symbol, comp_ids_fr, comp_ids_to, conductors, variables)
+
+    data = Dict{Tuple{Int, Int, Int, String}, Any}()
+    for (l, i, j, cond) in comp_ids_fr
+        data[(l, i, j, cond)] = Dict(cond => variables[(l, i, j, cond)])
+    end
+
+    for (l, i, j, cond) in comp_ids_to
+        data[(l, i, j, cond)] = Dict(cond => variables[(l, i, j, cond)])
+    end
+
+    _PM.sol_component_value_edge(pm, n, comp_name, field_name_fr, field_name_to, comp_ids_fr, comp_ids_to, data)
+end

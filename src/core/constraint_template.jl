@@ -99,6 +99,16 @@ function constraint_converter_dc_current(pm::_PM.AbstractPowerModel, i::Int; nw:
     constraint_converter_dc_current(pm, nw, i, busdc, terminals, poles, busdc_terminal_conv_poles)
 end
 
+function constraint_converter_dc_current_sw(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    conv = _PM.ref(pm, nw, :convdc, i)
+    poles = keys(conv["status"])
+    busdc = conv["busdc_i"]
+    terminals = keys(_PM.ref(pm, nw, :busdc_terminal_conv_poles,conv["busdc_i"][first(poles)])) #terminal
+    busdc_terminal_conv_poles = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
+    constraint_converter_dc_current_sw(pm, nw, i, busdc, terminals, poles, busdc_terminal_conv_poles)
+end
+
+
 function constraint_conv_transformer(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
     poles = keys(conv["status"])
@@ -144,4 +154,42 @@ function constraint_converter_dc_ground_shunt_ohm(pm::_PM.AbstractPowerModel; nw
     r_earth = 0.0
 
     constraint_converter_dc_ground_shunt_ohm(pm, nw, busdc_grounded_convs, r_earth)
+end
+
+function constraint_dc_switch_voltage_on_off_big_M_mc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    switch = _PM.ref(pm, nw, :dcswitch, i)
+    terminal = switch["terminal"]
+    constraint_dc_switch_voltage_on_off_big_M_mc(pm, nw, i, switch["f_busdc"], switch["t_busdc"], terminal)
+end
+
+function constraint_dc_switch_thermal_limit_mc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    switch = _PM.ref(pm, nw, :dcswitch, i)
+
+    f_idx = (i, switch["f_busdc"], switch["t_busdc"],switch["terminal"])
+    constraint_dc_switch_thermal_limit_mc(pm, nw, f_idx, switch["thermal_rating"])
+end
+
+function constraint_dc_switch_power_on_off_mc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    switch = _PM.ref(pm, nw, :dcswitch, i)
+    f_idx = (i, switch["f_busdc"], switch["t_busdc"], switch["terminal"])
+
+    constraint_dc_switch_power_on_off_mc(pm, nw, i, f_idx)
+end
+
+function constraint_BS_OTS_dcbranch_mc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    switch_couple = _PM.ref(pm, nw, :dcswitch_couples, i)
+    switch_ = _PM.ref(pm, nw, :dcswitch)
+    branch_ = _PM.ref(pm, nw, :branchdc)
+    single_switch = switch_[switch_couple["f_sw"]]
+    #print(single_switch)
+    branch_original = single_switch["original"]
+
+    #if single_switch["auxiliary"] == "branchdc"
+        constraint_BS_OTS_dcbranch_mc(pm, nw, switch_couple["f_sw"],switch_couple["t_sw"], 
+        (branch_[branch_original]["index"],branch_[branch_original]["fbusdc"],branch_[branch_original]["tbusdc"]),
+        (branch_[branch_original]["index"],branch_[branch_original]["tbusdc"],branch_[branch_original]["fbusdc"]),
+        (branch_[branch_original]["index"],branch_[branch_original]["fbusdc"],branch_[branch_original]["tbusdc"]),
+        (branch_[branch_original]["index"],branch_[branch_original]["tbusdc"],branch_[branch_original]["fbusdc"]),
+        single_switch,"auxiliary")
+    #end
 end

@@ -79,31 +79,6 @@ function variable_mc_active_dcbranch_flow(pm::_PM.AbstractPowerModel; nw::Int=_P
     report && sol_component_value_edge_status(pm, nw, :branchdc, :pf, :pt, _PM.ref(pm, nw, :arcsdc_from), _PM.ref(pm, nw, :arcsdc_to), conductors, vars)
 end
 
-function variable_mc_active_dcbranch_flow_sw(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
-    vars = _PM.var(pm, nw)[:p_dcgrid] = Dict(((l, i, j, cond)) => JuMP.@variable(pm.model, base_name = "$(nw)_pdcgrid_$((l,i,j))",
-    start = comp_start_value(_PM.ref(pm, nw, :branchdc, l), "p_start", cond, 0.0)
-    ) for (l, i, j, cond) in _PM.ref(pm, nw, :arcsdc)
-    )
-    
-    
-    for (l, i, j, cond) in _PM.ref(pm, nw, :arcsdc)
-        #for cond in keys(_PM.ref(pm, nw, :branchdc)[l]["status"]) 
-            if _PM.ref(pm, nw, :branchdc)[l]["status"][cond] == 1
-                if bounded
-                    JuMP.set_lower_bound.(vars[(l, i, j,cond)], -_PM.ref(pm, nw, :branchdc,l)["rateA"][cond])
-                    JuMP.set_upper_bound.(vars[(l, i, j,cond)], _PM.ref(pm, nw, :branchdc, l)["rateA"][cond])
-                end
-            end
-        #end
-    end
-
-    conductors = Dict(
-        l => collect(keys(_PM.ref(pm, nw, :branchdc)[l]["status"]))
-        for (l, i, j, cond) in _PM.ref(pm, nw, :arcsdc_from)
-    )
-
-    report && sol_component_value_edge_status(pm, nw, :branchdc, :pf, :pt, _PM.ref(pm, nw, :arcsdc_from), _PM.ref(pm, nw, :arcsdc_to), conductors, vars)
-end
 
 
 function variable_mcdcgrid_voltage_magnitude(pm::_PM.AbstractPowerModel; nw::Int=_PM.nw_id_default, bounded::Bool=true, report::Bool=true)
