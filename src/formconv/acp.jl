@@ -146,8 +146,8 @@ function constraint_conv_transformer_sw(pm::_PM.AbstractACPModel, n::Int, i::Int
     ptf_to = _PM.var(pm, n, :pconv_tf_to, i)[pole]
     qtf_to = _PM.var(pm, n, :qconv_tf_to, i)[pole]
 
-    vm = _PM.var(pm, n, :vm, acbus)[pole]
-    va = _PM.var(pm, n, :va, acbus)[pole]
+    vm = _PM.var(pm, n, :vm, acbus)#[pole]
+    va = _PM.var(pm, n, :va, acbus)#[pole]
     vmf = _PM.var(pm, n, :vmf, i)[pole]
     vaf = _PM.var(pm, n, :vaf, i)[pole]
     ztf = rtf + im * xtf

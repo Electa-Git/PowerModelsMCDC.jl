@@ -66,3 +66,29 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, n::Int, f_bus, t_
         end
     end
 end
+
+function constraint_ohms_dc_branch_sw(pm::_PM.AbstractPowerModel, n::Int, f_bus, t_bus, f_idx, t_idx, branch)
+    i_dc = _PM.var(pm, n, :i_dcgrid)
+    #i_dc_to = _PM.var(pm, n, :i_dcgrid)
+    vmdc = _PM.var(pm, n, :vdcm)
+    #vmdc_to = _PM.var(pm, n, :vdcm)
+    r = branch["r"]
+    status = branch["status"]
+
+    conductors = keys(status)
+    busdc_terminal_arcsdc = _PM.ref(pm, n, :busdc_terminal_arcsdc)
+    for cond in conductors
+        for (l,i,j) in busdc_terminal_arcsdc[(f_bus[cond], cond)]            
+            if (l,i,j) == f_idx
+                if r[cond] == 0
+                    JuMP.@constraint(pm.model, i_dc[(l,i,j)][cond] + i_dc[(l,j,i)][cond] == 0)
+                    JuMP.@constraint(pm.model, vmdc[i][cond] - vmdc[j][cond] == 0)
+                else
+                    g = 1 / r[cond]
+                    JuMP.@constraint(pm.model, i_dc[(l,i,j)][cond] == g * (vmdc[i][cond] - vmdc[j][cond]))
+                    JuMP.@constraint(pm.model, i_dc[(l,j,i)][cond] == g * (vmdc[j][cond] - vmdc[i][cond]))
+                end
+            end
+        end
+    end
+end

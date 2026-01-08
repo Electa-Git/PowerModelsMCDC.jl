@@ -78,11 +78,11 @@ function build_mcdc_acdcsw_AC(pm::_PM.AbstractPowerModel)
 end
 
 
-function solve_mcdcopf_fc(data::Dict{String,Any}, model_type::Type, optimizer; kwargs...)
-    return _PM.solve_model(data, model_type, optimizer, build_mcdcopf_fc; ref_extensions=[add_ref_dcgrid_switch!,_PM.ref_add_on_off_va_bounds!], kwargs...)
+function solve_mcdcopf_fc_ac_bs(data::Dict{String,Any}, model_type::Type, optimizer; kwargs...)
+    return _PM.solve_model(data, model_type, optimizer, build_mcdcopf_fc_ac_bs; ref_extensions=[add_ref_dcgrid_switch!,_PM.ref_add_on_off_va_bounds!], kwargs...)
 end
 
-function build_mcdcopf_fc(pm::_PM.AbstractPowerModel)
+function build_mcdcopf_fc_ac_bs(pm::_PM.AbstractPowerModel)
     _PM.variable_bus_voltage(pm, bounded=true)
     _PM.variable_gen_power(pm, bounded=true)
     _PM.variable_branch_power(pm, bounded=true)

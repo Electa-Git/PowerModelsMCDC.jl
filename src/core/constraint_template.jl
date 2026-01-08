@@ -60,9 +60,21 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, i::Int; nw::Int
     constraint_kcl_shunt_dcgrid(pm, nw, i, busdc_terminal_arcsdc_, busdc_terminal_conv_poles_, busdc_grounded_convs_, bus_convs_i_dc_cond_)
 end
 
+function constraint_kcl_shunt_dcgrid_sw(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    busdc = _PM.ref(pm, nw, :busdc, i)
+    busdc_terminal_arcsdc_ = _PM.ref(pm, nw, :busdc_terminal_arcsdc)
+    busdc_terminal_conv_poles_ = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
+    busdc_grounded_convs_ = _PM.ref(pm, nw, :busdc_grounded_convs)
+    bus_convs_i_dc_cond_ = _PM.ref(pm, nw, :busdc_terminal_i_conv_dc_poles)
+    busdc_terminal_arcsdc_sw = _PM.ref(pm, nw, :busdc_terminal_arcsdc_sw)
+    constraint_kcl_shunt_dcgrid_sw(pm, nw, i, busdc_terminal_arcsdc_, busdc_terminal_conv_poles_, busdc_grounded_convs_, bus_convs_i_dc_cond_,busdc_terminal_arcsdc_sw)
+end
+
+
 function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     branch = _PM.ref(pm, nw, :branchdc, i)
     f_bus = branch["fbusdc"]
+    println("f_bus is $f_bus")
     t_bus = branch["tbusdc"]
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
@@ -70,6 +82,17 @@ function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_
     constraint_ohms_dc_branch(pm, nw, f_bus, t_bus, f_idx, t_idx, branch)
 end
 
+
+function constraint_ohms_dc_branch_sw(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    branch = _PM.ref(pm, nw, :branchdc, i)
+    f_bus = branch["fbusdc"]
+    println("f_bus is $f_bus")
+    t_bus = branch["tbusdc"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    constraint_ohms_dc_branch_sw(pm, nw, f_bus, t_bus, f_idx, t_idx, branch)
+end
 
 function constraint_converter_losses(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
@@ -97,6 +120,17 @@ function constraint_converter_dc_current(pm::_PM.AbstractPowerModel, i::Int; nw:
     terminals = keys(_PM.ref(pm, nw, :busdc_terminal_conv_poles,busdc)) #terminal
     busdc_terminal_conv_poles = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
     constraint_converter_dc_current(pm, nw, i, busdc, terminals, poles, busdc_terminal_conv_poles)
+end
+
+
+function constraint_converter_dc_current_fc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    conv = _PM.ref(pm, nw, :convdc, i)
+    poles = keys(conv["status"])
+    busdc = conv["busdc_i"]
+    terminals = keys(conv["busdc_i"])
+    terminals = keys(_PM.ref(pm, nw, :busdc_terminal_conv_poles,busdc)) #terminal
+    busdc_terminal_conv_poles = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
+    constraint_converter_dc_current_fc(pm, nw, i, busdc, terminals, poles, busdc_terminal_conv_poles)
 end
 
 function constraint_converter_dc_current_sw(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
@@ -169,11 +203,11 @@ function constraint_dc_switch_thermal_limit_mc(pm::_PM.AbstractPowerModel, i::In
     constraint_dc_switch_thermal_limit_mc(pm, nw, f_idx, switch["thermal_rating"])
 end
 
-function constraint_dc_switch_power_on_off_mc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+function constraint_dc_switch_current_on_off_mc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     switch = _PM.ref(pm, nw, :dcswitch, i)
     f_idx = (i, switch["f_busdc"], switch["t_busdc"], switch["terminal"])
 
-    constraint_dc_switch_power_on_off_mc(pm, nw, i, f_idx)
+    constraint_dc_switch_current_on_off_mc(pm, nw, i, f_idx)
 end
 
 function constraint_BS_OTS_dcbranch_mc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
@@ -181,15 +215,18 @@ function constraint_BS_OTS_dcbranch_mc(pm::_PM.AbstractPowerModel, i::Int; nw::I
     switch_ = _PM.ref(pm, nw, :dcswitch)
     branch_ = _PM.ref(pm, nw, :branchdc)
     single_switch = switch_[switch_couple["f_sw"]]
-    #print(single_switch)
     branch_original = single_switch["original"]
+    cond = single_switch["terminal"]
 
-    #if single_switch["auxiliary"] == "branchdc"
-        constraint_BS_OTS_dcbranch_mc(pm, nw, switch_couple["f_sw"],switch_couple["t_sw"], 
-        (branch_[branch_original]["index"],branch_[branch_original]["fbusdc"],branch_[branch_original]["tbusdc"]),
-        (branch_[branch_original]["index"],branch_[branch_original]["tbusdc"],branch_[branch_original]["fbusdc"]),
-        (branch_[branch_original]["index"],branch_[branch_original]["fbusdc"],branch_[branch_original]["tbusdc"]),
-        (branch_[branch_original]["index"],branch_[branch_original]["tbusdc"],branch_[branch_original]["fbusdc"]),
-        single_switch,"auxiliary")
-    #end
+    constraint_BS_OTS_dcbranch_mc(pm, nw, switch_couple["f_sw"],switch_couple["t_sw"]) 
+end
+
+function constraint_exclusivity_dc_switch_mc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    switch_couple = _PM.ref(pm, nw, :dcswitch_couples, i)
+    constraint_exclusivity_dc_switch_mc(pm, nw, switch_couple["f_sw"], switch_couple["t_sw"])
+end
+
+function constraint_ZIL_dc_switch_mc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
+    switch_couple = _PM.ref(pm, nw, :dcswitch_couples, i)
+    constraint_ZIL_dc_switch_mc(pm, nw, switch_couple["f_sw"], switch_couple["dcswitch_split"])    
 end
