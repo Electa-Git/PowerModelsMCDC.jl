@@ -5,6 +5,26 @@ sum(p_dcgrid[a] for a in busdc_terminal_arcsdc) + sum(pconv_dc[c] for c in busdc
 ```
 """
 
+function _has_axis_key(container, key)
+    try
+        container[key]
+        return true
+    catch err
+        err isa KeyError || rethrow()
+        return false
+    end
+end
+
+function _get_nested_axis_or_zero(container, key1, key2)
+    try
+        subcontainer = container[key1]
+        return _has_axis_key(subcontainer, key2) ? subcontainer[key2] : 0.0
+    catch err
+        err isa KeyError || rethrow()
+        return 0.0
+    end
+end
+
 function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int, bus_arcs_dcgrid_terminals, bus_convs_dc_cond, bus_convs_grounding_shunt, bus_convs_i_dc_cond)
     i_dcgrid = _PM.var(pm, n, :i_dcgrid)
     iconv_dc = _PM.var(pm, n, :iconv_dc)
@@ -17,9 +37,9 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int,
         if terminal == "r"
             unique_convs = unique([cvs[1] for cvs in bus_convs_dc_cond[i][terminal]])
             JuMP.@constraint(pm.model,
-                sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
-                + sum(iconv_dc[conv][terminal] for conv in unique_convs) # this one to be fixed still, we are getting there come on
-                + sum(iconv_dcg_shunt[conv] for conv in bus_convs_grounding_shunt[i]) == 0
+                sum(_get_nested_axis_or_zero(i_dcgrid, branch, terminal) for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
+                + sum(iconv_dc[conv][terminal] for conv in unique_convs if haskey(iconv_dc, conv) && _has_axis_key(iconv_dc[conv], terminal))
+                + sum(iconv_dcg_shunt[conv] for conv in bus_convs_grounding_shunt[i] if haskey(iconv_dcg_shunt, conv)) == 0
                 )
         else
             JuMP.@constraint(pm.model,
@@ -58,9 +78,9 @@ function constraint_kcl_shunt_dcgrid_sw(pm::_PM.AbstractPowerModel, n::Int, i::I
         if terminal == "r"
             unique_convs = unique([cvs[1] for cvs in bus_convs_dc_cond[i][terminal]])
             JuMP.@constraint(pm.model,
-                sum(i_dcgrid[branch][terminal] for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
-                + sum(iconv_dc[conv][terminal] for conv in unique_convs) # this one to be fixed still, we are getting there come on
-                + sum(iconv_dcg_shunt[conv] for conv in bus_convs_grounding_shunt[i]) 
+                sum(_get_nested_axis_or_zero(i_dcgrid, branch, terminal) for branch in bus_arcs_dcgrid_terminals[(i, terminal)])
+                + sum(iconv_dc[conv][terminal] for conv in unique_convs if haskey(iconv_dc, conv) && _has_axis_key(iconv_dc[conv], terminal))
+                + sum(iconv_dcg_shunt[conv] for conv in bus_convs_grounding_shunt[i] if haskey(iconv_dcg_shunt, conv)) 
                 + sum(i_dc_sw[(l,i,j,cond)] for (l,i,j,cond) in busdc_terminal_arcsdc_sw[(i, terminal)])
                 == 0
                 )

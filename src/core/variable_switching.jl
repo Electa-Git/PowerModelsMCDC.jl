@@ -69,7 +69,6 @@ function variable_dc_switch_current_mc(pm::_PM.AbstractPowerModel; nw::Int=_PM.n
     isw_expr = Dict{Any,Any}((l,i,j,cond) => i_dc_sw_mc[(l,i,j,cond)] for (l,i,j,cond) in _PM.ref(pm, nw, :arcs_from_sw_dc))
     isw_expr = merge(isw_expr, Dict((l,j,i,cond) => -1.0*i_dc_sw_mc[(l,i,j,cond)] for (l,i,j,cond) in _PM.ref(pm, nw, :arcs_from_sw_dc)))
     _PM.var(pm, nw)[:i_dc_sw_mc] = isw_expr
-    println("isw_expr: ", isw_expr)
 
 
     report && sol_component_value_edge_status_sw(pm, nw, :dcswitch, :i_sw_fr, :i_sw_to, _PM.ref(pm, nw, :arcs_from_sw_dc), _PM.ref(pm, nw, :arcs_to_sw_dc), isw_expr)

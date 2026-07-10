@@ -39,15 +39,21 @@ end
 function _make_multiconductor_busdc!(busdc_dict::Dict{String,<:Any})
     for (b, busdc) in busdc_dict
 
-        # Voltage bounds: apply the same offset to each terminal
-        for param in ["Vdcmin", "Vdcmax"]
-            offset = busdc[param] - 1.0
-            busdc[param] = Dict{String,Float64}(
-                "p" =>  1.0 + offset,
-                "r" =>  0.0 + offset,
-                "n" => -1.0 + offset
-            )
-        end
+        # Scalar input data is a pole-to-return voltage magnitude. Convert it
+        # to terminal-voltage bounds in the p/r/n frame.
+        vdcmin = busdc["Vdcmin"]
+        vdcmax = busdc["Vdcmax"]
+        return_bound = max(abs(vdcmax - busdc["Vdc"]), abs(busdc["Vdc"] - vdcmin))
+        busdc["Vdcmin"] = Dict{String,Float64}(
+            "p" =>  vdcmin,
+            "r" => -return_bound,
+            "n" => -vdcmax
+        )
+        busdc["Vdcmax"] = Dict{String,Float64}(
+            "p" =>  vdcmax,
+            "r" =>  return_bound,
+            "n" => -vdcmin
+        )
 
         # Voltage start value: apply the same magnitude to positive and negative terminals
         magnitude = busdc["Vdc"]

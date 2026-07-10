@@ -11,8 +11,8 @@ function build_mcdc_acdcsw_AC(pm::_PM.AbstractPowerModel)
     _PM.variable_branch_power(pm)
     _PM.variable_storage_power(pm)
 
-    _PMTP.variable_switch_indicator(pm) # binary variable to indicate the status of an ac switch
-    _PMTP.variable_switch_power(pm) # variable to indicate the power flowing through an ac switch (if closed)
+    #= _PMTP.variable_switch_indicator(pm) # binary variable to indicate the status of an ac switch
+    _PMTP.variable_switch_power(pm) # variable to indicate the power flowing through an ac switch (if closed) =#
 
     # DC grid
     variable_mc_active_dcbranch_flow(pm, bounded=true)
@@ -21,7 +21,7 @@ function build_mcdc_acdcsw_AC(pm::_PM.AbstractPowerModel)
     variable_mcdc_converter(pm, bounded=true)
 
     # Objective function
-    _PMTP.objective_min_fuel_cost_ac_switch(pm)
+    #_PMTP.objective_min_fuel_cost_ac_switch(pm)
 
     # Constraints
     _PM.constraint_model_voltage(pm)
@@ -34,7 +34,7 @@ function build_mcdc_acdcsw_AC(pm::_PM.AbstractPowerModel)
         constraint_kcl_shunt_sw(pm, i) # including the ac switches in the power balance of the AC part of an AC/DC grid
     end
 
-    for i in _PM.ids(pm, :switch)
+    #= for i in _PM.ids(pm, :switch)
         _PMTP.constraint_switch_thermal_limit(pm, i) # limiting the apparent power flowing through an ac switch
         _PMTP.constraint_switch_power_on_off(pm,i) # limiting the maximum active and reactive power through an ac switch
         _PMTP.constraint_switch_voltage_on_off_big_M(pm,i)
@@ -44,7 +44,7 @@ function build_mcdc_acdcsw_AC(pm::_PM.AbstractPowerModel)
         _PMTP.constraint_exclusivity_switch(pm, i) # the sum of the switches in a couple must be lower or equal than one (if OTS is allowed, like here), as each grid element is connected to either part of a split busbar no matter if the ZIL switch is opened or closed
         _PMTP.constraint_BS_OTS_branch(pm,i) # making sure that if the grid element is not reconnected to the split busbar, the active and reactive power flowing through the switch is 0
         _PMTP.constraint_ZIL_switch(pm,i)
-    end
+    end =#
 
     for i in _PM.ids(pm, :branch)
         _PM.constraint_ohms_yt_from(pm, i)

@@ -74,7 +74,6 @@ end
 function constraint_ohms_dc_branch(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     branch = _PM.ref(pm, nw, :branchdc, i)
     f_bus = branch["fbusdc"]
-    println("f_bus is $f_bus")
     t_bus = branch["tbusdc"]
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
@@ -86,7 +85,6 @@ end
 function constraint_ohms_dc_branch_sw(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     branch = _PM.ref(pm, nw, :branchdc, i)
     f_bus = branch["fbusdc"]
-    println("f_bus is $f_bus")
     t_bus = branch["tbusdc"]
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
@@ -106,7 +104,6 @@ end
 function constraint_converter_current(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
     conv = _PM.ref(pm, nw, :convdc, i)
     poles = keys(conv["status"])
-    println("Converter $i poles: ", poles)
     
     for pole in poles
         constraint_converter_current(pm, nw, i, pole)

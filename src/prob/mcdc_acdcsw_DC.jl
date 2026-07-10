@@ -12,7 +12,7 @@ function build_mcdc_acdcsw_DC(pm::_PM.AbstractPowerModel)
     _PM.variable_branch_power(pm)
 
     # DC grid
-    _PMTP.variable_dc_switch_indicator(pm) # binary variable to indicate the status of a dc switch
+    #_PMTP.variable_dc_switch_indicator(pm) # binary variable to indicate the status of a dc switch
     variable_dc_switch_current_mc(pm) # variable to indicate the power flowing through a dc switch (if closed)
 
     # DC grid
@@ -23,7 +23,7 @@ function build_mcdc_acdcsw_DC(pm::_PM.AbstractPowerModel)
 
     
     # Objective function
-    _PMTP.objective_min_fuel_cost_dc_switch(pm)
+    #_PMTP.objective_min_fuel_cost_dc_switch(pm)
 
     
     # Constraints

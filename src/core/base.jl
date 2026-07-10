@@ -105,7 +105,6 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<:Any})
             end
         end
         nw_ref[:busdc_terminal_arcsdc] = busdc_terminal_arcsdc
-        println("busdc_terminal_arcsdc: ", nw_ref[:busdc_terminal_arcsdc])
         # Map DC bus terminal to connected converter active poles
         # ->  This was changed, let's see if it works 
         busdc_terminal_conv_poles = Dict(
@@ -295,7 +294,6 @@ function add_ref_dcgrid_switch!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<:A
         for (c,poles) in nw_ref[:convdc_poles]
             for pole in poles
                 i = nw_ref[:convdc][c]["busac_i"][pole]
-                println(" i is $(i)")
                 if isempty(bus_conv_poles[i])
                     bus_conv_poles[i] = Dict(c => Vector{String}())    
                 end
@@ -515,7 +513,6 @@ function add_ref_dcgrid_switch_old!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String
         for (c,poles) in nw_ref[:convdc_poles]
             for pole in poles
                 i = nw_ref[:convdc][c]["busac_i"][pole]
-                println(" i is $(i)")
                 if isempty(bus_conv_poles[i])
                     bus_conv_poles[i] = Dict(c => Vector{String}())    
                 end
@@ -694,13 +691,11 @@ function add_ref_dcgrid_dcswitch!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<
             #conv["busdc_i"] in keys(nw_ref[:busdc]) &&
             #conv["busac_i"][pole] in keys(nw_ref[:bus]))
         )
-        println("dcswitch: ", nw_ref[:dcswitch])
 
         # DC arcs: tuples of the form (l,i,j) where l is the DC branch and i and j are the adjacent DC buses
         nw_ref[:arcsdc_from] = [(b, branch["fbusdc"], branch["tbusdc"]) for (b, branch) in nw_ref[:branchdc]]
         nw_ref[:arcsdc_to]   = [(b, branch["tbusdc"], branch["fbusdc"]) for (b, branch) in nw_ref[:branchdc]]
         nw_ref[:arcsdc]      = [nw_ref[:arcsdc_from]; nw_ref[:arcsdc_to]]
-        println("arcsdc: ", nw_ref[:arcsdc])
         # Map DC bus to active terminals (as sets composed by "p", "r", and "n")
         nw_ref[:busdc_terminals] = Dict(
             # Assumption: all DC buses have all 3 terminals
@@ -818,7 +813,6 @@ function add_ref_dcgrid_dcswitch!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<
             end
         end
         nw_ref[:busdc_terminal_conv_poles] = busdc_terminal_conv_poles
-        println("busdc_terminal_conv_poles: ", nw_ref[:busdc_terminal_conv_poles])
 
         busdc_terminal_i_conv_dc_poles = Dict(
         # i are buses amnd they can have up to three TERMINALS p,r,n
@@ -936,13 +930,11 @@ function add_ref_dcgrid_dcswitch_corrected!(ref::Dict{Symbol,<:Any}, nw_ref::Dic
             #conv["busdc_i"] in keys(nw_ref[:busdc]) &&
             #conv["busac_i"][pole] in keys(nw_ref[:bus]))
         )
-        println("dcswitch: ", nw_ref[:dcswitch])
 
         # DC arcs: tuples of the form (l,i,j) where l is the DC branch and i and j are the adjacent DC buses
         nw_ref[:arcsdc_from] = [(b, branch["fbusdc"], branch["tbusdc"]) for (b, branch) in nw_ref[:branchdc]]
         nw_ref[:arcsdc_to]   = [(b, branch["tbusdc"], branch["fbusdc"]) for (b, branch) in nw_ref[:branchdc]]
         nw_ref[:arcsdc]      = [nw_ref[:arcsdc_from]; nw_ref[:arcsdc_to]]
-        println("arcsdc: ", nw_ref[:arcsdc])
         # Map DC bus to active terminals (as sets composed by "p", "r", and "n")
         nw_ref[:busdc_terminals] = Dict(
             # Assumption: all DC buses have all 3 terminals
@@ -1176,4 +1168,3 @@ _PM.con(pm::_PM.AbstractPowerModel, key::Symbol, idx, conductor::String; nw::Int
 
 _PM.sol(pm::_PM.AbstractPowerModel, nw::Int, key::Symbol, idx, conductor::String) = _IM.sol(pm, _PM.pm_it_sym, nw, key, idx)[conductor]
 _PM.sol(pm::_PM.AbstractPowerModel, key::Symbol, idx, conductor::String; nw::Int=nw_id_default) = _IM.sol(pm, _PM.pm_it_sym, key, idx; nw = nw)[conductor]
-
