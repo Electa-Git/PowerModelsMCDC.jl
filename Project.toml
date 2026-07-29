@@ -23,7 +23,7 @@ JuMP = "1"
 Juniper = "0.9.4"
 Memento = "1"
 PowerModels = "0.21.5"
-PowerModelsACDC = "0.9.0"
+PowerModelsACDC = "0.9.0, 0.10.0"
 StatsPlots = "0.15.8"
 julia = "1.6"
 
