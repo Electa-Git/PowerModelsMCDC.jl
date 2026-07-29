@@ -1,8 +1,8 @@
 name = "PowerModelsMCDC"
 uuid = "05d58fe5-e6ff-58ad-86d6-05dcc0b74504"
+version = "0.1.1"
 authors = ["Chandra Kant Jat", "Jay Dave", "Hakan Ergun"]
 repo = "https://github.com/Electa-Git/PowerModelsMCDC.jl"
-version = "0.1.1"
 
 [deps]
 Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
@@ -12,7 +12,6 @@ Juniper = "2ddba703-00a4-53a7-87a5-e8b9971dde84"
 Memento = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
 PowerModels = "c36e90e8-916a-50a6-bd94-075b64ef4655"
 PowerModelsACDC = "ff45984e-d068-5f4c-9e32-c4133509d236"
-PowerModelsTopologicalActionsII = "aa9d2d61-8a5b-47cb-baca-6462e1811a24"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 
 [compat]
