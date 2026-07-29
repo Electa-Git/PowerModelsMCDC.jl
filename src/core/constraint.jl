@@ -25,7 +25,26 @@ function _get_nested_axis_or_zero(container, key1, key2)
     end
 end
 
-function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int, bus_arcs_dcgrid_terminals, bus_convs_dc_cond, bus_convs_grounding_shunt, bus_convs_i_dc_cond)
+"""
+    constraint_kcl_shunt_dcgrid(
+        pm, n, bus, branch_currents, converter_poles, grounded_converters,
+        converter_currents; skip_terminals=(),
+    )
+
+Enforce current balance on every conductor of a multi-conductor DC bus.
+Terminals listed in `skip_terminals` are ideal voltage boundaries whose source
+current is determined by the rest of the network.
+"""
+function constraint_kcl_shunt_dcgrid(
+    pm::_PM.AbstractPowerModel,
+    n::Int,
+    i::Int,
+    bus_arcs_dcgrid_terminals,
+    bus_convs_dc_cond,
+    bus_convs_grounding_shunt,
+    bus_convs_i_dc_cond;
+    skip_terminals=(),
+)
     i_dcgrid = _PM.var(pm, n, :i_dcgrid)
     iconv_dc = _PM.var(pm, n, :iconv_dc)
     iconv_dcg_shunt = _PM.var(pm, n, :iconv_dcg_shunt)
@@ -34,6 +53,7 @@ function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, n::Int, i::Int,
     terminals = keys(_PM.ref(pm, n, :busdc, i, "Vdc"))
 
     for terminal in terminals
+        terminal in skip_terminals && continue
         if terminal == "r"
             unique_convs = unique([cvs[1] for cvs in bus_convs_dc_cond[i][terminal]])
             JuMP.@constraint(pm.model,

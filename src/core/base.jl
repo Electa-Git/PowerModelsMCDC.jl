@@ -1,3 +1,10 @@
+"""
+    add_ref_dcgrid!(ref, nw_ref)
+
+Add multi-conductor DC branches, converter poles, terminal incidence, and
+grounding lookups to a PowerModels reference. Multiple converters connected to
+the same AC bus are retained independently.
+"""
 function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<:Any})
     for (n, nw_ref) in ref[:it][_PM.pm_it_sym][:nw]
 
@@ -76,16 +83,15 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<:Any})
 
 
         bus_conv_poles = Dict(
-            i => Dict()
+            i => Dict{Int,Vector{String}}()
             for i in keys(nw_ref[:bus])
         )
         
         for (c,poles) in nw_ref[:convdc_poles]
             i = nw_ref[:convdc][c]["busac_i"]
-            bus_conv_poles[i] = Dict(c => Vector{String}())
-            #bus_conv_poles["$i"]["$c"] => Vector{String}()
+            converter_poles = get!(bus_conv_poles[i], c, String[])
             for pole in poles
-                push!(bus_conv_poles[i][c],pole)
+                push!(converter_poles, pole)
             end
         end
         nw_ref[:bus_conv_poles] = bus_conv_poles
@@ -189,21 +195,21 @@ function add_ref_dcgrid!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<:Any})
                     ref_buses_dc[k] = v
                 end
             end
-            Memento.warn(_PM._LOGGER, "no reference DC bus found, setting reference bus based on AC bus type")
+            _Memento.warn(_LOGGER, "no reference DC bus found, setting reference bus based on AC bus type")
         end
         if length(ref_buses_dc) > 1
             ref_buses_warn = ""
             for (rb) in keys(ref_buses_dc)
                 ref_buses_warn = ref_buses_warn * "$rb, "
             end
-            Memento.warn(_PM._LOGGER, "multiple reference buses found, i.e. " * ref_buses_warn * "this can cause infeasibility if they are in the same connected component")
+            _Memento.warn(_LOGGER, "multiple reference buses found, i.e. " * ref_buses_warn * "this can cause infeasibility if they are in the same connected component")
         end
         nw_ref[:ref_buses_dc] = ref_buses_dc
 
         # Warn if there are converters with power fixed on both sides
         for (c, conv) in nw_ref[:convdc]
             if conv["type_dc"] == 1 && conv["type_ac"] in (1,2)
-                Memento.warn(_PM._LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
+                _Memento.warn(_LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
             end
         end
     end

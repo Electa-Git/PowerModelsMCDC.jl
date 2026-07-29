@@ -285,12 +285,12 @@ function check_branchdc_parameters(branchdc)
     status = ["status_p", "status_n", "status_r"]
     check = haskey.(Ref(branchdc), status)
     if sum(check) == 0
-        Memento.warn(_PM._LOGGER, "Parameters `status_p`, `status_n` and `status_r` are not defined for DC branch $branchdc_id. It is assumed that all conductors are active.")
+        _Memento.warn(_LOGGER, "Parameters `status_p`, `status_n` and `status_r` are not defined for DC branch $branchdc_id. It is assumed that all conductors are active.")
         for key in status
             branchdc[key] = 1
         end
     elseif 1 <= sum(check) < 3
-        Memento.error(_PM._LOGGER, "Some parameters among `status_p`, `status_n` and `status_r` are not defined for DC branch $branchdc_id.")
+        _Memento.error(_LOGGER, "Some parameters among `status_p`, `status_n` and `status_r` are not defined for DC branch $branchdc_id.")
     end
 end
 
@@ -340,14 +340,14 @@ function check_conv_parameters(conv)
     conv["Pacrated"] = max(abs(conv["Pacmax"]), abs(conv["Pacmin"]))
     conv["Qacrated"] = max(abs(conv["Qacmax"]), abs(conv["Qacmin"]))
     if conv["Imax"] < sqrt(conv["Pacrated"]^2 + conv["Qacrated"]^2)
-        Memento.warn(_PM._LOGGER, "Inconsistent current limit for converter $conv_id, it will be updated.")
+        _Memento.warn(_LOGGER, "Inconsistent current limit for converter $conv_id, it will be updated.")
         conv["Imax"] = sqrt(conv["Pacrated"]^2 + conv["Qacrated"]^2)
     end
     if conv["LossCrec"] != conv["LossCinv"]
-        Memento.warn(_PM._LOGGER, "The losses of converter $conv_id are different in inverter and rectifier mode, inverter losses are used.")
+        _Memento.warn(_LOGGER, "The losses of converter $conv_id are different in inverter and rectifier mode, inverter losses are used.")
     end
     if conv["islcc"] == 1
-        Memento.warn(_PM._LOGGER, "Converter $conv_id is an LCC, reactive power limits might be updated.")
+        _Memento.warn(_LOGGER, "Converter $conv_id is an LCC, reactive power limits might be updated.")
         if abs(conv["Pacmax"]) >= abs(conv["Pacmin"])
             conv["phimin"] = 0
             conv["phimax"] = acos(conv["Pacmin"] / conv["Pacmax"])
@@ -388,7 +388,7 @@ function check_conv_parameters(conv)
     status = ["status_p", "status_r", "status_n"]
     check = haskey.(Ref(conv), status)
     if sum(check) == 0
-        Memento.warn(_PM._LOGGER, "Parameters `status_p`, `status_r`, and `status_n` are not defined for converter $conv_id. It is assumed that all poles are active.")
+        _Memento.warn(_LOGGER, "Parameters `status_p`, `status_r`, and `status_n` are not defined for converter $conv_id. It is assumed that all poles are active.")
         for key in status
             conv[key] = 1
         end

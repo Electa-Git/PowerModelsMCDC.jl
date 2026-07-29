@@ -27,6 +27,7 @@ lp_optimizer = _PMMCDC.optimizer_with_attributes(
 
     # Problems
     include("prob.jl")
+    include("pf.jl")
 
     # Exported symbols
     include("export.jl")

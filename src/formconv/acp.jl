@@ -35,27 +35,49 @@ function constraint_converter_current(pm::_PM.AbstractACPModel, n::Int, i::Int, 
 end
 
 
-function constraint_converter_dc_current(pm::_PM.AbstractACPModel, n::Int, i::Int, busdc::Int, terminals, poles, busdc_terminal_conv_poles)
+"""
+    constraint_converter_dc_current(
+        pm, network, converter, dc_bus, terminals, poles, terminal_converters,
+    )
+
+Link each active positive or negative pole's DC power to its conductor voltage
+and current. Currents are positive into the converter, the pole return current
+has the opposite sign, and the aggregate return current enforces converter KCL.
+"""
+function constraint_converter_dc_current(
+    pm::_PM.AbstractACPModel,
+    n::Int,
+    i::Int,
+    busdc::Int,
+    _terminals,
+    poles,
+    _busdc_terminal_conv_poles,
+)
     pconv_dc = _PM.var(pm, n, :pconv_dc)
     pconv_dcg = _PM.var(pm, n, :pconv_dcg)
     iconv_dc = _PM.var(pm, n, :iconv_dc)
     iconv_dcg = _PM.var(pm, n, :iconv_dcg)
     vdcm = _PM.var(pm, n, :vdcm)
 
-    for terminal in terminals
-        for (conv_id,pole) in busdc_terminal_conv_poles[busdc][terminal]
-            if terminal != "r"
-                JuMP.@constraint(pm.model, pconv_dc[conv_id][pole] == iconv_dc[conv_id][pole] * vdcm[busdc][terminal])
-            else
-                JuMP.@constraint(pm.model, pconv_dc[conv_id][terminal] == iconv_dc[conv_id][terminal] * vdcm[busdc][terminal])
-            end
-        end
-    end
     for pole in poles
+        pole in ("p", "n") ||
+            throw(
+                ArgumentError(
+                    "ACP converter $i has unsupported active pole `$pole`; expected `p` or `n`",
+                ),
+            )
+        JuMP.@constraint(
+            pm.model,
+            pconv_dc[i][pole] == iconv_dc[i][pole] * vdcm[busdc][pole]
+        )
         JuMP.@constraint(pm.model, pconv_dcg[i][pole] == iconv_dcg[i][pole] * vdcm[busdc]["r"])
         JuMP.@constraint(pm.model, iconv_dc[i][pole] + iconv_dcg[i][pole] == 0)
     end
 
+    JuMP.@constraint(
+        pm.model,
+        pconv_dc[i]["r"] == iconv_dc[i]["r"] * vdcm[busdc]["r"]
+    )
     JuMP.@constraint(pm.model, sum(iconv_dc[i]) == 0)
 end
 

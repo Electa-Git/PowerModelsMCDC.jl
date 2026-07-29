@@ -51,13 +51,32 @@ function constraint_kcl_shunt_fc(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM
     constraint_kcl_shunt_fc(pm, nw, i, bus_arcs, bus_gens, bus_conv_poles, bus_loads, bus_shunts, pd, qd, gs, bs)
 end
 
-function constraint_kcl_shunt_dcgrid(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)
-    busdc = _PM.ref(pm, nw, :busdc, i)
+"""
+    constraint_kcl_shunt_dcgrid(pm, bus; nw=nw_id_default, skip_terminals=())
+
+Build multi-conductor DC KCL constraints at `bus`, except at ideal
+voltage-source terminals listed in `skip_terminals`.
+"""
+function constraint_kcl_shunt_dcgrid(
+    pm::_PM.AbstractPowerModel,
+    i::Int;
+    nw::Int=_PM.nw_id_default,
+    skip_terminals=(),
+)
     busdc_terminal_arcsdc_ = _PM.ref(pm, nw, :busdc_terminal_arcsdc)
     busdc_terminal_conv_poles_ = _PM.ref(pm, nw, :busdc_terminal_conv_poles)
     busdc_grounded_convs_ = _PM.ref(pm, nw, :busdc_grounded_convs)
     bus_convs_i_dc_cond_ = _PM.ref(pm, nw, :busdc_terminal_i_conv_dc_poles)
-    constraint_kcl_shunt_dcgrid(pm, nw, i, busdc_terminal_arcsdc_, busdc_terminal_conv_poles_, busdc_grounded_convs_, bus_convs_i_dc_cond_)
+    constraint_kcl_shunt_dcgrid(
+        pm,
+        nw,
+        i,
+        busdc_terminal_arcsdc_,
+        busdc_terminal_conv_poles_,
+        busdc_grounded_convs_,
+        bus_convs_i_dc_cond_;
+        skip_terminals,
+    )
 end
 
 function constraint_kcl_shunt_dcgrid_sw(pm::_PM.AbstractPowerModel, i::Int; nw::Int=_PM.nw_id_default)

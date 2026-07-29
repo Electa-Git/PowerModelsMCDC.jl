@@ -8,5 +8,7 @@
         @test :NO_SOLUTION ∈ exported # Sample check that `ResultStatusCode`s are exported
         @test :OPTIMIZE_NOT_CALLED ∈ exported # Sample check that `TerminationStatusCode`s are exported
         @test :optimizer_with_attributes ∈ exported
+        @test :solve_mcdcpf ∈ exported
+        @test :build_mcdcpf ∈ exported
     end
 end

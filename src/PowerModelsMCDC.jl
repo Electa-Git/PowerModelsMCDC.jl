@@ -13,11 +13,11 @@ import PowerModelsACDC as _PMACDC
 # Create our module level logger (this will get precompiled)
 const Memento = _PMACDC.Memento
 const _Memento = Memento
-const _LOGGER = _PMACDC._LOGGER
+const _LOGGER = Memento.getlogger(@__MODULE__)
 
 # Register the module level logger at runtime so that folks can access the logger via `getlogger(PowerModelsMCDC)`
 # NOTE: If this line is not included then the precompiled `PowerModelsMCDC._LOGGER` won't be registered at runtime.
-__init__() = nothing
+__init__() = Memento.register(_LOGGER)
 
 
 ## Includes
@@ -43,6 +43,7 @@ include("formdcgrid/lpac.jl")
 include("formconv/lpac.jl")
 
 include("prob/mcdcopf.jl")
+include("prob/mcdcpf.jl")
 include("prob/mcdc_acdcsw_AC.jl")
 include("prob/mcdc_acdcsw_DC.jl")
 
