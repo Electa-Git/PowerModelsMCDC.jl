@@ -415,21 +415,21 @@ function add_ref_dcgrid_switch!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<:A
                     ref_buses_dc[k] = v
                 end
             end
-            Memento.warn(_PM._LOGGER, "no reference DC bus found, setting reference bus based on AC bus type")
+            Memento.warn(_LOGGER, "no reference DC bus found, setting reference bus based on AC bus type")
         end
         if length(ref_buses_dc) > 1
             ref_buses_warn = ""
             for (rb) in keys(ref_buses_dc)
                 ref_buses_warn = ref_buses_warn * "$rb, "
             end
-            Memento.warn(_PM._LOGGER, "multiple reference buses found, i.e. " * ref_buses_warn * "this can cause infeasibility if they are in the same connected component")
+            Memento.warn(_LOGGER, "multiple reference buses found, i.e. " * ref_buses_warn * "this can cause infeasibility if they are in the same connected component")
         end
         nw_ref[:ref_buses_dc] = ref_buses_dc
 
         # Warn if there are converters with power fixed on both sides
         for (c, conv) in nw_ref[:convdc]
             if conv["type_dc"] == 1 && conv["type_ac"] in (1,2)
-                Memento.warn(_PM._LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
+                Memento.warn(_LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
             end
         end
     end
@@ -637,21 +637,21 @@ function add_ref_dcgrid_switch_old!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String
                     ref_buses_dc[k] = v
                 end
             end
-            Memento.warn(_PM._LOGGER, "no reference DC bus found, setting reference bus based on AC bus type")
+            Memento.warn(_LOGGER, "no reference DC bus found, setting reference bus based on AC bus type")
         end
         if length(ref_buses_dc) > 1
             ref_buses_warn = ""
             for (rb) in keys(ref_buses_dc)
                 ref_buses_warn = ref_buses_warn * "$rb, "
             end
-            Memento.warn(_PM._LOGGER, "multiple reference buses found, i.e. " * ref_buses_warn * "this can cause infeasibility if they are in the same connected component")
+            Memento.warn(_LOGGER, "multiple reference buses found, i.e. " * ref_buses_warn * "this can cause infeasibility if they are in the same connected component")
         end
         nw_ref[:ref_buses_dc] = ref_buses_dc
 
         # Warn if there are converters with power fixed on both sides
         for (c, conv) in nw_ref[:convdc]
             if conv["type_dc"] == 1 && conv["type_ac"] in (1,2)
-                Memento.warn(_PM._LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
+                Memento.warn(_LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
             end
         end
     end
@@ -876,21 +876,21 @@ function add_ref_dcgrid_dcswitch!(ref::Dict{Symbol,<:Any}, nw_ref::Dict{String,<
                     ref_buses_dc[k] = v
                 end
             end
-            Memento.warn(_PM._LOGGER, "no reference DC bus found, setting reference bus based on AC bus type")
+            Memento.warn(_LOGGER, "no reference DC bus found, setting reference bus based on AC bus type")
         end
         if length(ref_buses_dc) > 1
             ref_buses_warn = ""
             for (rb) in keys(ref_buses_dc)
                 ref_buses_warn = ref_buses_warn * "$rb, "
             end
-            Memento.warn(_PM._LOGGER, "multiple reference buses found, i.e. " * ref_buses_warn * "this can cause infeasibility if they are in the same connected component")
+            Memento.warn(_LOGGER, "multiple reference buses found, i.e. " * ref_buses_warn * "this can cause infeasibility if they are in the same connected component")
         end
         nw_ref[:ref_buses_dc] = ref_buses_dc
 
         # Warn if there are converters with power fixed on both sides
         for (c, conv) in nw_ref[:convdc]
             if conv["type_dc"] == 1 && conv["type_ac"] in (1,2)
-                Memento.warn(_PM._LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
+                Memento.warn(_LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
             end
         end
     end
@@ -1116,21 +1116,21 @@ function add_ref_dcgrid_dcswitch_corrected!(ref::Dict{Symbol,<:Any}, nw_ref::Dic
                     ref_buses_dc[k] = v
                 end
             end
-            Memento.warn(_PM._LOGGER, "no reference DC bus found, setting reference bus based on AC bus type")
+            Memento.warn(_LOGGER, "no reference DC bus found, setting reference bus based on AC bus type")
         end
         if length(ref_buses_dc) > 1
             ref_buses_warn = ""
             for (rb) in keys(ref_buses_dc)
                 ref_buses_warn = ref_buses_warn * "$rb, "
             end
-            Memento.warn(_PM._LOGGER, "multiple reference buses found, i.e. " * ref_buses_warn * "this can cause infeasibility if they are in the same connected component")
+            Memento.warn(_LOGGER, "multiple reference buses found, i.e. " * ref_buses_warn * "this can cause infeasibility if they are in the same connected component")
         end
         nw_ref[:ref_buses_dc] = ref_buses_dc
 
         # Warn if there are converters with power fixed on both sides
         for (c, conv) in nw_ref[:convdc]
             if conv["type_dc"] == 1 && conv["type_ac"] in (1,2)
-                Memento.warn(_PM._LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
+                Memento.warn(_LOGGER, "For converter $c is chosen P is fixed on AC and DC side. This can lead to infeasibility in the PF problem.")
             end
         end
     end
